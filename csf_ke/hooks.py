@@ -1,13 +1,32 @@
 from . import __version__ as app_version
 
 app_name = "csf_ke"
-app_title = "csf_ke"
+app_title = "CSF KE"
 app_publisher = "Navari Limited"
 app_description = "Country Specific Functionality Kenya"
 app_icon = "drag"
 app_color = "grey"
 app_email = "solutions@navari.co.ke"
 app_license = "MIT"
+
+
+fixtures = [
+    {
+        "doctype": "Custom Field",
+        "filters": [
+            [
+                "name",
+                "in",
+                (
+                   	"Employee-national_id",
+					"Employee-nhif_no",
+					"Employee-nssf_no",
+					"Employee-tax_id",										
+                ),
+            ]
+        ],
+    },
+]
 
 # Includes in <head>
 # ------------------
