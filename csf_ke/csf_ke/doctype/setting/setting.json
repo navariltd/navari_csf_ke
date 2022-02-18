@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2022-02-18 09:16:09.108327",
+ "creation": "2022-02-18 09:52:45.725480",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
@@ -17,10 +17,10 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-02-18 09:25:16.206783",
+ "modified": "2022-02-18 09:52:45.725480",
  "modified_by": "Administrator",
  "module": "CSF KE",
- "name": "Settings",
+ "name": "Setting",
  "owner": "Administrator",
  "permissions": [
   {
