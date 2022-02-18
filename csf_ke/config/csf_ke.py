@@ -53,8 +53,7 @@ def get_data():
                     "type": "report", 
                     "description": "Purchase Tax Report", 
                     "name": "Purchase Tax Report",
-                },
-
+                }
             ]
 
         }

@@ -5,7 +5,6 @@ def get_data():
 	return [
 		{
 			"module_name": "CSF KE",
-			"category": "Modules",
 			"color": "grey",
 			"icon": "octicon octicon-file-directory",
 			"type": "module",

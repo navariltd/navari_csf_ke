@@ -13,13 +13,13 @@ class SaleTaxReport(object):
 		self.filters = frappe._dict(filters or {})
 
 		if not self.filters.to_date:
-			self.filters.to_date = frappe.datetime.get_today()
+			self.filters.to_date = "invoice.posting_date <= %(to_date)s"
 
 		if not self.filters.from_date:
-			self.filters.from_date = frappe.datetime.add_months(frappe.datetime.get_today(),-1)
+			self.filters.from_date = "invoice.posting_date >= %(from_date)s"
 
 		if not self.filters.company:
-			self.filters.company = frappe.get_default("company")
+			self.filters.company = "invoice.company = %(company)s"
 
 		self.query_filters = {'posting_date': ['between', [self.filters.from_date, self.filters.to_date]]}
 
