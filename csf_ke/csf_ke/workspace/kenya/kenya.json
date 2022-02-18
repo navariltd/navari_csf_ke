@@ -14,7 +14,7 @@
  "is_standard": 1,
  "label": "Kenya",
  "links": [],
- "modified": "2022-02-18 09:42:09.377856",
+ "modified": "2022-02-18 09:44:30.074699",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya",
@@ -25,14 +25,14 @@
  "shortcuts": [
   {
    "doc_view": "",
-   "label": "NSSF Report",
-   "link_to": "NSSF Report",
+   "label": "NHIF Report",
+   "link_to": "NHIF Report",
    "type": "Report"
   },
   {
    "doc_view": "",
-   "label": "NHIF Report",
-   "link_to": "NHIF Report",
+   "label": "NSSF Report",
+   "link_to": "NSSF Report",
    "type": "Report"
   },
   {
