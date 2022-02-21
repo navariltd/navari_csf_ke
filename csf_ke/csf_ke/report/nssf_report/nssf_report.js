@@ -52,8 +52,7 @@ frappe.query_reports["NSSF Report"] = {
 			"fieldtype":"Select",
 			"options":["Draft", "Submitted", "Cancelled"],
 			"default": "Submitted",
-			"width": "100px",
-			"hidden": 1
+			"width": "100px"
 		}
 	]
 }

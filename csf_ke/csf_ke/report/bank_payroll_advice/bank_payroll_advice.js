@@ -43,8 +43,7 @@ frappe.query_reports["Bank Payroll Advice"] = {
 			"fieldtype":"Select",
 			"options":["Draft", "Submitted", "Cancelled"],
 			"default": "Submitted",
-			"width": "100px",
-			"hidden": 1
+			"width": "100px"
 		}
 	]
 }
