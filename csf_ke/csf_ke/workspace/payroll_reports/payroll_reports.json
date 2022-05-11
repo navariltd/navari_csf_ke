@@ -1,0 +1,98 @@
+{
+ "category": "Modules",
+ "charts": [],
+ "creation": "2022-05-11 17:17:08.044839",
+ "developer_mode_only": 0,
+ "disable_user_customization": 0,
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "extends": "Payroll",
+ "extends_another_page": 1,
+ "hide_custom": 0,
+ "idx": 0,
+ "is_default": 0,
+ "is_standard": 1,
+ "label": "Payroll Reports",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Kenyan Custom Reports",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "dependencies": "Salary Slip",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "NHIF",
+   "link_to": "NHIF Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "only_for": "",
+   "type": "Link"
+  },
+  {
+   "dependencies": "Salary Slip",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "NSSF",
+   "link_to": "NSSF Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "only_for": "",
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "HELB",
+   "link_to": "HELB Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "dependencies": "Salary Slip",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Payroll Register",
+   "link_to": "Payroll Register",
+   "link_type": "Report",
+   "onboard": 0,
+   "only_for": "",
+   "type": "Link"
+  },
+  {
+   "dependencies": "Salary Slip",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Bank Payroll Advice",
+   "link_to": "Bank Payroll Advice",
+   "link_type": "Report",
+   "onboard": 0,
+   "only_for": "",
+   "type": "Link"
+  },
+  {
+   "dependencies": "Salary Slip",
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "P9A Tax Deduction Card",
+   "link_to": "P9A Tax Deduction Card",
+   "link_type": "Report",
+   "onboard": 0,
+   "only_for": "",
+   "type": "Link"
+  }
+ ],
+ "modified": "2022-05-11 17:24:41.826731",
+ "modified_by": "Administrator",
+ "module": "CSF KE",
+ "name": "Payroll Reports",
+ "owner": "Administrator",
+ "pin_to_bottom": 0,
+ "pin_to_top": 0,
+ "shortcuts": []
+}

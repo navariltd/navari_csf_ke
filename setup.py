@@ -11,7 +11,7 @@ setup(
 	version=version,
 	description="Country Specific Functionality Kenya",
 	author="Navari Limited",
-	author_email="solutions@navari.co.ke",
+	author_email="info@navari.co.ke",
 	packages=find_packages(),
 	zip_safe=False,
 	include_package_data=True,
