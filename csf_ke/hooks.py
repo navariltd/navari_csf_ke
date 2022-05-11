@@ -3,7 +3,7 @@ from . import __version__ as app_version
 app_name = "csf_ke"
 app_title = "CSF KE"
 app_publisher = "Navari Limited"
-app_description = "Country Specific Functionality Kenya"
+app_description = "Country Specific Functionality for Kenya"
 app_icon = "drag"
 app_color = "grey"
 app_email = "solutions@navari.co.ke"
@@ -22,22 +22,10 @@ fixtures = [
 					"Employee-nhif_no",
 					"Employee-nssf_no",
 					"Employee-tax_id",
-                    "Salary Component-p9a_tax_deduction_card_type"
-					"Salary Component-month_name",
-                    "Salary Component-basic_salary_amt",
-                    "Salary Component-benefits_non_cash_amt",
-                    "Salary Component-value_of_quarters_amt",
-                    "Salary Component-total_gross_pay_amt",
-                    "Salary Component-e1_defined_contribution_retirement_scheme_amt",
-                    "Salary Component-e2_defined_contribution_retirement_scheme_amt",
-                    "Salary Component-e3_defined_contribution_retirement_scheme_amt",
-                    "Salary Component-owner_occupied_interest_amt",
-                    "Salary Component-retirement_contribution_and_owner_occupied_interest_amt",
-                    "Salary Component-chargeable_pay_amt",
-                    "Salary Component-tax_charged_amt",
-                    "Salary Component-personal_relief_amt",
-                    "Salary Component-insurance_relief_amt",
-                    "Salary Component-paye_tax_amt",										
+                    "Salary Component-p9a_tax_deduction_card_type",
+                    "Sales Taxes and Charges-hidden",
+                    "Sales Order-hide_total_without_tax",
+                    "Quotation-hide_total_without_tax",									
                 ),
             ]
         ],

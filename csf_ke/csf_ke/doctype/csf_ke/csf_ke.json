@@ -5,21 +5,21 @@
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "setting"
+  "csf_ke"
  ],
  "fields": [
   {
-   "fieldname": "setting",
+   "fieldname": "csf_ke",
    "fieldtype": "Data",
-   "label": "Setting"
+   "label": "CSF KE"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2022-05-11 17:36:48.556726",
+ "modified": "2022-05-11 21:33:01.545710",
  "modified_by": "Administrator",
  "module": "CSF KE",
- "name": "Settings",
+ "name": "CSF KE",
  "owner": "Administrator",
  "permissions": [
   {

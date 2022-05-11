@@ -4,5 +4,5 @@
 # import frappe
 import unittest
 
-class TestSettings(unittest.TestCase):
+class TestCSFKE(unittest.TestCase):
 	pass

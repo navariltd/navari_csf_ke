@@ -1,8 +1,28 @@
-## CSF KE
+### CSF KE
 
-Country Specific Functionality Kenya
+Country Specific Functionality for Kenya, includes:
 
-App that consist of NSSF Report, NHIF Report, HELB Report, Bank Payroll Advice Report, Payroll Register Report, P9A Tax Deduction Card Report, Sales Tax Report and Purchase Tax Report.
+### Kenya Payroll Reports
+
+• P9A Tax Deduction Card
+
+• NSSF Report
+
+• NHIF Report
+
+• HELB Report
+
+• Bank Payroll Advice Report
+
+• Payroll Register Report
+
+### Sales and Purchase Tax Reports
+
+• Sales Tax Report
+
+• Purchase Tax Report
+
+Extensions on Taxes and Totals templates
 
 ### Installation
 
@@ -22,4 +42,4 @@ $ bench --site [site.name] install-app csf_ke
 
 ### License
 
-GNU GPL V3. See [license.txt](https://github.com/navariltd/CSF_KE/blob/master/license.txt) for more information.
+GNU General Public License (v3). See [license.txt](https://github.com/navariltd/CSF_KE/blob/master/license.txt) for more information.

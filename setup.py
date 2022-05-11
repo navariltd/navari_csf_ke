@@ -9,7 +9,7 @@ from csf_ke import __version__ as version
 setup(
 	name="csf_ke",
 	version=version,
-	description="Country Specific Functionality Kenya",
+	description="Country Specific Functionality for Kenya",
 	author="Navari Limited",
 	author_email="info@navari.co.ke",
 	packages=find_packages(),
