@@ -40,5 +40,14 @@
    "onboard": 0,
    "type": "Link"
   }
- ]
+ ],
+ "modified": "2021-08-26 13:15:52.872470",
+ "modified_by": "Administrator",
+ "module": "Accounts",
+ "name": "Accounting",
+ "onboarding": "Accounts",
+ "owner": "Administrator",
+ "pin_to_bottom": 0,
+ "pin_to_top": 0,
+ "shortcuts": []
 }
