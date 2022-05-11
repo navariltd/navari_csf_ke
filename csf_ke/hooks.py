@@ -22,6 +22,7 @@ fixtures = [
 					"Employee-nhif_no",
 					"Employee-nssf_no",
 					"Employee-tax_id",
+                    "Salary Component-p9a_tax_deduction_card_type"
 					"Salary Component-month_name",
                     "Salary Component-basic_salary_amt",
                     "Salary Component-benefits_non_cash_amt",
