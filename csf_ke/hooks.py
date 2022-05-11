@@ -7,7 +7,7 @@ app_description = "Country Specific Functionality Kenya"
 app_icon = "drag"
 app_color = "grey"
 app_email = "solutions@navari.co.ke"
-app_license = "MIT"
+app_license = "GNU General Public License (v3)"
 
 
 fixtures = [

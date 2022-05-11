@@ -114,8 +114,8 @@ def get_conditions(filters, company_currency):
 	if filters.get("docstatus"):
 		conditions += "docstatus = {0}".format(doc_status[filters.get("docstatus")])
 
-	if filters.get("from_date"): conditions += " and start_date >= %(from_date)s"
-	if filters.get("to_date"): conditions += " and end_date <= %(to_date)s"
+	if filters.get("from_date"): conditions += " and start_date = %(from_date)s"
+	if filters.get("to_date"): conditions += " and end_date = %(to_date)s"
 	if filters.get("company"): conditions += " and company = %(company)s"
 	if filters.get("employee"): conditions += " and employee = %(employee)s"
 	if filters.get("currency") and filters.get("currency") != company_currency:

@@ -15,7 +15,7 @@ frappe.query_reports["HELB Report"] = {
 		},
 		{
 			"fieldname":"from_date",
-			"label": __("From"),
+			"label": __("Start Date"),
 			"fieldtype": "Date",
 			"default": frappe.datetime.add_months(frappe.datetime.get_today(),-1),
 			"reqd": 1,
@@ -23,7 +23,7 @@ frappe.query_reports["HELB Report"] = {
 		},
 		{
 			"fieldname":"to_date",
-			"label": __("To"),
+			"label": __("End Date"),
 			"fieldtype": "Date",
 			"default": frappe.datetime.get_today(),
 			"reqd": 1,

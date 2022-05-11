@@ -293,8 +293,8 @@ def get_p9a_tax_deduction_card_amt(filters, employee, month_start_date, month_en
             AND sc.p9a_tax_deduction_card_type =  %(p9a_tax_deduction_card_type)s
             AND ss.employee = %(employee)s
             AND ss.company = %(company)s
-            AND ss.start_date >= %(month_start_date)s
-            AND ss.end_date <= %(month_end_date)s
+            AND ss.start_date = %(month_start_date)s
+            AND ss.end_date = %(month_end_date)s
             AND ss.currency = %(currency_filter)s
 		ORDER BY
             ss.employee,
@@ -335,8 +335,8 @@ def get_p9a_tax_deduction_card_gross_pay(filters, employee, month_start_date, mo
 		WHERE ss.docstatus = 1
             AND ss.employee = %(employee)s
             AND ss.company = %(company)s
-            AND ss.start_date >= %(month_start_date)s
-            AND ss.end_date <= %(month_end_date)s
+            AND ss.start_date = %(month_start_date)s
+            AND ss.end_date = %(month_end_date)s
             AND ss.currency = %(currency_filter)s
 		ORDER BY
             ss.employee,
