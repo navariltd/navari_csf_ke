@@ -26,7 +26,7 @@
    "hidden": 0,
    "is_query_report": 1,
    "label": "Kenya Sales Tax Report",
-   "link_to": "Sales Tax Report",
+   "link_to": "Kenya Sales Tax Report",
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
@@ -35,13 +35,13 @@
    "hidden": 0,
    "is_query_report": 1,
    "label": "Kenya Purchase Tax Report",
-   "link_to": "Purchase Tax Report",
+   "link_to": "Kenya Purchase Tax Report",
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
   }
  ],
- "modified": "2022-05-12 08:46:51.174730",
+ "modified": "2022-05-12 10:27:34.334928",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Accounting Reports",
