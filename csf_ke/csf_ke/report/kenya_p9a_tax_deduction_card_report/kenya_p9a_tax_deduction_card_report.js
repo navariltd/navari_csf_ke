@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["P9A Tax Deduction Card"] = {
+frappe.query_reports["Kenya P9A Tax Deduction Card Report"] = {
 	"filters": [
 		{
 			"fieldname": "company",
@@ -94,6 +94,6 @@ frappe.query_reports["P9A Tax Deduction Card"] = {
 			"fieldtype": "Data",
 			"hidden": 1
 		}
+
 	]
 };
-

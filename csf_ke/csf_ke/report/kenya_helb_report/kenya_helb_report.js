@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["Bank Payroll Advice"] = {
+frappe.query_reports["Kenya HELB Report"] = {
 	"filters": [
 		{
 			"fieldname":"company",
@@ -28,6 +28,15 @@ frappe.query_reports["Bank Payroll Advice"] = {
 			"default": frappe.datetime.get_today(),
 			"reqd": 1,
 			"width": "100px"
+		},
+		{ 
+			"fieldname":"salary_component",
+			"label": __("Salary Component"),
+			"fieldtype": "Link",
+			"options": "Salary Component",
+			'default': "HELB",
+			"width": "100",
+			"reqd": 1
 		},
 		{
 			"fieldname": "currency",

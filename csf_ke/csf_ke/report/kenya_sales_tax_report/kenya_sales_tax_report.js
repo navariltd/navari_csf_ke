@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["HELB Report"] = {
+frappe.query_reports["Kenya Sales Tax Report"] = {
 	"filters": [
 		{
 			"fieldname":"company",
@@ -28,31 +28,6 @@ frappe.query_reports["HELB Report"] = {
 			"default": frappe.datetime.get_today(),
 			"reqd": 1,
 			"width": "100px"
-		},
-		{ 
-			"fieldname":"salary_component",
-			"label": __("Salary Component"),
-			"fieldtype": "Link",
-			"options": "Salary Component",
-			'default': "HELB",
-			"width": "100",
-			"reqd": 1
-		},
-		{
-			"fieldname": "currency",
-			"fieldtype": "Link",
-			"options": "Currency",
-			"label": __("Currency"),
-			"default": erpnext.get_currency(frappe.defaults.get_default("Company")),
-			"width": "50px"
-		},
-		{
-			"fieldname":"docstatus",
-			"label":__("Document Status"),
-			"fieldtype":"Select",
-			"options":["Draft", "Submitted", "Cancelled"],
-			"default": "Submitted",
-			"width": "100px"
 		}
 	]
-}
+};

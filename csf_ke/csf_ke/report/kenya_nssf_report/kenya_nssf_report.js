@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["Purchase Tax Report"] = {
+frappe.query_reports["Kenya NSSF Report"] = {
 	"filters": [
 		{
 			"fieldname":"company",
@@ -27,6 +27,31 @@ frappe.query_reports["Purchase Tax Report"] = {
 			"fieldtype": "Date",
 			"default": frappe.datetime.get_today(),
 			"reqd": 1,
+			"width": "100px"
+		},
+		{ 
+			"fieldname":"salary_component",
+			"label": __("Salary Component"),
+			"fieldtype": "Link",
+			"options": "Salary Component",
+			"default":"Employee NSSF",
+			"width": "100",
+			"reqd": 1
+		},
+		{
+			"fieldname": "currency",
+			"fieldtype": "Link",
+			"options": "Currency",
+			"label": __("Currency"),
+			"default": erpnext.get_currency(frappe.defaults.get_default("Company")),
+			"width": "50px"
+		},
+		{
+			"fieldname":"docstatus",
+			"label":__("Document Status"),
+			"fieldtype":"Select",
+			"options":["Draft", "Submitted", "Cancelled"],
+			"default": "Submitted",
 			"width": "100px"
 		}
 

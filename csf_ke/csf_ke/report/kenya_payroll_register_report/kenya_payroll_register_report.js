@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["Sales Tax Report"] = {
+frappe.query_reports["Kenya Payroll Register Report"] = {
 	"filters": [
 		{
 			"fieldname":"company",
@@ -27,6 +27,29 @@ frappe.query_reports["Sales Tax Report"] = {
 			"fieldtype": "Date",
 			"default": frappe.datetime.get_today(),
 			"reqd": 1,
+			"width": "100px"
+		},
+		{
+			"fieldname": "currency",
+			"fieldtype": "Link",
+			"options": "Currency",
+			"label": __("Currency"),
+			"default": erpnext.get_currency(frappe.defaults.get_default("Company")),
+			"width": "50px"
+		},
+		{
+			"fieldname":"employee",
+			"label": __("Employee"),
+			"fieldtype": "Link",
+			"options": "Employee",
+			"width": "100px"
+		},
+		{
+			"fieldname":"docstatus",
+			"label":__("Document Status"),
+			"fieldtype":"Select",
+			"options":["Draft", "Submitted", "Cancelled"],
+			"default": "Submitted",
 			"width": "100px"
 		}
 	]

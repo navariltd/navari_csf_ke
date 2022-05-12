@@ -6,7 +6,7 @@ app_publisher = "Navari Limited"
 app_description = "Country Specific Functionality for Kenya"
 app_icon = "drag"
 app_color = "grey"
-app_email = "solutions@navari.co.ke"
+app_email = "info@navari.co.ke"
 app_license = "GNU General Public License (v3)"
 
 

@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["NSSF Report"] = {
+frappe.query_reports["Kenya NHIF Report"] = {
 	"filters": [
 		{
 			"fieldname":"company",
@@ -34,7 +34,7 @@ frappe.query_reports["NSSF Report"] = {
 			"label": __("Salary Component"),
 			"fieldtype": "Link",
 			"options": "Salary Component",
-			"default":"Employee NSSF",
+			'default': "NHIF",
 			"width": "100",
 			"reqd": 1
 		},

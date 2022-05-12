@@ -1,7 +1,7 @@
 {
  "add_total_row": 1,
  "columns": [],
- "creation": "2021-08-31 13:16:52.127655",
+ "creation": "2022-02-13 13:58:24.615129",
  "disable_prepared_report": 0,
  "disabled": 0,
  "docstatus": 0,
@@ -9,15 +9,21 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "letter_head": "Standard",
- "modified": "2022-02-12 15:40:10.995819",
+ "modified": "2022-05-12 08:57:34.019923",
  "modified_by": "Administrator",
  "module": "CSF KE",
- "name": "Payroll Register",
+ "name": "Kenya Sales Tax Report",
  "owner": "Administrator",
  "prepared_report": 0,
- "ref_doctype": "Salary Slip",
- "report_name": "Payroll Register",
+ "ref_doctype": "Sales Invoice",
+ "report_name": "Kenya Sales Tax Report",
  "report_type": "Script Report",
- "roles": []
+ "roles": [
+  {
+   "role": "HR Manager"
+  },
+  {
+   "role": "HR User"
+  }
+ ]
 }

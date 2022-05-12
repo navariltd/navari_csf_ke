@@ -1,7 +1,7 @@
 {
  "add_total_row": 1,
  "columns": [],
- "creation": "2022-02-13 13:58:24.615129",
+ "creation": "2021-08-31 19:12:45.314328",
  "disable_prepared_report": 0,
  "disabled": 0,
  "docstatus": 0,
@@ -9,21 +9,22 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2022-02-13 13:58:24.615129",
+ "letter_head": "Standard",
+ "modified": "2022-05-12 09:18:44.563186",
  "modified_by": "Administrator",
  "module": "CSF KE",
- "name": "Sales Tax Report",
+ "name": "Kenya Bank Payroll Advice Report",
  "owner": "Administrator",
  "prepared_report": 0,
- "ref_doctype": "Sales Invoice",
- "report_name": "Sales Tax Report",
+ "ref_doctype": "Salary Slip",
+ "report_name": "Kenya Bank Payroll Advice Report",
  "report_type": "Script Report",
  "roles": [
   {
-   "role": "HR Manager"
+   "role": "HR User"
   },
   {
-   "role": "HR User"
+   "role": "HR Manager"
   }
  ]
 }

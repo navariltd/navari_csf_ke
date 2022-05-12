@@ -7,9 +7,9 @@ from frappe import _
 from pypika import functions as fn
 
 def execute(filters=None):
-	return SaleTaxReport(filters).run()
+	return KenyaSalesTaxReport(filters).run()
 
-class SaleTaxReport(object):
+class KenyaSalesTaxReport(object):
 	def __init__(self, filters=None):
 		self.filters = frappe._dict(filters or {})
 

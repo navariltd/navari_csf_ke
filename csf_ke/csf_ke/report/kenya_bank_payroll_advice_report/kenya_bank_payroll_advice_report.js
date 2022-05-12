@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["NHIF Report"] = {
+frappe.query_reports["Kenya Bank Payroll Advice Report"] = {
 	"filters": [
 		{
 			"fieldname":"company",
@@ -29,15 +29,6 @@ frappe.query_reports["NHIF Report"] = {
 			"reqd": 1,
 			"width": "100px"
 		},
-		{ 
-			"fieldname":"salary_component",
-			"label": __("Salary Component"),
-			"fieldtype": "Link",
-			"options": "Salary Component",
-			'default': "NHIF",
-			"width": "100",
-			"reqd": 1
-		},
 		{
 			"fieldname": "currency",
 			"fieldtype": "Link",
@@ -55,4 +46,4 @@ frappe.query_reports["NHIF Report"] = {
 			"width": "100px"
 		}
 	]
-}
+};

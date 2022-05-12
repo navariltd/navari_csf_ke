@@ -17,7 +17,7 @@
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Kenyan Custom Reports",
+   "label": "Kenya Custom Reports",
    "link_type": "DocType",
    "onboard": 0,
    "type": "Card Break"
@@ -25,7 +25,7 @@
   {
    "hidden": 0,
    "is_query_report": 1,
-   "label": "Sales Tax",
+   "label": "Kenya Sales Tax Report",
    "link_to": "Sales Tax Report",
    "link_type": "Report",
    "onboard": 0,
@@ -34,14 +34,14 @@
   {
    "hidden": 0,
    "is_query_report": 1,
-   "label": "Purchase Tax",
+   "label": "Kenya Purchase Tax Report",
    "link_to": "Purchase Tax Report",
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
   }
  ],
- "modified": "2022-05-11 17:36:58.783513",
+ "modified": "2022-05-12 08:46:51.174730",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Accounting Reports",
