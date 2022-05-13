@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2022-05-12 08:57:34.019923",
+ "modified": "2022-05-13 12:27:49.924371",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya Sales Tax Report",
@@ -20,10 +20,10 @@
  "report_type": "Script Report",
  "roles": [
   {
-   "role": "HR Manager"
+   "role": "Accounts User"
   },
   {
-   "role": "HR User"
+   "role": "Accounts Manager"
   }
  ]
 }
