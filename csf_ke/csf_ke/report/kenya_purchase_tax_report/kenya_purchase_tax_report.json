@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2022-05-12 09:02:27.559981",
+ "modified": "2022-05-12 21:14:02.342408",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya Purchase Tax Report",
@@ -21,12 +21,6 @@
  "roles": [
   {
    "role": "Accounts User"
-  },
-  {
-   "role": "Purchase User"
-  },
-  {
-   "role": "Auditor"
   },
   {
    "role": "Accounts Manager"

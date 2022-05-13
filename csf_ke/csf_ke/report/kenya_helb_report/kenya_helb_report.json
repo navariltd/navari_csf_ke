@@ -10,7 +10,7 @@
  "idx": 0,
  "is_standard": "Yes",
  "letter_head": "Standard",
- "modified": "2022-05-12 09:11:05.918376",
+ "modified": "2022-05-12 21:14:45.523627",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya HELB Report",
@@ -25,12 +25,6 @@
   },
   {
    "role": "HR Manager"
-  },
-  {
-   "role": "Employee"
-  },
-  {
-   "role": "Employee Self Service"
   }
  ]
 }
