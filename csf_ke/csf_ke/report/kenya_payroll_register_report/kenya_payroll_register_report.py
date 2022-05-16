@@ -22,8 +22,13 @@ def execute(filters=None):
 
 	data = []
 	for ss in salary_slips:
-		row = [ss.name, ss.employee, ss.employee_name, doj_map.get(ss.employee), ss.bank_name, ss.bank_account_no, ss.branch, ss.department, ss.designation,
-			ss.company, ss.start_date, ss.end_date, ss.leave_without_pay, ss.payment_days]
+		emp_det = doj_map.get(ss.employee)
+		if not emp_det:
+			continue
+
+		row = [ss.name, ss.employee, ss.employee_name, emp_det.date_of_joining, emp_det.national_id, emp_det.nssf_no, emp_det.nhif_no, emp_det.tax_id, 
+		ss.bank_name, ss.bank_account_no, ss.branch, ss.department, ss.designation,
+		ss.company, ss.start_date, ss.end_date, ss.leave_without_pay, ss.payment_days]
 
 		if ss.branch is not None: columns[3] = columns[3].replace('-1','120')
 		if ss.department is not None: columns[4] = columns[4].replace('-1','120')
@@ -60,10 +65,10 @@ def get_columns(salary_slips):
 		_("Employee") + ":Link/Employee:120",
 		_("Employee Name") + "::140",
 		_("Date of Joining") + "::80",
-		_("National ID") + "::80",
-		_("NSSF No") + "::80",
-		_("NHIF No") + "::80",
-		_("KRA Pin") + "::80",
+		_("National ID") + "::90",
+		_("NSSF No") + "::90",
+		_("NHIF No") + "::90",
+		_("KRA Pin") + "::100",
 		_("Bank Name") + ":Link/Salary Slip:100",
 		_("Bank Account No") + ":Link/Salary Slip:120",		
 		_("Branch") + ":Link/Branch:120",
@@ -79,7 +84,8 @@ def get_columns(salary_slips):
 	"""
 	columns = [
 		_("Salary Slip ID") + ":Link/Salary Slip:150",_("Employee") + ":Link/Employee:120", _("Employee Name") + "::140",
-		_("Date of Joining") + "::80",_("Bank Name") + ":Link/Salary Slip:100",_("Bank Account No") + ":Link/Salary Slip:120",
+		_("Date of Joining") + "::80",_("National ID") + "::90",_("NSSF No") + "::90",_("NHIF No") + "::90",
+		_("KRA Pin") + "::100",_("Bank Name") + ":Link/Salary Slip:100",_("Bank Account No") + ":Link/Salary Slip:120",
 		_("Branch") + ":Link/Branch:120", _("Department") + ":Link/Department:120",
 		_("Designation") + ":Link/Designation:120", _("Company") + ":Link/Company:120", _("Start Date") + "::80",
 		_("End Date") + "::80", _("Leave Without Pay") + ":Float:70", _("Payment Days") + ":Float:120"
@@ -124,12 +130,11 @@ def get_conditions(filters, company_currency):
 	return conditions, filters
 
 def get_employee_doj_map():
-	return	frappe._dict(frappe.db.sql("""
-				SELECT
-					employee,
-					date_of_joining
-				FROM `tabEmployee`
-				"""))
+	doj_map = frappe._dict()
+	for d in frappe.db.sql(""" SELECT name, date_of_joining, national_id, nssf_no, nhif_no, tax_id FROM `tabEmployee` """, as_dict=1):
+		doj_map.setdefault(d.name, d)
+
+	return doj_map
 
 def get_ss_earning_map(salary_slips, currency, company_currency):
 	ss_earnings = frappe.db.sql("""select sd.parent, sd.salary_component, sd.amount, ss.exchange_rate, ss.name
