@@ -10,7 +10,7 @@
  "idx": 0,
  "is_standard": "Yes",
  "letter_head": "Standard",
- "modified": "2022-05-12 09:21:17.938751",
+ "modified": "2022-06-06 14:23:32.760289",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya Payroll Register Report",
@@ -19,5 +19,12 @@
  "ref_doctype": "Salary Slip",
  "report_name": "Kenya Payroll Register Report",
  "report_type": "Script Report",
- "roles": []
+ "roles": [
+  {
+   "role": "HR User"
+  },
+  {
+   "role": "HR Manager"
+  }
+ ]
 }
