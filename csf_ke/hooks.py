@@ -22,10 +22,7 @@ fixtures = [
 					"Employee-nhif_no",
 					"Employee-nssf_no",
 					"Employee-tax_id",
-                    "Salary Component-p9a_tax_deduction_card_type",
-                    "Sales Taxes and Charges-hidden",
-                    "Sales Order-hide_total_without_tax",
-                    "Quotation-hide_total_without_tax",									
+                    "Salary Component-p9a_tax_deduction_card_type",								
                 ),
             ]
         ],
