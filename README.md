@@ -1,8 +1,6 @@
-### CSF KE
+### EXPNext Country Specific Functionality for Kenya
 
-EXPNext Country Specific Functionality for Kenya
-
-Includes:
+### Includes:
 
 ### Kenya Payroll Reports
 
