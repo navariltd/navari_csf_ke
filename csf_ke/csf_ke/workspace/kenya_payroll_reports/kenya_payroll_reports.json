@@ -1,14 +1,14 @@
 {
  "charts": [],
  "content": "[{\"type\":\"card\",\"data\":{\"card_name\":\"Kenya Custom Reports\",\"col\":4}}]",
- "creation": "2022-10-29 11:27:10.316004",
+ "creation": "2022-10-29 12:17:01.289790",
  "docstatus": 0,
  "doctype": "Workspace",
  "for_user": "",
  "hide_custom": 0,
  "icon": "file",
  "idx": 0,
- "label": "Payroll Reports",
+ "label": "Kenya Payroll Reports",
  "links": [
   {
    "hidden": 0,
@@ -70,7 +70,7 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
+   "is_query_report": 1,
    "label": "P9A Tax Deduction Card Report",
    "link_count": 0,
    "link_to": "Kenya P9A Tax Deduction Card Report",
@@ -79,10 +79,10 @@
    "type": "Link"
   }
  ],
- "modified": "2022-10-29 11:34:26.341106",
+ "modified": "2022-10-29 12:22:22.395542",
  "modified_by": "Administrator",
  "module": "CSF KE",
- "name": "Payroll Reports",
+ "name": "Kenya Payroll Reports",
  "owner": "Administrator",
  "parent_page": "Payroll",
  "public": 1,
@@ -90,5 +90,5 @@
  "roles": [],
  "sequence_id": 40.0,
  "shortcuts": [],
- "title": "Payroll Reports"
+ "title": "Kenya Payroll Reports"
 }

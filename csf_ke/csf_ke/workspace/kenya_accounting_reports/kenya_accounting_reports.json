@@ -1,14 +1,14 @@
 {
  "charts": [],
  "content": "[{\"type\":\"card\",\"data\":{\"card_name\":\"Kenya Custom Reports\",\"col\":4}}]",
- "creation": "2022-10-29 11:20:20.596313",
+ "creation": "2022-10-29 12:10:07.260427",
  "docstatus": 0,
  "doctype": "Workspace",
  "for_user": "",
  "hide_custom": 0,
  "icon": "file",
  "idx": 0,
- "label": "Accounting Reports",
+ "label": "Kenya Accounting Reports",
  "links": [
   {
    "hidden": 0,
@@ -21,7 +21,7 @@
   {
    "hidden": 0,
    "is_query_report": 1,
-   "label": "Sales Tax Reports",
+   "label": "Sales Tax Report",
    "link_count": 0,
    "link_to": "Kenya Sales Tax Report",
    "link_type": "Report",
@@ -39,10 +39,10 @@
    "type": "Link"
   }
  ],
- "modified": "2022-10-29 11:24:26.358429",
+ "modified": "2022-10-29 12:15:20.987860",
  "modified_by": "Administrator",
  "module": "CSF KE",
- "name": "Accounting Reports",
+ "name": "Kenya Accounting Reports",
  "owner": "Administrator",
  "parent_page": "Accounting",
  "public": 1,
@@ -50,5 +50,5 @@
  "roles": [],
  "sequence_id": 39.0,
  "shortcuts": [],
- "title": "Accounting Reports"
+ "title": "Kenya Accounting Reports"
 }
