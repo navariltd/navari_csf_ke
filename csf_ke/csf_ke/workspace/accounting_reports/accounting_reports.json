@@ -1,35 +1,27 @@
 {
  "charts": [],
- "creation": "2022-05-11 17:08:31.110809",
+ "content": "[{\"type\":\"card\",\"data\":{\"card_name\":\"Kenya Custom Reports\",\"col\":4}}]",
+ "creation": "2022-10-29 11:20:20.596313",
  "docstatus": 0,
  "doctype": "Workspace",
- "extends": "Accounting",
- "extends_another_page": 1,
- "hide_custom": 0,
- "idx": 0,
- "is_default": 0,
- "label": "Accounting Reports",
  "for_user": "",
- "parent_page": "",
- "public": 1,
- "restrict_to_domain": "",
- "roles": [],
- "sequence_id": 31,
- "title": "Build",
+ "hide_custom": 0,
+ "icon": "file",
+ "idx": 0,
+ "label": "Accounting Reports",
  "links": [
   {
    "hidden": 0,
    "is_query_report": 0,
    "label": "Kenya Custom Reports",
-   "link_count": 0,
-   "link_type": "DocType",
+   "link_count": 2,
    "onboard": 0,
    "type": "Card Break"
   },
   {
    "hidden": 0,
    "is_query_report": 1,
-   "label": "Sales Tax Report",
+   "label": "Sales Tax Reports",
    "link_count": 0,
    "link_to": "Kenya Sales Tax Report",
    "link_type": "Report",
@@ -47,10 +39,16 @@
    "type": "Link"
   }
  ],
- "modified": "2022-05-12 21:11:47.946554",
+ "modified": "2022-10-29 11:24:26.358429",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Accounting Reports",
  "owner": "Administrator",
- "shortcuts": []
+ "parent_page": "Accounting",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 39.0,
+ "shortcuts": [],
+ "title": "Accounting Reports"
 }
