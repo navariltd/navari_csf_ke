@@ -1,19 +1,19 @@
 {
  "charts": [],
- "content": "[{\"type\":\"card\",\"data\":{\"card_name\":\"Kenya Custom Reports\",\"col\":4}}]",
- "creation": "2022-10-29 12:17:01.289790",
+ "content": "[{\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px;\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"type\":\"card\",\"data\":{\"card_name\":\"Payroll Reports\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Accounting Reports\",\"col\":4}}]",
+ "creation": "2022-11-03 16:41:03.405594",
  "docstatus": 0,
  "doctype": "Workspace",
  "for_user": "",
  "hide_custom": 0,
  "icon": "file",
  "idx": 0,
- "label": "Kenya Payroll Reports",
+ "label": "Kenya",
  "links": [
   {
    "hidden": 0,
    "is_query_report": 0,
-   "label": "Kenya Custom Reports",
+   "label": "Payroll Reports",
    "link_count": 6,
    "onboard": 0,
    "type": "Card Break"
@@ -77,18 +77,46 @@
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Accounting Reports",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Sales Tax Report",
+   "link_count": 0,
+   "link_to": "Kenya Sales Tax Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Purchase Tax Report",
+   "link_count": 0,
+   "link_to": "Kenya Purchase Tax Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2022-10-29 12:22:22.395542",
+ "modified": "2022-11-03 17:10:36.187531",
  "modified_by": "Administrator",
  "module": "CSF KE",
- "name": "Kenya Payroll Reports",
+ "name": "Kenya",
  "owner": "Administrator",
- "parent_page": "Payroll",
+ "parent_page": "",
  "public": 1,
  "quick_lists": [],
  "roles": [],
- "sequence_id": 40.0,
+ "sequence_id": 41.0,
  "shortcuts": [],
- "title": "Kenya Payroll Reports"
+ "title": "Kenya"
 }
