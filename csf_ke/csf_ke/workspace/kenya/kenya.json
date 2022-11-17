@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px;\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"type\":\"card\",\"data\":{\"card_name\":\"Payroll Reports\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Accounting Reports\",\"col\":4}}]",
+ "content": "[{\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px;\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"type\":\"card\",\"data\":{\"card_name\":\"Accounting Reports\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Payroll Reports\",\"col\":4}}]",
  "creation": "2022-11-03 16:41:03.405594",
  "docstatus": 0,
  "doctype": "Workspace",
@@ -107,7 +107,7 @@
    "type": "Link"
   }
  ],
- "modified": "2022-11-03 17:10:36.187531",
+ "modified": "2022-11-04 08:46:10.431488",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya",
