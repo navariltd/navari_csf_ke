@@ -12,12 +12,17 @@ def execute(filters=None):
 class KenyaSalesTaxReport(object):
 	def __init__(self, filters=None):
 		self.filters = frappe._dict(filters or {})
+		self.registered_customers_total_sales = 0
+		self.registered_customers_total_vat = 0
+		self.unregistered_customers_total_sales = 0
+		self.unregistered_customers_total_vat = 0
 
 	def run(self):
 		columns = self.get_columns()
 		data = self.get_data()
+		report_summary = self.get_report_summary()
 
-		return columns, data
+		return columns, data, None, None, report_summary
  
 	def get_columns(self):
 		columns =  [
@@ -113,7 +118,7 @@ class KenyaSalesTaxReport(object):
 
 		company, from_date, to_date, is_return, tax_template = self.filters.company, self.filters.from_date, self.filters.to_date, self.filters.is_return, self.filters.tax_template
 
-		conditions = " AND 1=1 "
+		conditions = " AND sales_invoice.docstatus = 1 "
 
 		if(company):
 			conditions += f" AND sales_invoice.company = '{company}'"
@@ -132,7 +137,7 @@ class KenyaSalesTaxReport(object):
 				sales_invoice.etr_invoice_number as etr_invoice_number,
 				sales_invoice.posting_date as invoice_date,
 				sales_invoice.name as invoice_name,
-				sales_invoice.total as invoice_total_sales,
+				sales_invoice.base_grand_total as invoice_total_sales,
 				sales_invoice.return_against as return_against
 			FROM 
     			`tabSales Invoice` as `sales_invoice`
@@ -198,16 +203,39 @@ class KenyaSalesTaxReport(object):
 				else:
 					unregistered_customers_sales_invoice_entries += [report_entry]	
 
-		registered_customers_total_sales = 0
-		registered_customers_total_vat = 0
 		for entry in registered_customers_sales_invoice_entries:
-			registered_customers_total_sales += entry['invoice_total_sales']
-			registered_customers_total_vat += entry['amount_of_vat']
+			self.registered_customers_total_sales += entry['invoice_total_sales']
+			self.registered_customers_total_vat += entry['amount_of_vat']
 
-		unregistered_customers_total_sales = 0
-		unregistered_customers_total_vat = 0
 		for entry in unregistered_customers_sales_invoice_entries:
-			unregistered_customers_total_sales += entry['invoice_total_sales']
-			unregistered_customers_total_vat += entry['amount_of_vat']
-	
+			self.unregistered_customers_total_sales += entry['invoice_total_sales']
+			self.unregistered_customers_total_vat += entry['amount_of_vat']
+
 		return report_details
+	
+	def get_report_summary(self):
+		return [{
+			"value": self.registered_customers_total_sales,
+			"indicator": "Green",
+			"label": _("Registered customers total sales"),
+			"datatype": "Currency",
+			"currency": "KES"
+		}, {
+			"value": self.registered_customers_total_vat,
+			"indicator": "Green",
+			"label": _("Registered customers total VAT"),
+			"datatype": "Currency",
+			"currency": "KES"
+		}, {
+			"value": self.unregistered_customers_total_sales,
+			"indicator": "Green",
+			"label": _("Unregistered customers total sales"),
+			"datatype": "Currency",
+			"currency": "KES"
+		}, {
+			"value": self.unregistered_customers_total_vat,
+			"indicator": "Green",
+			"label": _("Registered customers total VAT"),
+			"datatype": "Currency",
+			"currency": "KES"
+		}]
