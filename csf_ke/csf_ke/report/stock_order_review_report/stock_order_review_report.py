@@ -43,19 +43,19 @@ def _execute(filters):
     
     columns = [
         {
+			'fieldname': 'warehouse',
+			'label': _('Warehouse/Branch'),
+			'fieldtype': 'Link',
+			'options': 'Warehouse',
+            'width': '200px'
+		},
+        {
             'fieldname': 'item_name',
             'label': 'Item',
             'fieldtype': 'Data',
             'options': 'bold',
             'width': '200px'
         },
-        {
-			'fieldname': 'warehouse',
-			'label': _('Warehouse'),
-			'fieldtype': 'Link',
-			'options': 'Warehouse',
-            'width': '200px'
-		},
 		{
 			'fieldname': 'qty',
 			'label': _('Requested Qty'),
