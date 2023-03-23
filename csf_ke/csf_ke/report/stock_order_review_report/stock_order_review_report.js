@@ -38,7 +38,7 @@ frappe.query_reports["Stock Order Review Report"] = {
             label: __("Warehouse"),
             fieldtype: "Link",
             options: "Warehouse",
-            reqd: 0
+            reqd: 1
         },
         {
             fieldname: "item",
