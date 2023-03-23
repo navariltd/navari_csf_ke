@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\":\"fu_Qea0T9L\",\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px;\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"ez66GJZq3i\",\"type\":\"card\",\"data\":{\"card_name\":\"Accounting Reports\",\"col\":4}},{\"id\":\"7bKksk7AZV\",\"type\":\"card\",\"data\":{\"card_name\":\"Payroll Reports\",\"col\":4}},{\"id\":\"i1JrRsq5Ak\",\"type\":\"card\",\"data\":{\"card_name\":\"Stock Order Review\",\"col\":4}}]",
+ "content": "[{\"id\":\"fu_Qea0T9L\",\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px;\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"ez66GJZq3i\",\"type\":\"card\",\"data\":{\"card_name\":\"Accounting Reports\",\"col\":4}},{\"id\":\"7bKksk7AZV\",\"type\":\"card\",\"data\":{\"card_name\":\"Payroll Reports\",\"col\":4}}]",
  "creation": "2022-11-03 16:41:03.405594",
  "docstatus": 0,
  "doctype": "Workspace",
@@ -106,27 +106,9 @@
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Stock Order Review",
-   "link_count": 1,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Stock Order review report",
-   "link_count": 0,
-   "link_to": "Stock Order Review Report",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
   }
  ],
- "modified": "2023-03-22 11:15:57.674711",
+ "modified": "2023-03-23 14:33:59.055815",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya",
