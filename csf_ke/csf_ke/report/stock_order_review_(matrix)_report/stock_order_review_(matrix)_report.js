@@ -2,8 +2,8 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["Stock Order Review Report"] = {
-    "filters": [
+frappe.query_reports["Stock Order Review (Matrix) Report"] = {
+	"filters": [
         {
             fieldname: "company",
             label: __("Company"),
@@ -38,7 +38,7 @@ frappe.query_reports["Stock Order Review Report"] = {
             label: __("Stock Request From"),
             fieldtype: "Select",
             options: ["Branch Stock Request", "Region Stock Allocation"],
-            default: "",
+            default: "Branch Stock Request",
         },
         {
             fieldname: "item",
