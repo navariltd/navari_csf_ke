@@ -95,8 +95,11 @@ def _execute(filters):
 
     # add child warehouses, indent respoctive of position from parent warehouse.
     for warehouse in warehouses:
+        if warehouse['indent'] > 0:
+            warehouse['totals_warehouse'] = frappe.db.get_value('Warehouse', warehouse['name'], 'parent_warehouse')
+
         if warehouse['is_group']:
-            data.append({ 'warehouse': warehouse['name'], 'indent': warehouse['indent'] })
+            data.append({ 'warehouse': warehouse['name'], 'indent': warehouse['indent'], 'totals_warehouse': warehouse.get('totals_warehouse'), 'allocated_qty': 0, 'qty': 0, 'actual_qty_at_lc': 0, 'branch_target_qty': 0 })
             insert_index = warehouses.index(warehouse) + 1 
             # warehouse has children. Get children.
             temp_warehouses = frappe.db.get_all('Warehouse', filters = { 'parent_warehouse': warehouse['name'], 'warehouse_type': ['in', ['Branch', 'Region', 'SubRegion', 'LC']] }, fields = [ 'name', 'is_group'])
@@ -105,7 +108,7 @@ def _execute(filters):
             # append children immediately after parent warehouse. Useful when building tree later.
             warehouses[ insert_index:insert_index ] = temp_warehouses
         else:
-            data.append({ 'warehouse': warehouse['name'], 'indent': warehouse['indent'] })
+            data.append({ 'warehouse': warehouse['name'], 'indent': warehouse['indent'], 'totals_warehouse': warehouse.get('totals_warehouse'), 'allocated_qty': 0, 'qty': 0, 'actual_qty_at_lc': 0, 'branch_target_qty': 0 })
 
     warehouse_names = list(map(lambda warehouse: warehouse['name'], warehouses))
     for warehouse in warehouse_names:
@@ -135,45 +138,49 @@ def _execute(filters):
     
     for row in data:
         if row['warehouse'] in warehouses_with_orders:
+            # pick all items for a particular warehouse
             items = seen.get(row['warehouse'])
 
             for item_code in items:
-                # from user filter
+                # if we have the user filtering through items
                 if item:
+                    # item code does not match in this iteration, skip
                     if item_code != item:
                         continue
                     else:
+                        # continue with execution flow
                         pass
 
+                # set some additional keys and values to the dict we are going to append to 'data'
                 items[item_code]['item_name'] = item_code
                 items[item_code]['indent'] = row['indent'] + 1
                 items[item_code]['warehouse'] = ''
 
                 # sum ordered qty for the whole branch
-                if row.get('qty'):
-                    row['qty'] += items[item_code]['qty']
-                else:
-                    row['qty'] = items[item_code]['qty']
+                row['qty'] += items[item_code]['qty']
 
                 # sum allocated_qty for the whole branch
-                if row.get('allocated_qty'):
-                    row['allocated_qty'] += items[item_code]['allocated_qty']
-                else:
-                    row['allocated_qty'] = items[item_code]['allocated_qty']
+                row['allocated_qty'] += items[item_code]['allocated_qty']
 
                 # branch target qry is just the same, no need to keep changing/adding on every loop
-                if not row.get('branch_target_qty'):
+                if not row['branch_target_qty']:
                     row['branch_target_qty'] = items[item_code]['branch_target_qty']
 
                 # total qty available at LC, for the ordered items
                 actual_qty_at_lc = items[item_code]['actual_qty_at_lc'] if items[item_code]['actual_qty_at_lc'] else 0
-                if row.get('actual_qty_at_lc'):
-                    row['actual_qty_at_lc'] += actual_qty_at_lc
-                else:
-                    row['actual_qty_at_lc'] = actual_qty_at_lc
-                
+                row['actual_qty_at_lc'] += actual_qty_at_lc
+
                 insert_index = data.index(row) + 1
                 data.insert(insert_index, items[item_code])
+
+            totals_row = list(filter(lambda x: x['warehouse'] == row['totals_warehouse'], data))
+            while totals_row:
+                totals_row = totals_row[0]
+                totals_row['qty'] += row['qty']
+                totals_row['allocated_qty'] += row['allocated_qty']
+                totals_row['branch_target_qty'] += row['branch_target_qty']
+                totals_row['actual_qty_at_lc'] += row['actual_qty_at_lc']
+                totals_row = list(filter(lambda x: x['warehouse'] == totals_row['totals_warehouse'], data))
         
     return columns, data
 
