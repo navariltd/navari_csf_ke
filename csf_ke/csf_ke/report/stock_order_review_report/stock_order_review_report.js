@@ -27,13 +27,6 @@ frappe.query_reports["Stock Order Review Report"] = {
             reqd: 1
         },
         {
-            fieldname: "values",
-            label: __("Values"),
-            fieldtype: "Select",
-            options: ["Allocated Quantity", "Requested Quantity", "Actual Quantity At LC", "Branch Target Quantity"],
-            default: "Allocated Quantity",
-        },
-        {
             fieldname: "stock_request_from",
             label: __("Stock Request From"),
             fieldtype: "Select",

@@ -27,6 +27,13 @@ def _execute(filters):
     if(company):
         conditions += f" AND sor.company = '{company}'"
 
+    warehouses = ''
+
+    if stock_request_from == 'Branch Stock Request':
+        warehouses = frappe.db.get_all('Warehouse', filters = { 'warehouse_type': 'SubRegion' }, fields = [ 'name', 'is_group', 'warehouse_type' ])
+    elif stock_request_from == 'Region Stock Allocation':
+        warehouses = frappe.db.get_all('Warehouse', filters = { 'warehouse_type': 'Region' }, fields = [ 'name', 'is_group', 'warehouse_type' ])
+
     stock_order_reviews = frappe.db.sql(f"""
         SELECT sor.name as "name"
         FROM `tabStock Order Review` as sor
@@ -67,14 +74,6 @@ def _execute(filters):
                 }
             ]
     
-    warehouses = ''
-
-    if stock_request_from == 'Branch Stock Request':
-        warehouses = frappe.db.get_all('Warehouse', filters = { 'warehouse_type': 'SubRegion' }, fields = [ 'name', 'is_group', 'warehouse_type' ])
-    elif stock_request_from == 'Region Stock Allocation':
-        warehouses = frappe.db.get_all('Warehouse', filters = { 'warehouse_type': 'Region' }, fields = [ 'name', 'is_group', 'warehouse_type' ])
-
-
     # Parent warehouses, the very top.
     for warehouse in warehouses:
         warehouse['indent'] = 0
