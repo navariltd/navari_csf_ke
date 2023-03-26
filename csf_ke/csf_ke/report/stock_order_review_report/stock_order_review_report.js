@@ -31,7 +31,7 @@ frappe.query_reports["Stock Order Review Report"] = {
             label: __("Stock Request From"),
             fieldtype: "Select",
             options: ["Branch Stock Request", "Region Stock Allocation"],
-            default: "",
+            default: "Branch Stock Request",
         },
         {
             fieldname: "item",
