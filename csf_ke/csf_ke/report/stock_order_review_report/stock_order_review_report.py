@@ -3,6 +3,7 @@
 
 import frappe
 from frappe import _
+import math
     
 def execute(filters=None):
     if filters.from_date > filters.to_date:
@@ -48,16 +49,16 @@ def _execute(filters):
         {
             'fieldname': 'branch_target_qty',
             'label': _('Branch Target Qty'),
-            'fieldtype': 'Float'
+            'fieldtype': 'Int'
         },
         {
             'fieldname': 'actual_qty_at_lc',
             'label': _('Actual Qty At LC'),
-            'fieldtype': 'Float'
+            'fieldtype': 'Int'
         }
     ]
 
-    conditions = " AND 1=1 "
+    conditions = " AND sor.docstatus = 1 "
     if(company):
         conditions += f" AND sor.company = '{company}'"
 
@@ -124,15 +125,21 @@ def _execute(filters):
                         seen[warehouse][item_code] = {}
                         seen[warehouse][item_code]['allocated_qty'] = stock_item['allocated_qty']
                         seen[warehouse][item_code]['qty'] = stock_item['qty']
-                        seen[warehouse][item_code]['branch_target_qty'] = get_branch_target_qty(warehouse)
-                        seen[warehouse][item_code]['actual_qty_at_lc'] = frappe.db.sql(f"SELECT SUM(actual_qty) FROM tabBin WHERE item_code = '{item_code}' AND warehouse = '{default_lc_warehouse}'", as_list=True)[0][0]
+                        branch_target_qty = get_branch_target_qty(warehouse)
+                        seen[warehouse][item_code]['branch_target_qty'] = math.ceil(branch_target_qty / 25)
+                        actual_qty_at_lc = frappe.db.sql(f"SELECT SUM(actual_qty) FROM tabBin WHERE item_code = '{item_code}' AND warehouse = '{default_lc_warehouse}'", as_list=True)[0][0]
+                        actual_qty_at_lc = math.ceil(actual_qty_at_lc /25) if actual_qty_at_lc else 0
+                        seen[warehouse][item_code]['actual_qty_at_lc'] = actual_qty_at_lc
                 else:
                     seen[warehouse] = {}
                     seen[warehouse][item_code] = {}
                     seen[warehouse][item_code]['allocated_qty'] = stock_item['allocated_qty']
                     seen[warehouse][item_code]['qty'] = stock_item['qty']
-                    seen[warehouse][item_code]['branch_target_qty'] = get_branch_target_qty(warehouse)
-                    seen[warehouse][item_code]['actual_qty_at_lc'] = frappe.db.sql(f"SELECT SUM(actual_qty) FROM tabBin WHERE item_code = '{item_code}' AND warehouse = '{default_lc_warehouse}'", as_list=True)[0][0]
+                    branch_target_qty = get_branch_target_qty(warehouse)
+                    seen[warehouse][item_code]['branch_target_qty'] = math.ceil(branch_target_qty / 25)
+                    actual_qty_at_lc = frappe.db.sql(f"SELECT SUM(actual_qty) FROM tabBin WHERE item_code = '{item_code}' AND warehouse = '{default_lc_warehouse}'", as_list=True)[0][0]
+                    actual_qty_at_lc = math.ceil(actual_qty_at_lc /25) if actual_qty_at_lc else 0
+                    seen[warehouse][item_code]['actual_qty_at_lc'] = actual_qty_at_lc
 
     warehouses_with_orders = list(seen.keys())
     
