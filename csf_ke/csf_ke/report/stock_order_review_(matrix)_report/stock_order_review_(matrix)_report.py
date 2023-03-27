@@ -3,7 +3,6 @@
 
 import frappe
 from frappe import _
-import math
     
 def execute(filters=None):
     if filters.from_date > filters.to_date:
@@ -98,7 +97,7 @@ def _execute(filters):
     if display_values == 'Branch Target Quantity':
         for row in data:
             target_qty = get_branch_target_qty(row['warehouse'])
-            target_qty = math.ceil(target_qty / 25)
+            target_qty = round(target_qty / 25)
             row['branch_target_qty'] = target_qty
 
             totals_row = list(filter(lambda item: item['warehouse'] == row['totals_warehouse'], data))
@@ -112,7 +111,7 @@ def _execute(filters):
             default_lc_warehouse = frappe.db.get_value('Warehouse', row['warehouse'], 'default_lc_warehouse')
             for item in items:
                 actual_qty_at_lc = frappe.db.sql(f"SELECT SUM(actual_qty) FROM tabBin WHERE item_code = '{item}' AND warehouse = '{default_lc_warehouse}'", as_list=True)[0][0]
-                actual_qty_at_lc = math.ceil(actual_qty_at_lc / 25) if actual_qty_at_lc else 0
+                actual_qty_at_lc = round(actual_qty_at_lc / 25) if actual_qty_at_lc else 0
                 row[item] = actual_qty_at_lc
     elif display_values == 'Allocated Quantity':
         for row in data:
