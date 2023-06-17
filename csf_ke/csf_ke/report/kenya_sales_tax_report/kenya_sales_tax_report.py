@@ -38,18 +38,18 @@ class KenyaSalesTaxReport(object):
 					"fieldtype": "Data",
 					"width": 240
 				},
-				{
-					"label": _("ETR Serial Number"),
-					"fieldname": "etr_serial_number",
-					"fieldtype": "Data",
-					"width": 200
-				},
-				{
-					"label": _("ETR Invoice Number"),
-					"fieldname": "etr_invoice_number",
-					"fieldtype": "Data",
-					"width": 200
-				},
+				# {
+				# 	"label": _("ETR Serial Number"),
+				# 	"fieldname": "etr_serial_number",
+				# 	"fieldtype": "Data",
+				# 	"width": 200
+				# },
+				# {
+				# 	"label": _("ETR Invoice Number"),
+				# 	"fieldname": "etr_invoice_number",
+				# 	"fieldtype": "Data",
+				# 	"width": 200
+				# },
 				{
 					"label":_("Invoice Date"),
 					"fieldname": "invoice_date",
@@ -156,7 +156,7 @@ class KenyaSalesTaxReport(object):
 			if tax_template:
 				condition_tax_template += f"AND sales_invoice_item.item_tax_template = '{tax_template}'"
 
-			items_services = frappe.db.sql(f"""
+			items_or_services = frappe.db.sql(f"""
 				SELECT 
 					sales_invoice_item.description as description_of_goods_services,
 					sales_invoice_item.amount as amount,
@@ -171,24 +171,20 @@ class KenyaSalesTaxReport(object):
 			total_taxable_value = 0
 			total_vat = 0
 
-			for item_service in items_services:
+			for item_or_service in items_or_services:
 				# get tax rate for each item and calculate VAT
 				tax_rate = frappe.db.get_value('Item Tax Template Detail',
-					{'parent': item_service['item_tax_template']},
+					{'parent': item_or_service['item_tax_template']},
 					['tax_rate'])
-				item_service['amount_of_vat'] = item_service['taxable_value'] * 0 if not tax_rate else item_service['taxable_value'] * (tax_rate / 100)
+				item_or_service['amount_of_vat'] = 0 if not tax_rate else item_or_service['taxable_value'] * (tax_rate / 100)
 
-				total_taxable_value += item_service['taxable_value']
-				total_vat += item_service['amount_of_vat']
-				item_service['indent'] = 1
-				report_details.append(item_service)
+				total_taxable_value += item_or_service['taxable_value']
+				total_vat += item_or_service['amount_of_vat']
+				item_or_service['indent'] = 1
+				report_details.append(item_or_service)
 
 			sales_invoice['taxable_value'] = total_taxable_value
-			total_taxable_value = 0 #reset total_taxable_value to zero for the next sales invoice
 			sales_invoice['amount_of_vat'] = total_vat
-			total_vat = 0 #reset total_vat to zero for the next sales invoice
-
-			
 
 		report_details = list(filter(lambda report_entry: report_entry['taxable_value'], report_details))
 
@@ -235,7 +231,7 @@ class KenyaSalesTaxReport(object):
 		}, {
 			"value": self.unregistered_customers_total_vat,
 			"indicator": "Green",
-			"label": _("Registered customers total VAT"),
+			"label": _("Unregistered customers total VAT"),
 			"datatype": "Currency",
 			"currency": "KES"
 		}]
