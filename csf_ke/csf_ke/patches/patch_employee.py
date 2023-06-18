@@ -6,47 +6,47 @@ def execute():
         "Employee": [
             {
                 "collapsible": 1,
-                "fieldname": "statutory_details",
+                "fieldname": "statutory",
                 "fieldtype": "Section Break",
-                "insert_after": "personal_details",
                 "label": "Statutory Details",
-                "translatable": 1
+                "translatable": 1,
+                "insert_after": "personal_details"
             },
             {
                 "fieldname": "national_id",
                 "fieldtype": "Data",
-                "insert_after": "statutory_details",
                 "label": "National ID",
-                "translatable": 1
+                "translatable": 1,
+                "insert_after": "statutory"
             },
             {
                 "fieldname": "nssf_no",
                 "fieldtype": "Data",
-                "insert_after": "national_id",
                 "label": "NSSF No",
-                "translatable": 1
+                "translatable": 1,
+                "insert_after": "national_id"
             },
             {
-                "fieldname": "column_break_statutory_details_01",
+                "fieldname": "sd_column_break",
                 "fieldtype": "Column Break",
                 "insert_after": "nssf_no"
             },
             {
                 "fieldname": "nhif_no",
                 "fieldtype": "Data",
-                "insert_after": "column_break_statutory_details_01",
                 "label": "NHIF No",
-                "translatable": 1
+                "translatable": 1,
+                "insert_after": "sd_column_break"
             },
             {
                 "fieldname": "tax_id",
                 "fieldtype": "Data",
-                "insert_after": "nhif_no",
                 "label": "Tax ID",
-                "translatable": 1
+                "translatable": 1,
+                "insert_after": "nhif_no"
             },
             {
-                "fieldname": "section_break_statutory_details_01",
+                "fieldname": "sd_section_break",
                 "fieldtype": "Section Break",
                 "insert_after": "tax_id"
             }
