@@ -1,5 +1,5 @@
 {
- "add_total_row": 1,
+ "add_total_row": 0,
  "columns": [],
  "creation": "2022-02-13 13:58:24.615129",
  "disable_prepared_report": 0,
@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2023-02-20 09:05:11.320506",
+ "modified": "2023-06-19 13:37:57.950417",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya Sales Tax Report",
