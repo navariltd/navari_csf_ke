@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px;\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"type\":\"card\",\"data\":{\"card_name\":\"Accounting Reports\",\"col\":4}},{\"type\":\"card\",\"data\":{\"card_name\":\"Payroll Reports\",\"col\":4}}]",
+ "content": "[{\"id\":\"fu_Qea0T9L\",\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px;\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"ez66GJZq3i\",\"type\":\"card\",\"data\":{\"card_name\":\"Accounting Reports\",\"col\":4}},{\"id\":\"7bKksk7AZV\",\"type\":\"card\",\"data\":{\"card_name\":\"Payroll Reports\",\"col\":4}}]",
  "creation": "2022-11-03 16:41:03.405594",
  "docstatus": 0,
  "doctype": "Workspace",
@@ -8,6 +8,7 @@
  "hide_custom": 0,
  "icon": "file",
  "idx": 0,
+ "is_hidden": 0,
  "label": "Kenya",
  "links": [
   {
@@ -107,10 +108,11 @@
    "type": "Link"
   }
  ],
- "modified": "2022-11-04 08:46:10.431488",
+ "modified": "2023-03-23 14:33:59.055815",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya",
+ "number_cards": [],
  "owner": "Administrator",
  "parent_page": "",
  "public": 1,

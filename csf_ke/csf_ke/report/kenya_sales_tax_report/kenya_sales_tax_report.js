@@ -28,6 +28,23 @@ frappe.query_reports["Kenya Sales Tax Report"] = {
 			"default": frappe.datetime.get_today(),
 			"reqd": 1,
 			"width": "100px"
+		},
+		{
+			"fieldname":"is_return",
+			"label": __("Is Return"),
+			"fieldtype": "Select",
+			"options": ["","Is Return","Normal Sales Invoice"],
+			"default": "",
+			"reqd": 0,
+			"width": "100px"
+		},
+		{
+			"fieldname":"tax_template",
+			"label": __("Tax Template"),
+			"fieldtype": "Link",
+			"options": "Item Tax Template",
+			"reqd": 0,
+			"width": "100px"
 		}
 	]
 };
