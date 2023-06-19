@@ -27,8 +27,9 @@ def execute():
                 "insert_after": "national_id"
             },
             {
-                "fieldname": "sd_column_break",
+                "fieldname": "column_break_csf_emp_01",
                 "fieldtype": "Column Break",
+                "Label": "",
                 "insert_after": "nssf_no"
             },
             {
@@ -36,7 +37,7 @@ def execute():
                 "fieldtype": "Data",
                 "label": "NHIF No",
                 "translatable": 1,
-                "insert_after": "sd_column_break"
+                "insert_after": "column_break_csf_emp_01"
             },
             {
                 "fieldname": "tax_id",
@@ -53,4 +54,4 @@ def execute():
         ]
     }
 
-    create_custom_fields(custom_fields)
+    create_custom_fields(custom_fields, update=True)
