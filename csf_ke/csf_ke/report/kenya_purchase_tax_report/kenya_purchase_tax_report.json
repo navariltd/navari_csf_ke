@@ -1,5 +1,5 @@
 {
- "add_total_row": 1,
+ "add_total_row": 0,
  "columns": [],
  "creation": "2022-02-13 13:59:04.797779",
  "disable_prepared_report": 0,
@@ -9,7 +9,7 @@
  "filters": [],
  "idx": 0,
  "is_standard": "Yes",
- "modified": "2022-05-12 21:14:02.342408",
+ "modified": "2023-06-20 11:31:15.774789",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya Purchase Tax Report",
