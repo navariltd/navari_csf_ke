@@ -47,8 +47,9 @@ def execute():
                 "insert_after": "nhif_no"
             },
             {
-                "fieldname": "sd_section_break",
+                "fieldname": "section_break_csf_emp_01",
                 "fieldtype": "Section Break",
+                "Label": "",
                 "insert_after": "tax_id"
             }
         ]

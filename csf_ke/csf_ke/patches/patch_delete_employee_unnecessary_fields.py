@@ -8,3 +8,4 @@ def execute():
     frappe.delete_doc("Custom Field", "Employee-section_break_statutory_details_01", force=True)
     frappe.delete_doc("Custom Field", "Employee-statutory_details", force=True)
     frappe.delete_doc("Custom Field", "Employee-sd_column_break", force=True)
+    frappe.delete_doc("Custom Field", "Employee-sd_section_break", force=True)
