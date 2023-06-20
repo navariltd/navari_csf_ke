@@ -116,7 +116,11 @@ class KenyaSalesTaxReport(object):
 		if self.filters.from_date > self.filters.to_date:
 			frappe.throw(_("To Date cannot be before From Date. {}").format(self.filters.to_date))
 
-		company, from_date, to_date, is_return, tax_template = self.filters.company, self.filters.from_date, self.filters.to_date, self.filters.is_return, self.filters.tax_template
+		company = self.filters.company
+		from_date = self.filters.from_date
+		to_date = self.filters.to_date
+		is_return = self.filters.is_return
+		tax_template = self.filters.tax_template
 
 		conditions = " AND sales_invoice.docstatus = 1 "
 
