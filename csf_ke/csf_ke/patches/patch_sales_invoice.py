@@ -9,6 +9,7 @@ def execute():
                 "label": "ETR Data",
                 "fieldtype": "Tab Break",
                 "insert_after": "timesheets",
+                "allow_on_submit": True,
                 "translatable": 1
             },
             {
@@ -17,6 +18,7 @@ def execute():
                 "fieldtype": "Data",
                 "collapsible": 0,
                 "insert_after": "etr_data",
+                "allow_on_submit": True,
                 "translatable": 1
             },
             {
@@ -24,6 +26,7 @@ def execute():
                 "fieldtype": "Column Break",
                 "collapsible": 0,
                 "insert_after": "etr_serial_number",
+                "allow_on_submit": True,
                 "translatable": 1
             },
             {
@@ -32,6 +35,7 @@ def execute():
                 "fieldtype": "Data",
                 "collapsible": 0,
                 "insert_after": "etr_column_break",
+                "allow_on_submit": True,
                 "translatable": 1
             }
         ]
