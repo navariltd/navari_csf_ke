@@ -18,11 +18,11 @@ fixtures = [
                 "name",
                 "in",
                 (
-                   	"Employee-national_id",
-					"Employee-nhif_no",
-					"Employee-nssf_no",
-					"Employee-tax_id",
-                    "Salary Component-p9a_tax_deduction_card_type",								
+                    "Employee-national_id",
+                    "Employee-nhif_no",
+                    "Employee-nssf_no",
+                    "Employee-tax_id",
+                    "Salary Component-p9a_tax_deduction_card_type",
                 ),
             ]
         ],
@@ -64,7 +64,7 @@ fixtures = [
 
 # website user home page (by Role)
 # role_home_page = {
-#	"Role": "home_page"
+# 	"Role": "home_page"
 # }
 
 # Generators
@@ -120,7 +120,7 @@ fixtures = [
 # 		"on_update": "method",
 # 		"on_cancel": "method",
 # 		"on_trash": "method"
-#	}
+# 	}
 # }
 
 # Scheduled Tasks
@@ -172,24 +172,22 @@ fixtures = [
 # --------------------
 
 user_data_fields = [
-	{
-		"doctype": "{doctype_1}",
-		"filter_by": "{filter_by}",
-		"redact_fields": ["{field_1}", "{field_2}"],
-		"partial": 1,
-	},
-	{
-		"doctype": "{doctype_2}",
-		"filter_by": "{filter_by}",
-		"partial": 1,
-	},
-	{
-		"doctype": "{doctype_3}",
-		"strict": False,
-	},
-	{
-		"doctype": "{doctype_4}"
-	}
+    {
+        "doctype": "{doctype_1}",
+        "filter_by": "{filter_by}",
+        "redact_fields": ["{field_1}", "{field_2}"],
+        "partial": 1,
+    },
+    {
+        "doctype": "{doctype_2}",
+        "filter_by": "{filter_by}",
+        "partial": 1,
+    },
+    {
+        "doctype": "{doctype_3}",
+        "strict": False,
+    },
+    {"doctype": "{doctype_4}"},
 ]
 
 # Authentication and authorization
