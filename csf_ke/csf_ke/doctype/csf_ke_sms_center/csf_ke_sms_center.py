@@ -9,7 +9,7 @@ from frappe.model.document import Document
 from frappe.utils import cstr
 
 
-class CSFSMSCenter(Document):
+class CSFKESMSCenter(Document):
     @frappe.whitelist()
     def create_receiver_list(self):
         rec, where_clause = "", ""

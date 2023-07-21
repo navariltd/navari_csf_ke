@@ -3,7 +3,8 @@
 
 # import frappe
 from frappe.tests.utils import FrappeTestCase
+from .csf_ke_sms_center import CSFKESMSCenter
 
 
-class TestCSFSMSCenter(FrappeTestCase):
-	pass
+class TestCSFKESMSCenter(FrappeTestCase):
+    pass
