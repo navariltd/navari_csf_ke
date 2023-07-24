@@ -5,7 +5,6 @@ import frappe
 from frappe.model.document import Document
 from frappe import _, msgprint
 from frappe.core.doctype.sms_settings.sms_settings import send_sms
-from frappe.model.document import Document
 from frappe.utils import cstr
 
 
@@ -15,9 +14,9 @@ class CSFKESMSCenter(Document):
         rec, where_clause = "", ""
         if self.send_to == "All Customer Contact":
             where_clause = """ and dl.link_doctype = 'Customer'
-				and cu.unsubscribed = 0
-				and char_length(c.mobile_no) > 8
-			"""
+                and cu.unsubscribed = 0
+                and char_length(c.mobile_no) > 8
+            """
 
             if self.customer:
                 where_clause += (
@@ -25,8 +24,17 @@ class CSFKESMSCenter(Document):
                     or " and ifnull(dl.link_name, '') != ''"
                 )
 
-            if self.start_date and self.end_date:
+            if self.customer_group:
+                where_clause += f" and cu.customer_group = '{self.customer_group}'"
+
+            if self.start_date and self.end_date and self.end_date > self.start_date:
                 where_clause += f" and si.posting_date between '{self.start_date}' and '{self.end_date}'"
+
+            elif self.start_date:
+                where_clause += f" and si.posting_date >= '{self.start_date}'"
+
+            elif self.end_date:
+                where_clause += f" and si.posting_date <= '{self.end_date}'"
 
         if self.send_to == "All Supplier Contact":
             where_clause = " and dl.link_doctype = 'Supplier'"
@@ -45,12 +53,11 @@ class CSFKESMSCenter(Document):
 
         if self.send_to == "All Customer Contact":
             rec = frappe.db.sql(
-                """select distinct(CONCAT(ifnull(c.first_name,''), ' ', ifnull(c.last_name,''))), c.mobile_no
-				from `tabContact` c, `tabDynamic Link` dl INNER JOIN `tabCustomer` cu ON dl.link_name = cu.name
-				left join `tabSales Invoice` si on cu.name = si.customer_name
-				where ifnull(c.mobile_no,'')!='' and
-				c.docstatus != 2 and dl.parent = c.name%s"""
-                % where_clause
+                f"""select distinct(CONCAT(ifnull(c.first_name,''), ' ', ifnull(c.last_name,''))), c.mobile_no
+                from `tabContact` c, `tabDynamic Link` dl INNER JOIN `tabCustomer` cu ON dl.link_name = cu.name
+                left join `tabSales Invoice` si on cu.name = si.customer_name
+                where ifnull(c.mobile_no,'')!='' and
+                c.docstatus != 2 and dl.parent = c.name{where_clause}"""
             )
 
         elif self.send_to in [
@@ -59,18 +66,28 @@ class CSFKESMSCenter(Document):
             "All Sales Partner Contact",
         ]:
             rec = frappe.db.sql(
-                """select CONCAT(ifnull(c.first_name,''), ' ', ifnull(c.last_name,'')),
-				c.mobile_no from `tabContact` c, `tabDynamic Link` dl 
-				where ifnull(c.mobile_no,'')!='' and
-				c.docstatus != 2 and dl.parent = c.name%s"""
-                % where_clause
+                f"""select distinct(CONCAT(ifnull(c.first_name,''), ' ', ifnull(c.last_name,''))), c.mobile_no 
+                from `tabContact` c, `tabDynamic Link` dl 
+                where ifnull(c.mobile_no,'')!='' and
+                c.docstatus != 2 and dl.parent = c.name{where_clause}"""
             )
 
         elif self.send_to == "All Lead (Open)":
-            rec = frappe.db.sql(
-                """select lead_name, mobile_no from `tabLead` where
-				ifnull(mobile_no,'')!='' and docstatus != 2 and status='Open'"""
-            )
+            query = """select lead_name, mobile_no from `tabLead` where
+                ifnull(mobile_no,'')!='' and docstatus != 2 and status='Open'"""
+
+            if self.start_date and self.end_date and self.start_date > self.end_date:
+                query += (
+                    f" and creation between '{self.start_date}' and '{self.end_date}'"
+                )
+
+            elif self.start_date:
+                query += f" and creation >= '{self.start_date}'"
+
+            elif self.end_date:
+                query += f" and creation <= '{self.end_date}'"
+
+            rec = frappe.db.sql(query)
 
         elif self.send_to == "All Employee (Active)":
             where_clause = (
@@ -85,18 +102,17 @@ class CSFKESMSCenter(Document):
             )
 
             rec = frappe.db.sql(
-                """select employee_name, cell_number from
-				`tabEmployee` where status = 'Active' and docstatus < 2 and
-				ifnull(cell_number,'')!='' %s"""
-                % where_clause
+                f"""select employee_name, cell_number from
+                `tabEmployee` where status = 'Active' and docstatus < 2 and
+                ifnull(cell_number,'')!='' {where_clause}"""
             )
 
         elif self.send_to == "All Sales Person":
             rec = frappe.db.sql(
                 """select sales_person_name,
-				tabEmployee.cell_number from `tabSales Person` left join tabEmployee
-				on `tabSales Person`.employee = tabEmployee.name
-				where ifnull(tabEmployee.cell_number,'')!=''"""
+                tabEmployee.cell_number from `tabSales Person` left join tabEmployee
+                on `tabSales Person`.employee = tabEmployee.name
+                where ifnull(tabEmployee.cell_number,'')!=''"""
             )
 
         rec_list = ""
