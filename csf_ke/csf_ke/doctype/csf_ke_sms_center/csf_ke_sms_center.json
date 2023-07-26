@@ -124,7 +124,7 @@
       "options": "Customer Group"
     },
     {
-      "depends_on": "eval:doc.send_to === 'All Customer Contact';",
+      "depends_on": "eval:doc.send_to === 'All Customer Contact' || doc.send_to === 'All Lead (Open)';",
       "fieldname": "territory",
       "fieldtype": "Link",
       "label": "Territory",
@@ -133,7 +133,7 @@
   ],
   "issingle": 1,
   "links": [],
-  "modified": "2023-07-26 16:25:43.284396",
+  "modified": "2023-07-26 16:55:28.012739",
   "modified_by": "Administrator",
   "module": "CSF KE",
   "name": "CSF KE SMS Center",

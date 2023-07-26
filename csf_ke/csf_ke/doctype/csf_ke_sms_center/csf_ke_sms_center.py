@@ -79,6 +79,9 @@ class CSFKESMSCenter(Document):
             query = """select lead_name, mobile_no from `tabLead` where
                 ifnull(mobile_no,'')!='' and docstatus != 2 and status='Open'"""
 
+            if self.territory:
+                query += f" and territory = '{self.territory}'"
+
             if self.start_date and self.end_date and self.start_date > self.end_date:
                 query += (
                     f" and creation between '{self.start_date}' and '{self.end_date}'"
@@ -143,7 +146,9 @@ class CSFKESMSCenter(Document):
         receiver_list = []
         if not self.message:
             msgprint(_("Please enter message before sending"))
+
         else:
             receiver_list = self.get_receiver_nos()
+
         if receiver_list:
             send_sms(receiver_list, cstr(self.message))
