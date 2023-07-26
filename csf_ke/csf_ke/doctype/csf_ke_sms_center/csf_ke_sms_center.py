@@ -27,6 +27,9 @@ class CSFKESMSCenter(Document):
             if self.customer_group:
                 where_clause += f" and cu.customer_group = '{self.customer_group}'"
 
+            if self.territory:
+                where_clause += f" and cu.territory = '{self.territory}'"
+
             if self.start_date and self.end_date and self.end_date > self.start_date:
                 where_clause += f" and si.posting_date between '{self.start_date}' and '{self.end_date}'"
 

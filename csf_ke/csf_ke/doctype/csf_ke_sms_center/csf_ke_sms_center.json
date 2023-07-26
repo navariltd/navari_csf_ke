@@ -15,6 +15,7 @@
     "sales_partner",
     "department",
     "branch",
+    "territory",
     "create_receiver_list",
     "receiver_list",
     "column_break_xmwe",
@@ -104,13 +105,13 @@
       "label": "Send SMS"
     },
     {
-      "depends_on": "eval:doc.send_to === 'All Customer Contact' || doc.send_to === 'All Lead (Open)';",
+      "depends_on": "eval:((doc.send_to === 'All Customer Contact') || (doc.send_to === 'All Lead (Open)'));",
       "fieldname": "start_date",
       "fieldtype": "Date",
       "label": "Start Date"
     },
     {
-      "depends_on": "eval:doc.send_to === 'All Customer Contact' || doc.send_to === 'All Lead (Open)';",
+      "depends_on": "eval:doc.send_to === 'All Lead (Open)' || doc.send_to === 'All Customer Contact';",
       "fieldname": "end_date",
       "fieldtype": "Date",
       "label": "End Date"
@@ -121,11 +122,18 @@
       "fieldtype": "Link",
       "label": "Customer Group",
       "options": "Customer Group"
+    },
+    {
+      "depends_on": "eval:doc.send_to === 'All Customer Contact';",
+      "fieldname": "territory",
+      "fieldtype": "Link",
+      "label": "Territory",
+      "options": "Territory"
     }
   ],
   "issingle": 1,
   "links": [],
-  "modified": "2023-07-24 10:20:01.304084",
+  "modified": "2023-07-26 16:25:43.284396",
   "modified_by": "Administrator",
   "module": "CSF KE",
   "name": "CSF KE SMS Center",
