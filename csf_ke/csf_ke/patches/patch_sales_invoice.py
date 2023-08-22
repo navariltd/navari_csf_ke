@@ -33,9 +33,7 @@ def execute():
             {
                 "fieldname": "etr_column_break",
                 "fieldtype": "Column Break",
-                "collapsible": 0,
                 "insert_after": "cu_invoice_date",
-                "allow_on_submit": True,
                 "translatable": 1
             },
             {
