@@ -2,22 +2,13 @@ import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 def execute():
-
-    # Had created these fields in previous patches, delete to clear employee doctype
-    frappe.delete_doc("Custom Field", "Employee-column_break_84", force=True)
-    frappe.delete_doc("Custom Field", "Employee-section_break_87", force=True)
-    frappe.delete_doc("Custom Field", "Employee-column_break_statutory_details_01", force=True)
-    frappe.delete_doc("Custom Field", "Employee-section_break_statutory_details_01", force=True)
-    frappe.delete_doc("Custom Field", "Employee-statutory_details", force=True)
-    frappe.delete_doc("Custom Field", "Employee-sd_column_break", force=True)
-    frappe.delete_doc("Custom Field", "Employee-sd_section_break", force=True)
     frappe.delete_doc("Custom Field", "Employee-statutory", force=True)
     frappe.delete_doc("Custom Field", "Employee-national_id", force=True)
     frappe.delete_doc("Custom Field", "Employee-nssf_no", force=True)
-    frappe.delete_doc("Custom Field", "Employee-column_break_csf_emp_01", force=True)
+    frappe.delete_doc("Custom Field", "Employee-cb_csf_emp_01", force=True)
     frappe.delete_doc("Custom Field", "Employee-nhif_no", force=True)
     frappe.delete_doc("Custom Field", "Employee-tax_id", force=True)
-    frappe.delete_doc("Custom Field", "Employee-section_break_csf_emp_01", force=True)
+    frappe.delete_doc("Custom Field", "Employee-sb_csf_emp_01", force=True)
 
     custom_fields = {
         "Employee": [
@@ -46,7 +37,7 @@ def execute():
             {
                 "fieldname": "cb_csf_emp_01",
                 "fieldtype": "Column Break",
-                "Label": "",
+                "label": "",
                 "insert_after": "nssf_no"
             },
             {
@@ -66,9 +57,42 @@ def execute():
             {
                 "fieldname": "sb_csf_emp_01",
                 "fieldtype": "Section Break",
-                "label": "",
                 "insert_after": "tax_id"
-            }
+            },
+            {
+                "fieldname": "probation_start_date",
+                "label": "Probation Start Date",
+                "fieldtype": "Date",
+                "insert_after": "col_break_22",
+                "translatable": 1
+            },
+            {
+                "fieldname": "probation_end_date",
+                "label": "Probation End Date",
+                "fieldtype": "Date",
+                "insert_after": "probation_start_date",
+                "translatable": 1
+            },
+            {
+                "fieldname": "cb_navari_vf_emp_01",
+                "fieldtype": "Column Break",
+                "insert_after": "probation_end_date",
+                "translatable": 1
+            },
+            {
+                "fieldname": "contract_start_date",
+                "label": "Contract Start Date",
+                "fieldtype": "Date",
+                "insert_after": "final_confirmation_date",
+                "translatable": 1
+            },
+            {
+                "fieldname": "bank_branch_name",
+                "fieldtype": "Data",
+                "label": "Bank Branch Name",
+                "translatable": 1,
+                "insert_after": "bank_name"
+            },
         ]
     }
 
