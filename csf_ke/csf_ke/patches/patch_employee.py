@@ -58,7 +58,41 @@ def execute():
                 "fieldname": "sb_csf_emp_01",
                 "fieldtype": "Section Break",
                 "insert_after": "tax_id"
-            }
+            },
+            {
+                "fieldname": "probation_start_date",
+                "label": "Probation Start Date",
+                "fieldtype": "Date",
+                "insert_after": "col_break_22",
+                "translatable": 1
+            },
+            {
+                "fieldname": "probation_end_date",
+                "label": "Probation End Date",
+                "fieldtype": "Date",
+                "insert_after": "probation_start_date",
+                "translatable": 1
+            },
+            {
+                "fieldname": "cb_navari_vf_emp_01",
+                "fieldtype": "Column Break",
+                "insert_after": "probation_end_date",
+                "translatable": 1
+            },
+            {
+                "fieldname": "contract_start_date",
+                "label": "Contract Start Date",
+                "fieldtype": "Date",
+                "insert_after": "final_confirmation_date",
+                "translatable": 1
+            },
+            {
+                "fieldname": "bank_branch_name",
+                "fieldtype": "Data",
+                "label": "Bank Branch Name",
+                "translatable": 1,
+                "insert_after": "bank_name"
+            },
         ]
     }
 

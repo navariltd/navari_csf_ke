@@ -1,3 +1,7 @@
 csf_ke.csf_ke.patches.patch_sales_invoice #31 July 2023 12:37
 csf_ke.csf_ke.patches.patch_purchase_invoice #31 July 2023 12:24
-csf_ke.csf_ke.patches.patch_employee #22 August 2023 13:39
+csf_ke.csf_ke.patches.patch_employee #23 August 2023 11:15
+csf_ke.csf_ke.patches.job_offer_valid_date #23 August 2023 11:15
+csf_ke.csf_ke.patches.employee_separation_type #23 August 2023 11:15
+csf_ke.csf_ke.patches.appointment_letter_introduction #23 August 2023 11:15
+csf_ke.csf_ke.patches.appointment_letter_template_introduction #23 August 2023 11:15
