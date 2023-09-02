@@ -38,18 +38,18 @@ class KenyaSalesTaxReport(object):
 					"fieldtype": "Data",
 					"width": 240
 				},
-				{
-					"label": _("ETR Serial Number"),
-					"fieldname": "etr_serial_number",
-					"fieldtype": "Data",
-					"width": 200
-				},
-				{
-					"label": _("ETR Invoice Number"),
-					"fieldname": "etr_invoice_number",
-					"fieldtype": "Data",
-					"width": 200
-				},
+				# {
+				# 	"label": _("ETR Serial Number"),
+				# 	"fieldname": "etr_serial_number",
+				# 	"fieldtype": "Data",
+				# 	"width": 200
+				# },
+				# {
+				# 	"label": _("ETR Invoice Number"),
+				# 	"fieldname": "etr_invoice_number",
+				# 	"fieldtype": "Data",
+				# 	"width": 200
+				# },
 				{
 					"label":_("Invoice Date"),
 					"fieldname": "invoice_date",
@@ -62,12 +62,6 @@ class KenyaSalesTaxReport(object):
 					"fieldtype": "Link",
 					"options": "Sales Invoice",
 					"width": 200
-				},
-				{
-					"label": _("Description of Goods/Services"),
-					"fieldname": "description_of_goods_services",
-					"fieldtype": "Data",
-					"width": 280
 				},
 				{
 					"label": _("Taxable Value(Ksh)"),
@@ -170,7 +164,7 @@ class KenyaSalesTaxReport(object):
 				total_taxable_value += item_or_service['taxable_value']
 				total_vat += item_or_service['amount_of_vat']
 				item_or_service['indent'] = 1
-				report_details.append(item_or_service)
+				# report_details.append(item_or_service)
 
 			sales_invoice['taxable_value'] = total_taxable_value
 			sales_invoice['amount_of_vat'] = total_vat
