@@ -164,7 +164,6 @@ class KenyaSalesTaxReport(object):
 				total_taxable_value += item_or_service['taxable_value']
 				total_vat += item_or_service['amount_of_vat']
 				item_or_service['indent'] = 1
-				# report_details.append(item_or_service)
 
 			sales_invoice['taxable_value'] = total_taxable_value
 			sales_invoice['amount_of_vat'] = total_vat
