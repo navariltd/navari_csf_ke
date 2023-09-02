@@ -132,7 +132,6 @@ class KenyaPurchaseTaxReport(object):
 
 			items_or_services = frappe.db.sql(f"""
 				SELECT 
-					purchase_invoice_item.description as description_of_goods_services,
 					purchase_invoice_item.amount as amount,
 					purchase_invoice_item.base_net_amount as taxable_value,
 					purchase_invoice_item.item_tax_template as item_tax_template
