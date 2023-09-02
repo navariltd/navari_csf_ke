@@ -39,12 +39,6 @@ class KenyaPurchaseTaxReport(object):
 					"width": 240
 				},
 				{
-					"label": _("ETR Serial Number"),
-					"fieldname": "etr_serial_number",
-					"fieldtype": "Data",
-					"width": 200
-				},
-				{
 					"label": _("ETR Invoice Number"),
 					"fieldname": "etr_invoice_number",
 					"fieldtype": "Data",
@@ -62,12 +56,6 @@ class KenyaPurchaseTaxReport(object):
 					"fieldtype": "Link",
 					"options": "Purchase Invoice",
 					"width": 200
-				},
-				{
-					"label": _("Description of Goods/Services"),
-					"fieldname": "description_of_goods_services",
-					"fieldtype": "Data",
-					"width": 280
 				},
 				{
 					"label": _("Taxable Value(Ksh)"),
@@ -120,7 +108,6 @@ class KenyaPurchaseTaxReport(object):
 			SELECT
 				IFNULL(supplier.tax_id, NULL) as pin_of_supplier,
 				purchase_invoice.supplier_name as name_of_supplier,
-				purchase_invoice.etr_serial_number as etr_serial_number,
 				purchase_invoice.etr_invoice_number as etr_invoice_number,
 				purchase_invoice.posting_date as invoice_date,
 				purchase_invoice.name as invoice_name,
@@ -168,7 +155,6 @@ class KenyaPurchaseTaxReport(object):
 				total_taxable_value += item_or_service['taxable_value']
 				total_vat += item_or_service['amount_of_vat']
 				item_or_service['indent'] = 1
-				report_details.append(item_or_service)
 
 			purchase_invoice['taxable_value'] = total_taxable_value
 			purchase_invoice['amount_of_vat'] = total_vat
