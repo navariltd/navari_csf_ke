@@ -38,18 +38,18 @@ class KenyaSalesTaxReport(object):
 					"fieldtype": "Data",
 					"width": 240
 				},
-				# {
-				# 	"label": _("ETR Serial Number"),
-				# 	"fieldname": "etr_serial_number",
-				# 	"fieldtype": "Data",
-				# 	"width": 200
-				# },
-				# {
-				# 	"label": _("ETR Invoice Number"),
-				# 	"fieldname": "etr_invoice_number",
-				# 	"fieldtype": "Data",
-				# 	"width": 200
-				# },
+				{
+					"label": _("ETR Serial Number"),
+					"fieldname": "etr_serial_number",
+					"fieldtype": "Data",
+					"width": 200
+				},
+				{
+					"label": _("ETR Invoice Number"),
+					"fieldname": "etr_invoice_number",
+					"fieldtype": "Data",
+					"width": 200
+				},
 				{
 					"label":_("Invoice Date"),
 					"fieldname": "invoice_date",
