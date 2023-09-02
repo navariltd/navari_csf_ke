@@ -94,21 +94,6 @@ class KenyaSalesTaxReport(object):
 				}
 			]
 
-		# columns += [
-		# 	{
-		# 		"label":_("Relevant Invoice Number"),
-		# 		"fieldname": "relevant_invoice_number",
-		# 		"fieldtype": "Data",
-		# 		"width": 200
-		# 	},
-		# 	{
-		# 		"label":_("Relevant Invoice Date"),
-		# 		"fieldname": "relevant_invoice_date",
-		# 		"fieldtype": "Date",
-		# 		"width": 200
-		# 	}
-		# ]
-
 		return columns
 	
 
