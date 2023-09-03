@@ -39,18 +39,6 @@ class KenyaSalesTaxReport(object):
 					"width": 240
 				},
 				{
-					"label": _("ETR Serial Number"),
-					"fieldname": "etr_serial_number",
-					"fieldtype": "Data",
-					"width": 200
-				},
-				{
-					"label": _("ETR Invoice Number"),
-					"fieldname": "etr_invoice_number",
-					"fieldtype": "Data",
-					"width": 200
-				},
-				{
 					"label":_("Invoice Date"),
 					"fieldname": "invoice_date",
 					"fieldtype": "Date",
@@ -63,6 +51,30 @@ class KenyaSalesTaxReport(object):
 					"options": "Sales Invoice",
 					"width": 200
 				},
+				{
+					"label": _("ETR Serial Number"),
+					"fieldname": "etr_serial_number",
+					"fieldtype": "Data",
+					"width": 200
+				},
+				{
+					"label": _("ETR Invoice Number"),
+					"fieldname": "etr_invoice_number",
+					"fieldtype": "Data",
+					"width": 200
+				},
+				{
+					"fieldname": _("cu_link"),
+					"label": "CU Link",
+					"fieldtype": "Data",
+					"width": 200
+            	},
+				{
+					"label": _("CU Invoice Date"),
+					"fieldname": "cu_invoice_date",
+					"fieldtype": "Date",
+					"width": 200
+           		},
 				{
 					"label": _("Taxable Value(Ksh)"),
 					"fieldname": "taxable_value",
@@ -118,6 +130,8 @@ class KenyaSalesTaxReport(object):
 				sales_invoice.customer_name as name_of_purchaser,
 				sales_invoice.etr_serial_number as etr_serial_number,
 				sales_invoice.etr_invoice_number as etr_invoice_number,
+				sales_invoice.cu_link as cu_link,
+				sales_invoice.cu_invoice_date as cu_invoice_date,
 				sales_invoice.posting_date as invoice_date,
 				sales_invoice.name as invoice_name,
 				sales_invoice.base_grand_total as invoice_total_sales,
