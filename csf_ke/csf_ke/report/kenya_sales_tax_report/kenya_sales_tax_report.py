@@ -106,9 +106,9 @@ class KenyaSalesTaxReport(object):
 		if(company):
 			conditions += f" AND sales_invoice.company = '{company}'"
 		if(is_return == "Is Return"):
-			conditions += f" AND sales_invoice.is_return = 1"
+			conditions += " AND sales_invoice.is_return = 1"
 		if(is_return == "Normal Sales Invoice"):
-			conditions += f" AND sales_invoice.is_return = 0"
+			conditions += " AND sales_invoice.is_return = 0"
 
 		report_details = []
 
@@ -169,24 +169,13 @@ class KenyaSalesTaxReport(object):
 
 		report_details = list(filter(lambda report_entry: report_entry['taxable_value'], report_details))
 
-		# separate registered_customer and unregistered customer invoices.
-		registered_customers_sales_invoice_entries = []
-		unregistered_customers_sales_invoice_entries = []
-
 		for report_entry in report_details: 
-			if 'invoice_name' in report_entry:
-				if report_entry['pin_of_purchaser']:
-					registered_customers_sales_invoice_entries += [report_entry]
-				else:
-					unregistered_customers_sales_invoice_entries += [report_entry]	
-
-		for entry in registered_customers_sales_invoice_entries:
-			self.registered_customers_total_sales += entry['invoice_total_sales']
-			self.registered_customers_total_vat += entry['amount_of_vat']
-
-		for entry in unregistered_customers_sales_invoice_entries:
-			self.unregistered_customers_total_sales += entry['invoice_total_sales']
-			self.unregistered_customers_total_vat += entry['amount_of_vat']
+			if report_entry['pin_of_purchaser']:
+				self.registered_customers_total_sales += report_entry['invoice_total_sales']
+				self.registered_customers_total_vat += report_entry['amount_of_vat']
+			else:
+				self.unregistered_customers_total_sales += report_entry['invoice_total_sales']
+				self.unregistered_customers_total_vat += report_entry['amount_of_vat']
 
 		return report_details
 	

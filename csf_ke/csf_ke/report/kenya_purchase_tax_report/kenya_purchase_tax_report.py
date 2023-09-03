@@ -98,9 +98,9 @@ class KenyaPurchaseTaxReport(object):
 		if(company):
 			conditions += f" AND purchase_invoice.company = '{company}'"
 		if(is_return == "Is Return"):
-			conditions += f" AND purchase_invoice.is_return = 1"
+			conditions += " AND purchase_invoice.is_return = 1"
 		if(is_return == "Normal Purchase Invoice"):
-			conditions += f" AND purchase_invoice.is_return = 0"
+			conditions += " AND purchase_invoice.is_return = 0"
 
 		report_details = []
 
@@ -160,24 +160,13 @@ class KenyaPurchaseTaxReport(object):
 
 		report_details = list(filter(lambda report_entry: report_entry['taxable_value'], report_details))
 
-		# separate registered_supplier and unregistered supplier invoices.
-		registered_suppliers_purchase_invoice_entries = []
-		unregistered_suppliers_purchase_invoice_entries = []
-
 		for report_entry in report_details: 
-			if 'invoice_name' in report_entry:
-				if report_entry['pin_of_supplier']:
-					registered_suppliers_purchase_invoice_entries += [report_entry]
-				else:
-					unregistered_suppliers_purchase_invoice_entries += [report_entry]	
-
-		for entry in registered_suppliers_purchase_invoice_entries:
-			self.registered_suppliers_total_purchases += entry['invoice_total_purchases']
-			self.registered_suppliers_total_vat += entry['amount_of_vat']
-
-		for entry in unregistered_suppliers_purchase_invoice_entries:
-			self.unregistered_suppliers_total_purchases += entry['invoice_total_purchases']
-			self.unregistered_suppliers_total_vat += entry['amount_of_vat']
+			if report_entry['pin_of_supplier']:
+				self.registered_suppliers_total_purchases += report_entry['invoice_total_purchases']
+				self.registered_suppliers_total_vat += report_entry['amount_of_vat']
+			else:
+				self.unregistered_suppliers_total_purchases += report_entry['invoice_total_purchases']	
+				self.unregistered_suppliers_total_vat += report_entry['amount_of_vat']
 
 		return report_details
 
