@@ -39,12 +39,6 @@ class KenyaPurchaseTaxReport(object):
 					"width": 240
 				},
 				{
-					"label": _("ETR Serial Number"),
-					"fieldname": "etr_serial_number",
-					"fieldtype": "Data",
-					"width": 200
-				},
-				{
 					"label": _("ETR Invoice Number"),
 					"fieldname": "etr_invoice_number",
 					"fieldtype": "Data",
@@ -62,12 +56,6 @@ class KenyaPurchaseTaxReport(object):
 					"fieldtype": "Link",
 					"options": "Purchase Invoice",
 					"width": 200
-				},
-				{
-					"label": _("Description of Goods/Services"),
-					"fieldname": "description_of_goods_services",
-					"fieldtype": "Data",
-					"width": 280
 				},
 				{
 					"label": _("Taxable Value(Ksh)"),
@@ -110,9 +98,9 @@ class KenyaPurchaseTaxReport(object):
 		if(company):
 			conditions += f" AND purchase_invoice.company = '{company}'"
 		if(is_return == "Is Return"):
-			conditions += f" AND purchase_invoice.is_return = 1"
+			conditions += " AND purchase_invoice.is_return = 1"
 		if(is_return == "Normal Purchase Invoice"):
-			conditions += f" AND purchase_invoice.is_return = 0"
+			conditions += " AND purchase_invoice.is_return = 0"
 
 		report_details = []
 
@@ -120,7 +108,6 @@ class KenyaPurchaseTaxReport(object):
 			SELECT
 				IFNULL(supplier.tax_id, NULL) as pin_of_supplier,
 				purchase_invoice.supplier_name as name_of_supplier,
-				purchase_invoice.etr_serial_number as etr_serial_number,
 				purchase_invoice.etr_invoice_number as etr_invoice_number,
 				purchase_invoice.posting_date as invoice_date,
 				purchase_invoice.name as invoice_name,
@@ -145,7 +132,6 @@ class KenyaPurchaseTaxReport(object):
 
 			items_or_services = frappe.db.sql(f"""
 				SELECT 
-					purchase_invoice_item.description as description_of_goods_services,
 					purchase_invoice_item.amount as amount,
 					purchase_invoice_item.base_net_amount as taxable_value,
 					purchase_invoice_item.item_tax_template as item_tax_template
@@ -168,31 +154,19 @@ class KenyaPurchaseTaxReport(object):
 				total_taxable_value += item_or_service['taxable_value']
 				total_vat += item_or_service['amount_of_vat']
 				item_or_service['indent'] = 1
-				report_details.append(item_or_service)
 
 			purchase_invoice['taxable_value'] = total_taxable_value
 			purchase_invoice['amount_of_vat'] = total_vat
 
 		report_details = list(filter(lambda report_entry: report_entry['taxable_value'], report_details))
 
-		# separate registered_supplier and unregistered supplier invoices.
-		registered_suppliers_purchase_invoice_entries = []
-		unregistered_suppliers_purchase_invoice_entries = []
-
 		for report_entry in report_details: 
-			if 'invoice_name' in report_entry:
-				if report_entry['pin_of_supplier']:
-					registered_suppliers_purchase_invoice_entries += [report_entry]
-				else:
-					unregistered_suppliers_purchase_invoice_entries += [report_entry]	
-
-		for entry in registered_suppliers_purchase_invoice_entries:
-			self.registered_suppliers_total_purchases += entry['invoice_total_purchases']
-			self.registered_suppliers_total_vat += entry['amount_of_vat']
-
-		for entry in unregistered_suppliers_purchase_invoice_entries:
-			self.unregistered_suppliers_total_purchases += entry['invoice_total_purchases']
-			self.unregistered_suppliers_total_vat += entry['amount_of_vat']
+			if report_entry['pin_of_supplier']:
+				self.registered_suppliers_total_purchases += report_entry['invoice_total_purchases']
+				self.registered_suppliers_total_vat += report_entry['amount_of_vat']
+			else:
+				self.unregistered_suppliers_total_purchases += report_entry['invoice_total_purchases']	
+				self.unregistered_suppliers_total_vat += report_entry['amount_of_vat']
 
 		return report_details
 

@@ -39,18 +39,6 @@ class KenyaSalesTaxReport(object):
 					"width": 240
 				},
 				{
-					"label": _("ETR Serial Number"),
-					"fieldname": "etr_serial_number",
-					"fieldtype": "Data",
-					"width": 200
-				},
-				{
-					"label": _("ETR Invoice Number"),
-					"fieldname": "etr_invoice_number",
-					"fieldtype": "Data",
-					"width": 200
-				},
-				{
 					"label":_("Invoice Date"),
 					"fieldname": "invoice_date",
 					"fieldtype": "Date",
@@ -64,11 +52,29 @@ class KenyaSalesTaxReport(object):
 					"width": 200
 				},
 				{
-					"label": _("Description of Goods/Services"),
-					"fieldname": "description_of_goods_services",
+					"label": _("ETR Serial Number"),
+					"fieldname": "etr_serial_number",
 					"fieldtype": "Data",
-					"width": 280
+					"width": 200
 				},
+				{
+					"label": _("ETR Invoice Number"),
+					"fieldname": "etr_invoice_number",
+					"fieldtype": "Data",
+					"width": 200
+				},
+				{
+					"fieldname": _("cu_link"),
+					"label": "CU Link",
+					"fieldtype": "Data",
+					"width": 200
+            	},
+				{
+					"label": _("CU Invoice Date"),
+					"fieldname": "cu_invoice_date",
+					"fieldtype": "Date",
+					"width": 200
+           		},
 				{
 					"label": _("Taxable Value(Ksh)"),
 					"fieldname": "taxable_value",
@@ -94,21 +100,6 @@ class KenyaSalesTaxReport(object):
 				}
 			]
 
-		# columns += [
-		# 	{
-		# 		"label":_("Relevant Invoice Number"),
-		# 		"fieldname": "relevant_invoice_number",
-		# 		"fieldtype": "Data",
-		# 		"width": 200
-		# 	},
-		# 	{
-		# 		"label":_("Relevant Invoice Date"),
-		# 		"fieldname": "relevant_invoice_date",
-		# 		"fieldtype": "Date",
-		# 		"width": 200
-		# 	}
-		# ]
-
 		return columns
 	
 
@@ -127,9 +118,9 @@ class KenyaSalesTaxReport(object):
 		if(company):
 			conditions += f" AND sales_invoice.company = '{company}'"
 		if(is_return == "Is Return"):
-			conditions += f" AND sales_invoice.is_return = 1"
+			conditions += " AND sales_invoice.is_return = 1"
 		if(is_return == "Normal Sales Invoice"):
-			conditions += f" AND sales_invoice.is_return = 0"
+			conditions += " AND sales_invoice.is_return = 0"
 
 		report_details = []
 
@@ -139,6 +130,8 @@ class KenyaSalesTaxReport(object):
 				sales_invoice.customer_name as name_of_purchaser,
 				sales_invoice.etr_serial_number as etr_serial_number,
 				sales_invoice.etr_invoice_number as etr_invoice_number,
+				sales_invoice.cu_link as cu_link,
+				sales_invoice.cu_invoice_date as cu_invoice_date,
 				sales_invoice.posting_date as invoice_date,
 				sales_invoice.name as invoice_name,
 				sales_invoice.base_grand_total as invoice_total_sales,
@@ -162,7 +155,6 @@ class KenyaSalesTaxReport(object):
 
 			items_or_services = frappe.db.sql(f"""
 				SELECT 
-					sales_invoice_item.description as description_of_goods_services,
 					sales_invoice_item.amount as amount,
 					sales_invoice_item.base_net_amount as taxable_value,
 					sales_invoice_item.item_tax_template as item_tax_template
@@ -185,31 +177,19 @@ class KenyaSalesTaxReport(object):
 				total_taxable_value += item_or_service['taxable_value']
 				total_vat += item_or_service['amount_of_vat']
 				item_or_service['indent'] = 1
-				report_details.append(item_or_service)
 
 			sales_invoice['taxable_value'] = total_taxable_value
 			sales_invoice['amount_of_vat'] = total_vat
 
 		report_details = list(filter(lambda report_entry: report_entry['taxable_value'], report_details))
 
-		# separate registered_customer and unregistered customer invoices.
-		registered_customers_sales_invoice_entries = []
-		unregistered_customers_sales_invoice_entries = []
-
 		for report_entry in report_details: 
-			if 'invoice_name' in report_entry:
-				if report_entry['pin_of_purchaser']:
-					registered_customers_sales_invoice_entries += [report_entry]
-				else:
-					unregistered_customers_sales_invoice_entries += [report_entry]	
-
-		for entry in registered_customers_sales_invoice_entries:
-			self.registered_customers_total_sales += entry['invoice_total_sales']
-			self.registered_customers_total_vat += entry['amount_of_vat']
-
-		for entry in unregistered_customers_sales_invoice_entries:
-			self.unregistered_customers_total_sales += entry['invoice_total_sales']
-			self.unregistered_customers_total_vat += entry['amount_of_vat']
+			if report_entry['pin_of_purchaser']:
+				self.registered_customers_total_sales += report_entry['invoice_total_sales']
+				self.registered_customers_total_vat += report_entry['amount_of_vat']
+			else:
+				self.unregistered_customers_total_sales += report_entry['invoice_total_sales']
+				self.unregistered_customers_total_vat += report_entry['amount_of_vat']
 
 		return report_details
 	
