@@ -63,6 +63,8 @@ def get_p10_report_data(filters):
     if employee:
         conditions += f" AND ss.employee = '{employee}'"
 
+    p10_salary_component = ", ".join([f"'{component}'" for component in salary_components])
+
     ss_p10_tax_deduction_card = frappe.db.sql(f"""
                 SELECT
                     ss.employee,
@@ -72,14 +74,11 @@ def get_p10_report_data(filters):
                     IFNULL(sd.amount,0) as amount 
                 FROM `tabSalary Slip` ss
                 INNER JOIN `tabSalary Detail` sd ON ss.name=sd.parent
-                WHERE sd.salary_component IN ('Basic Salary', 'House Income', 'Transport Allowance','Leave Allowance','Overtime', 'Gratuity', 'PAYE', 'NHIF')
+                WHERE sd.salary_component IN ({p10_salary_component})
                  {conditions}
                 ORDER BY ss.employee
-            """, {"employee": employee, "company": company}, as_dict=True)
-    print("#" * 40)
-    print(ss_p10_tax_deduction_card)
-    print("*" * 40)
-    print(conditions)
+            """, as_dict=True)
+
 
     # Pivot the data into a dictionary where keys are employees and values are dictionaries of salary components
     employee_data = {}
@@ -101,7 +100,6 @@ def get_p10_report_data(filters):
     for employee_key, components in employee_data.items():
         employee_pin, employee_name = employee_key.split("-")
         row = {"employee": employee_pin, "employee_name": employee_name}
-        # print(f"Debug: employee_pin={row['employee']}, employee_name={row['employee_name']}")
         row.update(components)
         report_data.append(row)
 
