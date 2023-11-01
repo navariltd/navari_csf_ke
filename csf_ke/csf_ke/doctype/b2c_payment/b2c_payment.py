@@ -8,8 +8,8 @@ import json
 import frappe
 import requests
 from frappe.model.document import Document
-from frappe.utils.password import get_decrypted_password
 from frappe.utils.file_manager import get_file_path
+from frappe.utils.password import get_decrypted_password
 
 from csf_ke.csf_ke.doctype.b2c_payment.encoding_credentials import (
     openssl_encrypt_encode,
@@ -18,6 +18,7 @@ from csf_ke.csf_ke.doctype.b2c_payment.encoding_credentials import (
 AUTHORISATION_URL = (
     "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
 )
+PAYMENT_REQUEST_URL = "https://sandbox.safaricom.co.ke/mpesa/b2c/v3/paymentrequest"
 
 
 class B2CPayment(Document):
@@ -79,14 +80,17 @@ def initiate_payment(partial_payload: str) -> dict[str, str] | None:
         if certificate:
             security_credentials = openssl_encrypt_encode(
                 initiator_password.encode(), certificate
-            ).decode()
+            )[8:].decode()
 
             payload = generate_payload(
                 b2c_settings, partial_payload, security_credentials
             )
-            frappe.msgprint(
-                f"Next steps with token: {bearer_token}, and payload: {payload}"
-            )
+
+            response = send_payload(payload, bearer_token, PAYMENT_REQUEST_URL)
+
+            frappe.msgprint(f"Response from Safaricom: {response}")
+
+            print(response)
 
         else:
             frappe.msgprint(
@@ -147,9 +151,8 @@ def generate_payload(
     b2c_settings: Document,
     partial_payload: dict[str, str | int],
     security_credentials: str,
-) -> dict[str, str | int]:
+) -> str:
     """Generates an MPesa B2C API conforming payload to send in order to initiate payment"""
-    frappe.msgprint("Generating payload")
     partial_payload_from_settings = {
         "PartyA": b2c_settings.organisation_shortcode,
         "InitiatorName": b2c_settings.initiator_name,
@@ -160,4 +163,21 @@ def generate_payload(
 
     partial_payload.update(partial_payload_from_settings)
 
-    return partial_payload
+    return json.dumps(partial_payload)
+
+
+def send_payload(
+    payload: str, access_token: str, url: str = PAYMENT_REQUEST_URL
+) -> tuple[str, int]:
+    """Sends request to payment processing url with payload"""
+    response = requests.post(
+        url,
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {access_token}",
+            "Content-Type": "application/json",
+        },
+        timeout=60,
+    )
+
+    return response.text, response.status_code
