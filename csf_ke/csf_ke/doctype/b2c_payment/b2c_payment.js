@@ -5,6 +5,7 @@ frappe.ui.form.on("B2C Payment", {
   validate: function (frm) {
     if (frm.doc.partyb) {
       if (!validatePhoneNumber(frm.doc.partyb)) {
+        // Validate if the receiver's mobile number is valid
         frappe.msgprint("The Receiver (mobile number) entered is incorrect.");
         frappe.validated = false;
       }
@@ -23,17 +24,32 @@ frappe.ui.form.on("B2C Payment", {
         frappe.call({
           method:
             "csf_ke.csf_ke.doctype.b2c_payment.b2c_payment.initiate_payment",
+          args: {
+            // Create request with a partial payload
+            partial_payload: {
+              OriginatorConversationID: frm.doc.originatorconversationid,
+              CommandID: frm.doc.commandid,
+              Amount: frm.doc.amount,
+              PartyB: frm.doc.partyb,
+              Remarks: frm.doc.remarks,
+              Occassion: frm.doc.occassion,
+            },
+          },
           callback: function (response) {
             frappe.msgprint(response);
           },
         });
       });
     }
-    frm.set_value("originatorconversationid", generateUUIDv4());
+
+    if (!frm.doc.originatorconversationid) {
+      frm.set_value("originatorconversationid", generateUUIDv4());
+    }
   },
 });
 
 function generateUUIDv4() {
+  // Generates a uuid4 string conforming to RFC standards
   let uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
     /[xy]/g,
     function (c) {

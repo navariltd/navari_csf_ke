@@ -9,6 +9,11 @@ import frappe
 import requests
 from frappe.model.document import Document
 from frappe.utils.password import get_decrypted_password
+from frappe.utils.file_manager import get_file_path
+
+from csf_ke.csf_ke.doctype.b2c_payment.encoding_credentials import (
+    openssl_encrypt_encode,
+)
 
 AUTHORISATION_URL = (
     "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials"
@@ -20,8 +25,10 @@ class B2CPayment(Document):
 
 
 @frappe.whitelist(methods="POST")
-def initiate_payment() -> dict[str, str] | None:
+def initiate_payment(partial_payload: str) -> dict[str, str] | None:
     """Endpoint that initiates the payment process"""
+    partial_payload = json.loads(frappe.form_dict.partial_payload)
+    b2c_settings = frappe.db.get_singles_dict("MPesa B2C Settings")
     now = datetime.datetime.now()
     hashed_token = frappe.db.sql(
         f"""
@@ -35,8 +42,6 @@ def initiate_payment() -> dict[str, str] | None:
     )
 
     if not hashed_token:
-        b2c_settings = frappe.db.get_singles_dict("MPesa B2C Settings")
-
         if b2c_settings:
             consumer_key = b2c_settings.get("consumer_key")
             consumer_secret = get_decrypted_password(
@@ -65,6 +70,28 @@ def initiate_payment() -> dict[str, str] | None:
         bearer_token = get_decrypted_password(
             "Daraja Access Tokens", hashed_token[0].name, "access_token"
         )
+        initiator_password = get_decrypted_password(
+            "MPesa B2C Settings", "MPesa B2C Settings", "initiator_password"
+        )
+
+        certificate = get_certificate_file()
+
+        if certificate:
+            security_credentials = openssl_encrypt_encode(
+                initiator_password.encode(), certificate
+            ).decode()
+
+            payload = generate_payload(
+                b2c_settings, partial_payload, security_credentials
+            )
+            frappe.msgprint(
+                f"Next steps with token: {bearer_token}, and payload: {payload}"
+            )
+
+        else:
+            frappe.msgprint(
+                "No valid certificate file found. Did you get the certificate from Safaricom?"
+            )
 
 
 def get_access_tokens(
@@ -102,3 +129,35 @@ def save_access_token_to_database(response: str) -> bool:
     new_token.save()
 
     return True
+
+
+def get_certificate_file() -> str:
+    """Get the uploaded certificate from the server"""
+    certificate_path = frappe.get_value("File", {"file_type": "CER"}, ["file_url"])
+
+    if certificate_path:
+        certificate: str = get_file_path(certificate_path)
+
+        return certificate
+
+    return "No certificate File found in the server"
+
+
+def generate_payload(
+    b2c_settings: Document,
+    partial_payload: dict[str, str | int],
+    security_credentials: str,
+) -> dict[str, str | int]:
+    """Generates an MPesa B2C API conforming payload to send in order to initiate payment"""
+    frappe.msgprint("Generating payload")
+    partial_payload_from_settings = {
+        "PartyA": b2c_settings.organisation_shortcode,
+        "InitiatorName": b2c_settings.initiator_name,
+        "SecurityCredential": security_credentials,
+        "QueueTimeOutURL": b2c_settings.queue_timeout_url,
+        "ResultURL": b2c_settings.results_url,
+    }
+
+    partial_payload.update(partial_payload_from_settings)
+
+    return partial_payload
