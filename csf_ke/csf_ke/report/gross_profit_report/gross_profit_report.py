@@ -3,6 +3,7 @@
 
 # import frappe
 
+from frappe.utils import add_days, flt
 from frappe.utils import flt, add_days
 from frappe.utils import add_days
 from frappe import qb
@@ -164,7 +165,6 @@ def calculate_gross_profit_percentage(gross_profit, selling_amount):
 def get_data(filters):
     data = []
     query = get_query(filters)
-    currency_precision = 3
 
     primary_data = frappe.db.sql(query, as_dict=True)
     item_dict = {}
@@ -183,20 +183,20 @@ def get_data(filters):
         item['qty_uom'] = calculate_qty_in_chosen_uom(
             item_code, item['qty'], chosen_uom, item['uom_required'])
 
-        buying_amount = get_buying_amount(item_code, qty, from_date, to_date)
+        # valuation change
+        buying_amount = get_valuation_change_sum(
+            item_code, from_date, to_date)
         item['buying_amount'] = buying_amount
 
-        # valuation change
-        valuation_change = get_valuation_change_sum(
-            item_code, from_date, to_date)
         selling_amount = item.get('selling_amount', 0)
         item['gross_profit'] = selling_amount - buying_amount
         item['gross_profit_percentage'] = calculate_gross_profit_percentage(
             item['gross_profit'], selling_amount)
 
         # Include the valuation rate
-        item['valuation_rate'] = get_valuation_rate_from_sle(
-            item_code, from_date, to_date)
+        # item['valuation_rate'] = get_valuation_rate_from_sle(
+        #     item_code, from_date, to_date)
+        item['valuation_rate'] = buying_amount/qty
 
         if item_code not in item_dict:
             item_dict[item_code] = item
@@ -236,8 +236,6 @@ def get_conversion_factor(item_code, chosen_uom):
 
     if not conversion_factor:
         conversion_factor = 1.0  # If no conversion factor is found, default to 1
-
-    # print(str(conversion_factor))
 
     return conversion_factor
 
@@ -300,98 +298,10 @@ def get_query(filters):
     return sql_query
 
 
-def get_buying_amount(item_code, qty, from_date, to_date):
-    # Get the valuation rate from the ledger using the item_code
-    valuation_rate = get_valuation_rate_from_sle(item_code, from_date, to_date)
-
-    # Calculate the buying amount by multiplying valuation rate and quantity
-    buying_amount = valuation_rate * qty
-
-    return buying_amount
-
-
-# def get_valuation_rate_from_sle(item_code):
-#     sle_entries = frappe.get_all("Stock Ledger Entry",
-#                                  filters={"item_code": item_code},
-#                                  fields=["valuation_rate"],
-#                                  order_by="posting_date DESC",
-#                                  limit_page_length=1)
-
-#     valuation_rate = sle_entries[0].get(
-#         "valuation_rate") if sle_entries else 0.0
-#     return flt(valuation_rate)
-
-
-def get_last_purchase_rate(item_code):
-    purchase_invoice = frappe.qb.DocType("Purchase Invoice")
-    purchase_invoice_item = frappe.qb.DocType("Purchase Invoice Item")
-
-    query = (
-        frappe.qb.from_(purchase_invoice_item)
-        .inner_join(purchase_invoice)
-        .on(purchase_invoice.name == purchase_invoice_item.parent)
-        .select(purchase_invoice_item.base_rate / purchase_invoice_item.conversion_factor)
-        .where(purchase_invoice.docstatus == 1)
-        # .where(purchase_invoice.posting_date <= self.filters.to_date)
-        .where(purchase_invoice_item.item_code == item_code)
-    )
-
-    query.orderby(purchase_invoice.posting_date, order=frappe.qb.desc)
-    query.limit(1)
-    last_purchase_rate = query.run()
-
-    return flt(last_purchase_rate[0][0]) if last_purchase_rate else 0.0
-
-
-def get_valuation_rate_from_sle(item_code, from_date, to_date):
-    filters = {
-        "item_code": item_code,
-        "docstatus": 1,  # To filter for completed documents
-        "is_cancelled": 0,
-        "voucher_type": "Delivery Note"
-
-    }
-
-    if from_date:
-        filters["posting_date"] = (">=", from_date)
-
-    if to_date:
-        if "posting_date" in filters:
-            filters["posting_date"] = (">=", from_date, "<=", to_date)
-        else:
-            filters["posting_date"] = ("<=", add_days(to_date, 1))
-
-    sle_entries = frappe.get_all("Stock Ledger Entry",
-                                 filters=filters,
-                                 fields=["valuation_rate", "voucher_no", "voucher_type"])
-
-    approved_valuation_rates = []
-
-    for entry in sle_entries:
-        voucher_no = entry.get("voucher_no")
-        voucher_type = entry.get("voucher_type")
-
-        if voucher_no and voucher_type:
-            voucher_status = frappe.get_value(
-                voucher_type, voucher_no, "docstatus")
-            if voucher_status == 1:
-                valuation_rate = flt(entry.get("valuation_rate"))
-                if valuation_rate != 0.0:
-                    approved_valuation_rates.append(valuation_rate)
-
-    if approved_valuation_rates:
-
-        average_valuation_rate = sum(
-            approved_valuation_rates) / len(approved_valuation_rates)
-        return flt(average_valuation_rate)
-    else:
-        return 0.0
-
-
 def get_valuation_change_sum(item_code, from_date, to_date):
 
     sql_query = """
-        SELECT si.posting_date
+        SELECT si.posting_date, si.title
         FROM `tabSales Invoice` AS si
         WHERE si.name IN (
             SELECT sii.parent
@@ -404,11 +314,10 @@ def get_valuation_change_sum(item_code, from_date, to_date):
     sales_invoices = frappe.db.sql(
         sql_query, {"item_code": item_code, "from_date": from_date, "to_date": to_date}, as_dict=True)
 
-    # frappe.msgprint(str(sales_invoices))
-    for sales_invoice in sales_invoices:
-        sales_invoice_posting_date = sales_invoice.get("posting_date")
-        # add logic here to compare the Sales Invoice posting date with other criteria as needed.
-        # frappe.msgprint(str(sales_invoice_posting_date))
+    # Initialize a list to store the posting dates of Sales Invoices
+    sales_invoice_title = [
+        si.get("title") for si in sales_invoices]
+
     filters = {
         "item_code": item_code,
         "docstatus": 1,
@@ -424,30 +333,88 @@ def get_valuation_change_sum(item_code, from_date, to_date):
         else:
             filters["posting_date"] = ("<=", add_days(to_date, 1))
 
+    # Get all Delivery Notes within the date range
+    delivery_notes = frappe.get_all(
+        "Delivery Note",
+        filters={
+            "item_code": item_code,
+            "posting_date": [">=", from_date, "<=", to_date],
+        },
+        fields=["title", "posting_date", "name"],
+    )
+
+    # Filter Delivery Notes based on their posting date matching Sales Invoices
+    filtered_delivery_notes = [dn for dn in delivery_notes if dn.get(
+        "title") in sales_invoice_title]
+
+    # Extract the names of filtered delivery notes
+    filtered_delivery_note_names = [
+        dn.get("name") for dn in filtered_delivery_notes]
+
+    filters["voucher_no"] = ["in", filtered_delivery_note_names]
+
+    # proceed with Stock Ledger Entries for the filtered Delivery Notes
     sle_entries = frappe.get_all("Stock Ledger Entry",
                                  filters=filters,
                                  fields=["stock_value_difference as valuation_change", "voucher_no", "voucher_type", "item_code"])
     valuation_change_sum = 0.0
 
     for entry in sle_entries:
-        voucher_no = entry.get("voucher_no")
-        new_item_code = entry.get("item_code")
-        delivery_note = frappe.db.get_all(
-            "Delivery Note", filters={"name": voucher_no}, fields=["posting_date"])
-        # frappe.msgprint(str(new_item_code))
+        valuation_change_sum += flt(entry.get("valuation_change"))
 
-        valuation_change = flt(entry.get("valuation_change"))
-        if valuation_change != 0.0:
-            valuation_change_sum += valuation_change
-
-    # frappe.msgprint(str(item_code) + ":" + str(valuation_change_sum))
+    valuation_change_sum = abs(valuation_change_sum)
     return flt(valuation_change_sum)
+
+
+# def get_buying_amount(item_code, qty, from_date, to_date):
+#     # Get the valuation rate from the ledger using the item_code
+#     valuation_rate = get_valuation_rate_from_sle(item_code, from_date, to_date)
+
+#     # Calculate the buying amount by multiplying valuation rate and quantity
+#     buying_amount = valuation_rate * qty
+
+#     return buying_amount
+
+# def get_valuation_rate_from_sle(item_code):
+#     sle_entries = frappe.get_all("Stock Ledger Entry",
+#                                  filters={"item_code": item_code},
+#                                  fields=["valuation_rate"],
+#                                  order_by="posting_date DESC",
+#                                  limit_page_length=1)
+
+#     valuation_rate = sle_entries[0].get(
+#         "valuation_rate") if sle_entries else 0.0
+#     return flt(valuation_rate)
+
+
+# def get_last_purchase_rate(item_code):
+#     purchase_invoice = frappe.qb.DocType("Purchase Invoice")
+#     purchase_invoice_item = frappe.qb.DocType("Purchase Invoice Item")
+
+#     query = (
+#         frappe.qb.from_(purchase_invoice_item)
+#         .inner_join(purchase_invoice)
+#         .on(purchase_invoice.name == purchase_invoice_item.parent)
+#         .select(purchase_invoice_item.base_rate / purchase_invoice_item.conversion_factor)
+#         .where(purchase_invoice.docstatus == 1)
+#         # .where(purchase_invoice.posting_date <= self.filters.to_date)
+#         .where(purchase_invoice_item.item_code == item_code)
+#     )
+
+#     query.orderby(purchase_invoice.posting_date, order=frappe.qb.desc)
+#     query.limit(1)
+#     last_purchase_rate = query.run()
+
+#     return flt(last_purchase_rate[0][0]) if last_purchase_rate else 0.0
 
 
 # def get_valuation_rate_from_sle(item_code, from_date, to_date):
 #     filters = {
 #         "item_code": item_code,
-#         "docstatus": 1, "is_cancelled": 0,
+#         "docstatus": 1,  # To filter for completed documents
+#         "is_cancelled": 0,
+#         "voucher_type": "Delivery Note"
+
 #     }
 
 #     if from_date:
@@ -461,15 +428,26 @@ def get_valuation_change_sum(item_code, from_date, to_date):
 
 #     sle_entries = frappe.get_all("Stock Ledger Entry",
 #                                  filters=filters,
-#                                  fields=["valuation_rate"])
-#     # frappe.msgprint(str(item_code)+str(sle_entries))
-#     # frappe.msgprint(str(len(sle_entries)))
-#     valuation_rates = [flt(entry.get("valuation_rate"))
-#                        for entry in sle_entries if entry.get("valuation_rate") != 0.0]
+#                                  fields=["valuation_rate", "voucher_no", "voucher_type"])
 
-#     if valuation_rates:
-#         frappe.msgprint(str(sum(valuation_rates)))
-#         average_valuation_rate = sum(valuation_rates) / len(valuation_rates)
+#     approved_valuation_rates = []
+
+#     for entry in sle_entries:
+#         voucher_no = entry.get("voucher_no")
+#         voucher_type = entry.get("voucher_type")
+
+#         if voucher_no and voucher_type:
+#             voucher_status = frappe.get_value(
+#                 voucher_type, voucher_no, "docstatus")
+#             if voucher_status == 1:
+#                 valuation_rate = flt(entry.get("valuation_rate"))
+#                 if valuation_rate != 0.0:
+#                     approved_valuation_rates.append(valuation_rate)
+
+#     if approved_valuation_rates:
+
+#         average_valuation_rate = sum(
+#             approved_valuation_rates) / len(approved_valuation_rates)
 #         return flt(average_valuation_rate)
 #     else:
 #         return 0.0
