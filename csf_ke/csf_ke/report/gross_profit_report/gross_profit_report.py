@@ -3,6 +3,7 @@
 
 # import frappe
 
+from frappe.utils import flt, add_days
 from frappe.utils import add_days
 from frappe import qb
 from frappe import get_all, get_value
@@ -60,14 +61,14 @@ def get_columns(filters):
             "fieldtype": "Link",
             "options": "UOM",
             "width": 120,
-            "hidden": 1
+
         },
         {
             "label": "UOM Required",
             "fieldname": "uom_required",
             "fieldtype": "Data",
             "width": 100,
-            "hidden": 1
+
         },
         {
             "label": "Qty",
@@ -185,6 +186,9 @@ def get_data(filters):
         buying_amount = get_buying_amount(item_code, qty, from_date, to_date)
         item['buying_amount'] = buying_amount
 
+        # valuation change
+        valuation_change = get_valuation_change_sum(
+            item_code, from_date, to_date)
         selling_amount = item.get('selling_amount', 0)
         item['gross_profit'] = selling_amount - buying_amount
         item['gross_profit_percentage'] = calculate_gross_profit_percentage(
@@ -344,6 +348,8 @@ def get_valuation_rate_from_sle(item_code, from_date, to_date):
         "item_code": item_code,
         "docstatus": 1,  # To filter for completed documents
         "is_cancelled": 0,
+        "voucher_type": "Delivery Note"
+
     }
 
     if from_date:
@@ -374,12 +380,68 @@ def get_valuation_rate_from_sle(item_code, from_date, to_date):
                     approved_valuation_rates.append(valuation_rate)
 
     if approved_valuation_rates:
-        frappe.msgprint(str(item_code)+":" + str(approved_valuation_rates))
+
         average_valuation_rate = sum(
             approved_valuation_rates) / len(approved_valuation_rates)
         return flt(average_valuation_rate)
     else:
         return 0.0
+
+
+def get_valuation_change_sum(item_code, from_date, to_date):
+
+    sql_query = """
+        SELECT si.posting_date
+        FROM `tabSales Invoice` AS si
+        WHERE si.name IN (
+            SELECT sii.parent
+            FROM `tabSales Invoice Item` AS sii
+            WHERE sii.item_code = %(item_code)s AND si.docstatus = 1
+            AND si.posting_date >= %(from_date)s AND si.posting_date <= %(to_date)s
+        )
+    """
+
+    sales_invoices = frappe.db.sql(
+        sql_query, {"item_code": item_code, "from_date": from_date, "to_date": to_date}, as_dict=True)
+
+    # frappe.msgprint(str(sales_invoices))
+    for sales_invoice in sales_invoices:
+        sales_invoice_posting_date = sales_invoice.get("posting_date")
+        # add logic here to compare the Sales Invoice posting date with other criteria as needed.
+        # frappe.msgprint(str(sales_invoice_posting_date))
+    filters = {
+        "item_code": item_code,
+        "docstatus": 1,
+        "is_cancelled": 0,
+    }
+
+    if from_date:
+        filters["posting_date"] = (">=", from_date)
+
+    if to_date:
+        if "posting_date" in filters:
+            filters["posting_date"] = (">=", from_date, "<=", to_date)
+        else:
+            filters["posting_date"] = ("<=", add_days(to_date, 1))
+
+    sle_entries = frappe.get_all("Stock Ledger Entry",
+                                 filters=filters,
+                                 fields=["stock_value_difference as valuation_change", "voucher_no", "voucher_type", "item_code"])
+    valuation_change_sum = 0.0
+
+    for entry in sle_entries:
+        voucher_no = entry.get("voucher_no")
+        new_item_code = entry.get("item_code")
+        delivery_note = frappe.db.get_all(
+            "Delivery Note", filters={"name": voucher_no}, fields=["posting_date"])
+        # frappe.msgprint(str(new_item_code))
+
+        valuation_change = flt(entry.get("valuation_change"))
+        if valuation_change != 0.0:
+            valuation_change_sum += valuation_change
+
+    # frappe.msgprint(str(item_code) + ":" + str(valuation_change_sum))
+    return flt(valuation_change_sum)
 
 
 # def get_valuation_rate_from_sle(item_code, from_date, to_date):
