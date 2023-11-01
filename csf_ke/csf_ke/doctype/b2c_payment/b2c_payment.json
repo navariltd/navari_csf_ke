@@ -1,118 +1,118 @@
 {
- "actions": [],
- "allow_rename": 1,
- "autoname": "naming_series:",
- "creation": "2023-10-30 11:38:30.870409",
- "default_view": "List",
- "doctype": "DocType",
- "editable_grid": 1,
- "engine": "InnoDB",
- "field_order": [
-  "naming_series",
-  "section_break_pujd",
-  "originatorconversationid",
-  "commandid",
-  "remarks",
-  "column_break_jg71",
-  "partyb",
-  "amount",
-  "occassion",
-  "amended_from"
- ],
- "fields": [
-  {
-   "description": "This is randomly generated. Do not change",
-   "fieldname": "originatorconversationid",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Originator Conversation ID",
-   "read_only": 1,
-   "reqd": 1
-  },
-  {
-   "fieldname": "commandid",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Command ID",
-   "options": "\nSalaryPayment\nBusinessPayment\nPromotionPayment",
-   "reqd": 1
-  },
-  {
-   "fieldname": "amount",
-   "fieldtype": "Float",
-   "in_list_view": 1,
-   "label": "Amount",
-   "reqd": 1
-  },
-  {
-   "description": "Enter a phone number starting with 254. Format: 2547xxxxxxxx",
-   "fieldname": "partyb",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Receiver",
-   "reqd": 1
-  },
-  {
-   "fieldname": "remarks",
-   "fieldtype": "Data",
-   "label": "Remarks",
-   "reqd": 1
-  },
-  {
-   "fieldname": "occassion",
-   "fieldtype": "Data",
-   "label": "Occassion"
-  },
-  {
-   "fieldname": "column_break_jg71",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "section_break_pujd",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "hidden": 1,
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "B2C Payment",
-   "print_hide": 1,
-   "read_only": 1
-  },
-  {
-   "fieldname": "naming_series",
-   "fieldtype": "Select",
-   "hidden": 1,
-   "label": "Naming Series",
-   "options": "MPESA-B2C-"
-  }
- ],
- "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2023-10-30 13:40:11.480975",
- "modified_by": "Administrator",
- "module": "CSF KE",
- "name": "B2C Payment",
- "naming_rule": "By \"Naming Series\" field",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
- "sort_field": "modified",
- "sort_order": "DESC",
- "states": [],
- "track_changes": 1
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "naming_series:",
+  "creation": "2023-10-30 11:38:30.870409",
+  "default_view": "List",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "naming_series",
+    "section_break_pujd",
+    "originatorconversationid",
+    "commandid",
+    "remarks",
+    "column_break_jg71",
+    "partyb",
+    "amount",
+    "occassion",
+    "amended_from"
+  ],
+  "fields": [
+    {
+      "description": "This is randomly generated. Do not change",
+      "fieldname": "originatorconversationid",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Originator Conversation ID",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "commandid",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Command ID",
+      "options": "\nSalaryPayment\nBusinessPayment\nPromotionPayment",
+      "reqd": 1
+    },
+    {
+      "fieldname": "amount",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "Amount",
+      "reqd": 1
+    },
+    {
+      "description": "Enter a phone number starting with 254. Format: 2547xxxxxxxx",
+      "fieldname": "partyb",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Receiver",
+      "reqd": 1
+    },
+    {
+      "fieldname": "remarks",
+      "fieldtype": "Data",
+      "label": "Remarks",
+      "reqd": 1
+    },
+    {
+      "fieldname": "occassion",
+      "fieldtype": "Data",
+      "label": "Occassion"
+    },
+    {
+      "fieldname": "column_break_jg71",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "section_break_pujd",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "amended_from",
+      "fieldtype": "Link",
+      "hidden": 1,
+      "label": "Amended From",
+      "no_copy": 1,
+      "options": "B2C Payment",
+      "print_hide": 1,
+      "read_only": 1
+    },
+    {
+      "fieldname": "naming_series",
+      "fieldtype": "Select",
+      "hidden": 1,
+      "label": "Naming Series",
+      "options": "MPESA-B2C-"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2023-10-30 13:40:11.480975",
+  "modified_by": "Administrator",
+  "module": "CSF KE",
+  "name": "B2C Payment",
+  "naming_rule": "By \"Naming Series\" field",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
 }

@@ -2,16 +2,33 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("B2C Payment", {
+  validate: function (frm) {
+    if (frm.doc.partyb) {
+      if (!validatePhoneNumber(frm.doc.partyb)) {
+        frappe.msgprint("The Receiver (mobile number) entered is incorrect.");
+        frappe.validated = false;
+      }
+    }
+
+    if (frm.doc.amount < 1) {
+      frappe.msgprint(
+        "Amount entered is less than the least acceptable amount of Kshs. 1"
+      );
+      frappe.validated = false;
+    }
+  },
   refresh: function (frm) {
-    frm.add_custom_button("Initiate Payment", async function () {
-      frappe.call({
-        method:
-          "csf_ke.csf_ke.doctype.b2c_payment.b2c_payment.initiate_payment",
-        callback: function (response) {
-          // console.log(response);
-        },
+    if (!frm.doc.__islocal) {
+      frm.add_custom_button("Initiate Payment", async function () {
+        frappe.call({
+          method:
+            "csf_ke.csf_ke.doctype.b2c_payment.b2c_payment.initiate_payment",
+          callback: function (response) {
+            frappe.msgprint(response);
+          },
+        });
       });
-    });
+    }
     frm.set_value("originatorconversationid", generateUUIDv4());
   },
 });
@@ -26,4 +43,15 @@ function generateUUIDv4() {
     }
   );
   return uuid;
+}
+
+function validatePhoneNumber(input) {
+  // Validates the receiver phone numbers
+  if (input.startsWith("2547")) {
+    const pattern = /^2547\d{8}$/;
+    return pattern.test(input);
+  } else {
+    const pattern = /^(25410|25411)\d{7}$/;
+    return pattern.test(input);
+  }
 }
