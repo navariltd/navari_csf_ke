@@ -13,7 +13,6 @@ frappe.ui.form.on("MPesa B2C Settings", {
         frappe.msgprint(message);
       } else {
         message = "The URLs Registered are not valid. Please review them";
-        console.log(message);
         frappe.msgprint(message);
         frappe.validated = false;
       }
