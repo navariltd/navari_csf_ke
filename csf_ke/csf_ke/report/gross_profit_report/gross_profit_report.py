@@ -54,7 +54,7 @@ def get_columns(filters):
             "fieldtype": "Link",
             "options": "Item Group",
             "width": 120,
-            "hidden": 1
+
         },
         {
             "label": "Default UOM",
@@ -181,7 +181,7 @@ def get_data(filters):
         # Calculate the quantity in the chosen UOM
         chosen_uom = filters.get('uom')
         item['qty_uom'] = calculate_qty_in_chosen_uom(
-            item_code, item['qty'], chosen_uom, item['uom_required'])
+            item_code, item['qty'], chosen_uom, item['uom_required'], item["default_uom"])
 
         # valuation change
         buying_amount = get_valuation_change_sum(
@@ -196,7 +196,11 @@ def get_data(filters):
         # Include the valuation rate
         # item['valuation_rate'] = get_valuation_rate_from_sle(
         #     item_code, from_date, to_date)
-        item['valuation_rate'] = buying_amount/qty
+        if qty == 0:
+            # Handle the case where qty is zero (e.g., set valuation_rate to 0 or handle it as appropriate)
+            item['valuation_rate'] = 0
+        else:
+            item['valuation_rate'] = buying_amount / qty
 
         if item_code not in item_dict:
             item_dict[item_code] = item
@@ -208,30 +212,30 @@ def get_data(filters):
     return data
 
 
-def calculate_qty_in_chosen_uom(item_code, qty, chosen_uom, sales_invoice_uom):
-    calculated_qty = qty
+def calculate_qty_in_chosen_uom(item_code, qty, chosen_uom, sales_invoice_uom, default_uom):
 
-    if chosen_uom != sales_invoice_uom:
-        conversion_factor = get_conversion_factor(item_code, chosen_uom)
-
-        if chosen_uom == "Kg":
+    if chosen_uom != default_uom:
+        conversion_factor = get_conversion_factor(item_code, default_uom)
+        if chosen_uom == "Bag" and sales_invoice_uom == "Bag":
             # If the chosen unit of measure is Kgs, calculate the quantity from the existing quantity
 
             calculated_qty = qty
-        if chosen_uom == "Bag" and sales_invoice_uom == "Kg":
-            calculated_qty = qty / 25
+        if chosen_uom == "Kg" and default_uom == "Bag":
+            calculated_qty = qty / 0.04
         elif conversion_factor:
 
             # If there is a conversion factor, use it to calculate the quantity
             calculated_qty = qty / conversion_factor
+    else:
+        calculated_qty = qty
 
     return calculated_qty
 
 
-def get_conversion_factor(item_code, chosen_uom):
+def get_conversion_factor(item_code, default_uom):
    # Get the conversion factor from the UOM Conversion Detail table
     conversion_factor = frappe.get_value("UOM Conversion Detail",
-                                         {"parent": item_code, "uom": chosen_uom},
+                                         {"parent": item_code, "uom": default_uom},
                                          "conversion_factor")
 
     if not conversion_factor:
@@ -299,9 +303,9 @@ def get_query(filters):
 
 
 def get_valuation_change_sum(item_code, from_date, to_date):
-
+    quantity = 0.0
     sql_query = """
-        SELECT si.posting_date, si.title
+        SELECT si.posting_date, si.title, si.update_stock,si.name
         FROM `tabSales Invoice` AS si
         WHERE si.name IN (
             SELECT sii.parent
@@ -325,13 +329,13 @@ def get_valuation_change_sum(item_code, from_date, to_date):
     }
 
     if from_date:
-        filters["posting_date"] = (">=", from_date)
+        filters["posting_date"] = ("<=", from_date)
 
     if to_date:
         if "posting_date" in filters:
             filters["posting_date"] = (">=", from_date, "<=", to_date)
         else:
-            filters["posting_date"] = ("<=", add_days(to_date, 1))
+            filters["posting_date"] = (">=", add_days(to_date, 1))
 
     # Get all Delivery Notes within the date range
     delivery_notes = frappe.get_all(
@@ -352,17 +356,44 @@ def get_valuation_change_sum(item_code, from_date, to_date):
         dn.get("name") for dn in filtered_delivery_notes]
 
     filters["voucher_no"] = ["in", filtered_delivery_note_names]
-
+    # frappe.msgprint(str(filters))
     # proceed with Stock Ledger Entries for the filtered Delivery Notes
     sle_entries = frappe.get_all("Stock Ledger Entry",
-                                 filters=filters,
-                                 fields=["stock_value_difference as valuation_change", "voucher_no", "voucher_type", "item_code"])
+                                 filters={
+                                     "voucher_no": ["in", filtered_delivery_note_names], "item_code": item_code, "docstatus": 1, "is_cancelled": 0,
+                                     "posting_date": [">=", from_date]
+                                 },
+                                 or_filters={
+                                     "posting_date": ["<=", to_date]},
+                                 fields=["stock_value_difference as valuation_change", "voucher_no", "voucher_type", "item_code", "posting_date", "name", "actual_qty"])
     valuation_change_sum = 0.0
+    # frappe.msgprint(str(sle_entries))
+    if sle_entries:
+        for entry in sle_entries:
+            # frappe.msgprint(str(entry.get("posting_date")))
+            valuation_change_sum += flt(entry.get("valuation_change"))
+            quantity += flt(entry.get("actual_qty"))
+    else:
+        pass
 
-    for entry in sle_entries:
-        valuation_change_sum += flt(entry.get("valuation_change"))
+    for si in sales_invoices:
+        update_stock = si.get("update_stock")
+        if update_stock == 1:
+            voucher_name = si.get("name")
+            # frappe.msgprint(str(voucher_name))
+            sle_entries_from_si = frappe.get_all("Stock Ledger Entry",
+                                                 filters={
+                                                     "voucher_no": voucher_name, "item_code": item_code, "docstatus": 1, "is_cancelled": 0},
+                                                 or_filters=[["posting_date", ">=", from_date], [
+                                                     "posting_date", "<=", to_date]],
+                                                 fields=["stock_value_difference as valuation_change", "voucher_no", "voucher_type", "item_code", "posting_date"])
+            if sle_entries_from_si:
+
+                for entry in sle_entries_from_si:
+                    # frappe.msgprint(str(entry))
+                    valuation_change_sum += flt(entry.get("valuation_change"))
+                    quantity += flt(entry.get("actual_qty"))
+    # frappe.msgprint(str(valuation_change_sum))
 
     valuation_change_sum = abs(valuation_change_sum)
     return flt(valuation_change_sum)
-
-
