@@ -11,7 +11,7 @@ frappe.ui.form.on("B2C Payment", {
       }
     }
 
-    if (frm.doc.amount < 1) {
+    if (frm.doc.amount < 10) {
       frappe.msgprint(
         "Amount entered is less than the least acceptable amount of Kshs. 1"
       );

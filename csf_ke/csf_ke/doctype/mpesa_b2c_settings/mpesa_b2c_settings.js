@@ -3,11 +3,18 @@
 
 frappe.ui.form.on("MPesa B2C Settings", {
   validate: function (frm) {
-    if (frm.doc.results_url && frm.doc.queue_timeout_url) {
+    if (
+      frm.doc.results_url &&
+      frm.doc.queue_timeout_url &&
+      frm.doc.authorization_url &&
+      frm.doc.payment_url
+    ) {
       let message = "";
       if (
         validateURL(frm.doc.results_url) &&
-        validateURL(frm.doc.queue_timeout_url)
+        validateURL(frm.doc.queue_timeout_url) &&
+        validateURL(frm.doc.authorization_url) &&
+        validateURL(frm.doc.payment_url)
       ) {
         message = `The Results URL: ${frm.doc.results_url} and Queue TimeOut URL: ${frm.doc.queue_timeout_url} will be used to handle responses from Safaricom.`;
         frappe.msgprint(message);
