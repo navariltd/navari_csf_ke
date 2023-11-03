@@ -252,7 +252,8 @@ def get_query(filters):
         si_item.stock_uom AS default_uom,
         si_item.uom AS uom_required,
         
-        SUM(si_item.stock_qty) AS qty,
+        CAST(SUM(si_item.stock_qty) AS DECIMAL(10, 2)) AS qty,
+
         SUM(si_item.base_amount) AS selling_amount,
         
         SUM(si_item.base_amount)/SUM(si_item.stock_qty) AS average_selling_rate
@@ -263,7 +264,7 @@ def get_query(filters):
         `tabSales Invoice` si ON si_item.parent = si.name
    
     WHERE
-        si.docstatus = 1
+        si.docstatus = 1 AND si.status != 'Cancelled' AND si.return_against IS NULL AND si_item.item_code IS NOT NULL
 """
 
     # Add dynamic conditions based on the selected filters
@@ -302,6 +303,103 @@ def get_query(filters):
     return sql_query
 
 
+# def get_valuation_change_sum(item_code, from_date, to_date):
+#     quantity = 0.0
+#     sql_query = """
+#         SELECT si.posting_date, si.title, si.update_stock,si.name
+#         FROM `tabSales Invoice` AS si
+#         WHERE si.name IN (
+#             SELECT sii.parent
+#             FROM `tabSales Invoice Item` AS sii
+#             WHERE sii.item_code = %(item_code)s AND si.docstatus = 1 AND si.is_return = 0
+#             AND si.posting_date >= %(from_date)s AND si.posting_date <= %(to_date)s
+#         )
+#     """
+
+#     sales_invoices = frappe.db.sql(
+#         sql_query, {"item_code": item_code, "from_date": from_date, "to_date": to_date}, as_dict=True)
+
+#     # Initialize a list to store the posting dates of Sales Invoices
+#     sales_invoice_title = [
+#         si.get("title") for si in sales_invoices]
+
+#     filters = {
+#         "item_code": item_code,
+#         "docstatus": 1,
+#         "is_cancelled": 0,
+#     }
+
+#     if from_date:
+#         filters["posting_date"] = ("<=", from_date)
+
+#     if to_date:
+#         if "posting_date" in filters:
+#             filters["posting_date"] = (">=", from_date, "<=", to_date)
+#         else:
+#             filters["posting_date"] = (">=", add_days(to_date, 1))
+
+#     # Get all Delivery Notes within the date range
+#     delivery_notes = frappe.get_all(
+#         "Delivery Note",
+#         filters={
+#             "item_code": item_code,
+#             "posting_date": [">=", from_date, "<=", to_date],
+#         },
+#         fields=["title", "posting_date", "name"],
+#     )
+
+#     # Filter Delivery Notes based on their posting date matching Sales Invoices
+#     filtered_delivery_notes = [dn for dn in delivery_notes if dn.get(
+#         "title") in sales_invoice_title]
+
+#     # Extract the names of filtered delivery notes
+#     filtered_delivery_note_names = [
+#         dn.get("name") for dn in filtered_delivery_notes]
+
+#     filters["voucher_no"] = ["in", filtered_delivery_note_names]
+#     # frappe.msgprint(str(filters))
+#     # proceed with Stock Ledger Entries for the filtered Delivery Notes
+#     sle_entries = frappe.get_all("Stock Ledger Entry",
+#                                  filters={
+#                                      "voucher_no": ["in", filtered_delivery_note_names], "item_code": item_code, "docstatus": 1, "is_cancelled": 0,
+#                                      "posting_date": [">=", from_date]
+#                                  },
+#                                  or_filters={
+#                                      "posting_date": ["<=", to_date]},
+#                                  fields=["stock_value_difference as valuation_change", "voucher_no", "voucher_type", "item_code", "posting_date", "name", "actual_qty"])
+#     valuation_change_sum = 0.0
+#     # frappe.msgprint(str(sle_entries))
+#     if sle_entries:
+#         for entry in sle_entries:
+#             # frappe.msgprint(str(entry.get("posting_date")))
+#             valuation_change_sum += flt(entry.get("valuation_change"))
+#             quantity += flt(entry.get("actual_qty"))
+#     else:
+#         pass
+
+#     for si in sales_invoices:
+#         update_stock = si.get("update_stock")
+#         if update_stock == 1:
+#             voucher_name = si.get("name")
+#             # frappe.msgprint(str(voucher_name))
+#             sle_entries_from_si = frappe.get_all("Stock Ledger Entry",
+#                                                  filters={
+#                                                      "voucher_no": voucher_name, "item_code": item_code, "docstatus": 1, "is_cancelled": 0},
+#                                                  or_filters=[["posting_date", ">=", from_date], [
+#                                                      "posting_date", "<=", to_date]],
+#                                                  fields=["stock_value_difference as valuation_change", "voucher_no", "voucher_type", "item_code", "posting_date"])
+#             if sle_entries_from_si:
+
+#                 for entry in sle_entries_from_si:
+#                     # frappe.msgprint(str(entry))
+#                     valuation_change_sum += flt(entry.get("valuation_change"))
+#                     quantity += flt(entry.get("actual_qty"))
+#     # frappe.msgprint(str(valuation_change_sum))
+
+#     valuation_change_sum = abs(valuation_change_sum)
+#     return flt(valuation_change_sum)
+
+
 def get_valuation_change_sum(item_code, from_date, to_date):
     quantity = 0.0
     sql_query = """
@@ -311,7 +409,7 @@ def get_valuation_change_sum(item_code, from_date, to_date):
             SELECT sii.parent
             FROM `tabSales Invoice Item` AS sii
             WHERE sii.item_code = %(item_code)s AND si.docstatus = 1
-            AND si.posting_date >= %(from_date)s AND si.posting_date <= %(to_date)s
+            AND si.posting_date >= %(from_date)s AND si.posting_date <= %(to_date)s AND si.return_against IS NULL AND sii.item_code IS NOT NULL
         )
     """
 
@@ -321,7 +419,6 @@ def get_valuation_change_sum(item_code, from_date, to_date):
     # Initialize a list to store the posting dates of Sales Invoices
     sales_invoice_title = [
         si.get("title") for si in sales_invoices]
-
     filters = {
         "item_code": item_code,
         "docstatus": 1,
