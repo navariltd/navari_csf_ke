@@ -12,14 +12,14 @@ frappe.query_reports["Gross Profit Report"] = {
       fieldname: "from_date",
       label: __("From Date"),
       fieldtype: "Date",
-      default: frappe.datetime.month_start(), // Set to the first date of the current month
+      default: frappe.datetime.month_start(),
       reqd: 1,
     },
     {
       fieldname: "to_date",
       label: __("To Date"),
       fieldtype: "Date",
-      default: frappe.datetime.month_end(), // Set to the last date of the current month
+      default: frappe.datetime.month_end(),
       reqd: 1,
     },
     {
@@ -34,14 +34,7 @@ frappe.query_reports["Gross Profit Report"] = {
       fieldtype: "Link",
       options: "Item Group",
     },
-    // {
-    //   fieldname: "sales_person",
-    //   label: __("Sales Person"),
-    //   fieldtype: "Link",
-    //   options: "Sales Person",
-    //   hidden: 1,
-    // },
-    // Add the following filters for item, item group, warehouse, and UOM
+
     {
       fieldname: "item",
       label: __("Item"),
