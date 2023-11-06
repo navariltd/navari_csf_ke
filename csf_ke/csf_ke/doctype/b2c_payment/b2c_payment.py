@@ -4,6 +4,7 @@
 import base64
 import datetime
 import json
+import ast
 
 import frappe
 import requests
@@ -77,6 +78,19 @@ def initiate_payment(partial_payload: str) -> dict[str, str] | None:
         make_payment(bearer_token, b2c_settings, partial_payload)
 
 
+@frappe.whitelist(allow_guest=True)
+def results_callback_url(Result):
+    """Handles results response from Safaricom after successful B2C Payment request"""
+    results = ast.literal_eval(json.dumps(Result))
+    print(f"Results callback Hit @ {datetime.datetime.now()} - {results}")
+
+
+@frappe.whitelist(allow_guest=True)
+def queue_timeout_url(response):
+    """Handles timeout responses from Safaricom"""
+    frappe.msgprint(f"{response}")
+
+
 def get_access_tokens(
     consumer_key: str, consumer_secret: str, url: str
 ) -> tuple[str, int]:
@@ -102,8 +116,10 @@ def get_access_tokens(
 
 def save_access_token_to_database(response: str) -> str:
     """
-    Deserialises the response object and saves the access token to the database, returning the access token
+    Deserialises the response object and saves the access token to the database,
+    returning the access token
     """
+    token_fetch_time = datetime.datetime.now()
     response = json.loads(response)
 
     expiry_time = datetime.datetime.now() + datetime.timedelta(
@@ -113,6 +129,7 @@ def save_access_token_to_database(response: str) -> str:
     new_token = frappe.new_doc("Daraja Access Tokens")
     new_token.access_token = response.get("access_token")
     new_token.expiry_time = expiry_time
+    new_token.token_fetch_time = token_fetch_time
     new_token.save()
 
     return response.get("access_token")

@@ -1,59 +1,66 @@
 {
- "actions": [],
- "autoname": "autoincrement",
- "creation": "2023-11-01 11:56:09.082783",
- "default_view": "List",
- "doctype": "DocType",
- "editable_grid": 1,
- "engine": "InnoDB",
- "field_order": [
-  "access_token",
-  "column_break_snir",
-  "expiry_time"
- ],
- "fields": [
-  {
-   "fieldname": "access_token",
-   "fieldtype": "Password",
-   "in_list_view": 1,
-   "label": "Access Token",
-   "reqd": 1
-  },
-  {
-   "fieldname": "expiry_time",
-   "fieldtype": "Datetime",
-   "in_list_view": 1,
-   "label": "Expiry",
-   "reqd": 1
-  },
-  {
-   "fieldname": "column_break_snir",
-   "fieldtype": "Column Break"
-  }
- ],
- "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2023-11-01 11:58:21.077171",
- "modified_by": "Administrator",
- "module": "CSF KE",
- "name": "Daraja Access Tokens",
- "naming_rule": "Autoincrement",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
- "sort_field": "modified",
- "sort_order": "DESC",
- "states": []
+  "actions": [],
+  "autoname": "autoincrement",
+  "creation": "2023-11-01 11:56:09.082783",
+  "default_view": "List",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "access_token",
+    "token_fetch_time",
+    "column_break_snir",
+    "expiry_time"
+  ],
+  "fields": [
+    {
+      "fieldname": "access_token",
+      "fieldtype": "Password",
+      "in_list_view": 1,
+      "label": "Access Token",
+      "reqd": 1
+    },
+    {
+      "fieldname": "expiry_time",
+      "fieldtype": "Datetime",
+      "in_list_view": 1,
+      "label": "Expiry",
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_snir",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "token_fetch_time",
+      "fieldtype": "Datetime",
+      "label": "Token Fetch Time",
+      "reqd": 1
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2023-11-06 09:05:58.732268",
+  "modified_by": "Administrator",
+  "module": "CSF KE",
+  "name": "Daraja Access Tokens",
+  "naming_rule": "Autoincrement",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
 }
