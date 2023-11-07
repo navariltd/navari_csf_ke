@@ -20,9 +20,12 @@ frappe.ui.form.on("B2C Payment", {
     }
   },
   refresh: function (frm) {
-    if (!frm.doc.__islocal && frm.doc.status === "Not Initiated") {
+    if (
+      !frm.doc.__islocal &&
+      (frm.doc.status === "Not Initiated" || frm.doc.status === "Timed-Out")
+    ) {
       // Only render the Initiate Payment button if document is saved, and
-      // payment status is Not Initiated
+      // payment status is "Not Initiated" or "Timed-Out"
       frm.add_custom_button("Initiate Payment", async function () {
         frappe.call({
           method:

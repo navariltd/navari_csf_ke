@@ -3,7 +3,9 @@
 *.egg-info
 *.swp
 *.cer
+*.rest
 
+logfile.txt
 tags
 
 csf_ke/docs/current

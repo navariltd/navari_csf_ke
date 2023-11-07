@@ -1,10 +1,10 @@
 # Copyright (c) 2023, Navari Limited and contributors
 # For license information, please see license.txt
 
+import ast
 import base64
 import datetime
 import json
-import ast
 
 import frappe
 import requests
@@ -72,26 +72,10 @@ def initiate_payment(partial_payload: str) -> dict[str, str] | None:
 
 
 @frappe.whitelist(allow_guest=True)
-def results_callback_url(Result):
+def results_callback_url(Result: dict):
     """
     Handles results response from Safaricom after successful B2C Payment request.
-    For a complete description of the parameters: https://developer.safaricom.co.ke/APIs/BusinessToCustomer
-    """
-    """
-        {
-        "ResultType": 0,
-        "ResultCode": 2001,
-        "ResultDesc": "The initiator information is invalid.",
-        "OriginatorConversationID": "b113c8de-e22b-46ae-ab38-f99a075fc6e5",
-        "ConversationID": "AG_20231107_2010549cfa97ff3b3ef6",
-        "TransactionID": "RK751Z1MSN",
-        "ReferenceData": {
-            "ReferenceItem": {
-                "Key": "QueueTimeoutURL",
-                "Value": "https://internalsandbox.safaricom.co.ke/mpesa/b2cresults/v1/submit",
-                }
-            },
-        }
+    For a complete description of the response parameters: https://developer.safaricom.co.ke/APIs/BusinessToCustomer
     """
     results = ast.literal_eval(json.dumps(Result))
     originator_conversation_id = results.get("OriginatorConversationID")
@@ -102,25 +86,76 @@ def results_callback_url(Result):
     )
     result_type = int(results.get("ResultType"))
     result_code = int(results.get("ResultCode"))
+    results_description = results.get("ResultDesc")
+    transaction_id = results.get("TransactionID")
 
     if result_type == 0:
         if result_code == 0:
             # Success result code. Mark the b2c payment record as paid in the database
-            print(f"Success with transaction {results.get('TransactionID')}")
-            update_doctype("B2C Payment", b2c_payment_document, "status", "Paid")
+            result_parameters = results.get("ResultParameters").get("ResultParameter")
+            transaction_values = {}
+
+            for item in result_parameters:
+                if item["Key"] == "TransactionAmount":
+                    transaction_values["transaction_amount"] = item["Value"]
+
+                elif (
+                    item["Key"] == "TransactionReceipt"
+                    and item["Value"] == transaction_id
+                ):
+                    transaction_values["transaction_id"] = item["Value"]
+
+                elif item["Key"] == "B2CRecipientIsRegisteredCustomer":
+                    transaction_values["recipient_is_registered_customer"] = item[
+                        "Value"
+                    ]
+
+                elif item["Key"] == "B2CChargesPaidAccountAvailableFunds":
+                    transaction_values["charges_paid_acct_avlbl_funds"] = item["Value"]
+
+                elif item["Key"] == "ReceiverPartyPublicName":
+                    transaction_values["receiver_public_name"] = item["Value"]
+
+                elif item["Key"] == "TransactionCompletedDateTime":
+                    transaction_datetime = datetime.datetime.strptime(
+                        item["Value"], "%d.%m.%Y %H:%M:%S"
+                    ).strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                    transaction_values[
+                        "transaction_completed_datetime"
+                    ] = transaction_datetime
+
+                elif item["Key"] == "B2CUtilityAccountAvailableFunds":
+                    transaction_values["utility_acct_avlbl_funds"] = item["Value"]
+
+                elif item["Key"] == "B2CWorkingAccountAvailableFunds":
+                    transaction_values["working_acct_avlbl_funds"] = item["Value"]
+
+            # Add originator conversation id that will act as a link to the originator B2C Payment record
+            transaction_values.update(
+                {"originatorcoversationid": originator_conversation_id}
+            )
+            # Update doctype values
+            update_doctype_single_values(
+                "B2C Payment", b2c_payment_document, "status", "Paid"
+            )
+            transaction = save_transaction_to_database(
+                "B2C Payments Transactions", transaction_values
+            )
+
+            return transaction
 
         else:
-            results_description = results.get("ResultDesc")
-            print(
-                f"Transaction {results.get('TransactionID')} Errored with: {results_description}"
-            )
+            # Unsuccessful result code. Update the b2c payment record
+            print(f"Transaction {transaction_id} Errored with: {results_description}")
 
             # Update error related fields in B2C Payment doctype record
-            update_doctype("B2C Payment", b2c_payment_document, "status", "Errored")
-            update_doctype(
+            update_doctype_single_values(
+                "B2C Payment", b2c_payment_document, "status", "Errored"
+            )
+            update_doctype_single_values(
                 "B2C Payment", b2c_payment_document, "error_code", result_code
             )
-            update_doctype(
+            update_doctype_single_values(
                 "B2C Payment",
                 b2c_payment_document,
                 "error_description",
@@ -128,7 +163,7 @@ def results_callback_url(Result):
             )
 
     else:
-        print(f"Duplicate Request Encountered for {originator_conversation_id}")
+        print(f"Duplicate Request Encountered for {b2c_payment_document.name}")
 
 
 @frappe.whitelist(allow_guest=True)
@@ -255,7 +290,9 @@ def make_payment(
 
         response, status_code = send_payload(payload, bearer_token, payment_url)
 
-        update_doctype("B2C Payment", payment_document, "status", "Pending")
+        update_doctype_single_values(
+            "B2C Payment", payment_document, "status", "Pending"
+        )
 
         return response, status_code
 
@@ -264,7 +301,7 @@ def make_payment(
     )
 
 
-def update_doctype(
+def update_doctype_single_values(
     doctype: str, document_to_update: Document, field: str, new_value: str
 ) -> None:
     """
@@ -274,3 +311,18 @@ def update_doctype(
     frappe.db.set_value(
         doctype, document_to_update.name, field, new_value, update_modified=True
     )
+
+
+def save_transaction_to_database(
+    doctype: str,
+    update_values: dict[str, str | int | float],
+) -> Document:
+    """
+    Saves Transaction details to database after successful B2C Payment
+    """
+    update_values.update({"doctype": doctype})
+
+    transaction = frappe.get_doc(update_values)
+    transaction.insert(ignore_permissions=True)
+
+    return transaction

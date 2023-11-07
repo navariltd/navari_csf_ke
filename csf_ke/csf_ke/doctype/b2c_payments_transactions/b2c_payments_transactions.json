@@ -1,0 +1,127 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "field:transaction_id",
+  "creation": "2023-11-07 14:25:41.290770",
+  "default_view": "List",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": [
+    "originatorcoversationid",
+    "section_break_ovxt",
+    "transaction_id",
+    "receiver_public_name",
+    "charges_paid_acct_avlbl_funds",
+    "utility_acct_avlbl_funds",
+    "column_break_iset",
+    "transaction_amount",
+    "recipient_is_registered_customer",
+    "working_acct_avlbl_funds",
+    "transaction_completed_datetime"
+  ],
+  "fields": [
+    {
+      "fieldname": "transaction_id",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Transaction ID",
+      "read_only": 1,
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "recipient_is_registered_customer",
+      "fieldtype": "Select",
+      "label": "B2C Recipient Is Registered Customer",
+      "options": "\nN\nY",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "charges_paid_acct_avlbl_funds",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "B2C Charges Paid Account Available Funds",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "receiver_public_name",
+      "fieldtype": "Data",
+      "label": "Receiver Party Public Name",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "transaction_completed_datetime",
+      "fieldtype": "Datetime",
+      "in_list_view": 1,
+      "label": "Transaction Completed Date Time",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "utility_acct_avlbl_funds",
+      "fieldtype": "Float",
+      "label": "B2C Utility Account Available Funds",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "working_acct_avlbl_funds",
+      "fieldtype": "Float",
+      "in_list_view": 1,
+      "label": "B2C Working Account Available Funds",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "transaction_amount",
+      "fieldtype": "Float",
+      "label": "Transaction Amount",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "column_break_iset",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "originatorcoversationid",
+      "fieldtype": "Data",
+      "label": "Originator Conversation ID",
+      "read_only": 1,
+      "reqd": 1
+    },
+    {
+      "fieldname": "section_break_ovxt",
+      "fieldtype": "Section Break"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2023-11-07 15:37:32.183895",
+  "modified_by": "Administrator",
+  "module": "CSF KE",
+  "name": "B2C Payments Transactions",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": []
+}

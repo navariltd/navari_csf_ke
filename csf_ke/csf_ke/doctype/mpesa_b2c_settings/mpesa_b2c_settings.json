@@ -61,13 +61,13 @@
       "fieldtype": "Column Break"
     },
     {
-      "description": "Mandatory Format: (http|https)://domain.*",
+      "description": "Mandatory Format: (http|https)://domain/api/method/csf_ke.csf_ke.doctype.b2c_payment.b2c_payment.queue_timeout_url",
       "fieldname": "queue_timeout_url",
       "fieldtype": "Data",
       "label": "Queue TimeOut URL"
     },
     {
-      "description": "Mandatory Format: (http|https)://domain.*",
+      "description": "Mandatory Format: (http|https)://domain/api/method/csf_ke.csf_ke.doctype.b2c_payment.b2c_payment.results_callback_url",
       "fieldname": "results_url",
       "fieldtype": "Data",
       "label": "Results URL"
@@ -90,7 +90,7 @@
   "index_web_pages_for_search": 1,
   "issingle": 1,
   "links": [],
-  "modified": "2023-11-03 19:49:29.743083",
+  "modified": "2023-11-07 13:57:54.610010",
   "modified_by": "Administrator",
   "module": "CSF KE",
   "name": "MPesa B2C Settings",
