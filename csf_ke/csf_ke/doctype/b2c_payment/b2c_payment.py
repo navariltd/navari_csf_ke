@@ -26,6 +26,12 @@ def initiate_payment(partial_payload: str) -> dict[str, str] | None:
     """Endpoint that initiates the payment process"""
     partial_payload = json.loads(frappe.form_dict.partial_payload)
     b2c_settings = frappe.db.get_singles_dict("MPesa B2C Settings")
+    payment_document = frappe.db.get_value(
+        "B2C Payment",
+        {"name": partial_payload.get("name")},
+        ["name", "status"],
+        as_dict=True,
+    )
     now = datetime.datetime.now()
     hashed_token = frappe.db.sql(
         f"""
@@ -53,36 +59,76 @@ def initiate_payment(partial_payload: str) -> dict[str, str] | None:
             if status_code == requests.codes.ok:
                 # If response code is 200, proceed
                 bearer_token = save_access_token_to_database(response)
-                make_payment(bearer_token, b2c_settings, partial_payload)
-
-            if status_code == requests.codes.bad_request:
-                # response code 400
-                frappe.msgprint("Bad Request Encountered")
-
-            elif status_code == requests.codes.forbidden:
-                # response code 403
-                frappe.msgprint("Not authorised to access this resource")
-
-            elif status_code >= requests.codes.server_error:
-                # response codes >= 500
-                frappe.msgprint("Internal Server Error from Safaricom Encountered.")
-
-            else:
-                pass
+                make_payment(
+                    bearer_token, b2c_settings, partial_payload, payment_document
+                )
 
     else:
         bearer_token = get_decrypted_password(
             "Daraja Access Tokens", hashed_token[0].name, "access_token"
         )
 
-        make_payment(bearer_token, b2c_settings, partial_payload)
+        make_payment(bearer_token, b2c_settings, partial_payload, payment_document)
 
 
 @frappe.whitelist(allow_guest=True)
 def results_callback_url(Result):
-    """Handles results response from Safaricom after successful B2C Payment request"""
+    """
+    Handles results response from Safaricom after successful B2C Payment request.
+    For a complete description of the parameters: https://developer.safaricom.co.ke/APIs/BusinessToCustomer
+    """
+    """
+        {
+        "ResultType": 0,
+        "ResultCode": 2001,
+        "ResultDesc": "The initiator information is invalid.",
+        "OriginatorConversationID": "b113c8de-e22b-46ae-ab38-f99a075fc6e5",
+        "ConversationID": "AG_20231107_2010549cfa97ff3b3ef6",
+        "TransactionID": "RK751Z1MSN",
+        "ReferenceData": {
+            "ReferenceItem": {
+                "Key": "QueueTimeoutURL",
+                "Value": "https://internalsandbox.safaricom.co.ke/mpesa/b2cresults/v1/submit",
+                }
+            },
+        }
+    """
     results = ast.literal_eval(json.dumps(Result))
-    print(f"Results callback Hit @ {datetime.datetime.now()} - {results}")
+    originator_conversation_id = results.get("OriginatorConversationID")
+    b2c_payment_document = frappe.db.get_value(
+        "B2C Payment",
+        {"originatorconversationid": originator_conversation_id},
+        as_dict=True,
+    )
+    result_type = int(results.get("ResultType"))
+    result_code = int(results.get("ResultCode"))
+
+    if result_type == 0:
+        if result_code == 0:
+            # Success result code. Mark the b2c payment record as paid in the database
+            print(f"Success with transaction {results.get('TransactionID')}")
+            update_doctype("B2C Payment", b2c_payment_document, "status", "Paid")
+
+        else:
+            results_description = results.get("ResultDesc")
+            print(
+                f"Transaction {results.get('TransactionID')} Errored with: {results_description}"
+            )
+
+            # Update error related fields in B2C Payment doctype record
+            update_doctype("B2C Payment", b2c_payment_document, "status", "Errored")
+            update_doctype(
+                "B2C Payment", b2c_payment_document, "error_code", result_code
+            )
+            update_doctype(
+                "B2C Payment",
+                b2c_payment_document,
+                "error_description",
+                results_description,
+            )
+
+    else:
+        print(f"Duplicate Request Encountered for {originator_conversation_id}")
 
 
 @frappe.whitelist(allow_guest=True)
@@ -95,7 +141,8 @@ def get_access_tokens(
     consumer_key: str, consumer_secret: str, url: str
 ) -> tuple[str, int]:
     """
-    Get the access token. This is the first function called when initiating the B2C payment process
+    Get the access token from the authorization url.
+    This is the first function called when initiating the B2C payment process
     """
     keys = f"{consumer_key}:{consumer_secret}"
     encoded_credentials = base64.b64encode(keys.encode("utf-8")).decode("utf-8")
@@ -109,7 +156,7 @@ def get_access_tokens(
         timeout=60,
     )
 
-    response.raise_for_status()
+    response.raise_for_status()  # Raise HTTPError if status code >= 400
 
     return response.text, response.status_code
 
@@ -178,39 +225,18 @@ def send_payload(payload: str, access_token: str, url) -> tuple[str, int]:
         timeout=60,
     )
 
-    response.raise_for_status()
+    response.raise_for_status()  # Raise HTTPError if status code >= 400
+
+    frappe.msgprint("Success", "Success", indicator="green")
 
     return response.text, response.status_code
 
 
-def handle_status_codes(response: str, status_code: int) -> str:
-    """Handle the various status codes"""
-    if status_code == requests.codes.ok:
-        frappe.msgprint(f"Response from Safaricom: {response}")
-        return "Success"
-
-    elif status_code == requests.codes.not_found:
-        frappe.msgprint("Resource Not Found")
-        return "Not Found"
-
-    elif status_code == requests.codes.bad_request:
-        frappe.msgprint("Bad Request Initiated")
-        return "Bad Request"
-
-    elif status_code == requests.codes.unauthorized:
-        frappe.msgprint("You are not authorised to make the request")
-        return "Unauthorized"
-
-    elif status_code >= requests.codes.server_error:
-        frappe.msgprint("Internal Server Error Encountered")
-        return "Internal Server Error"
-
-    else:
-        return "Unknown Status Code"
-
-
 def make_payment(
-    bearer_token: str, b2c_settings: Document, partial_payload: dict[str, str | int]
+    bearer_token: str,
+    b2c_settings: Document,
+    partial_payload: dict[str, str | int],
+    payment_document: Document,
 ) -> tuple[str, int]:
     """Handle Making the payment"""
     initiator_password = get_decrypted_password(
@@ -229,10 +255,22 @@ def make_payment(
 
         response, status_code = send_payload(payload, bearer_token, payment_url)
 
-        handle_status_codes(response, status_code)
+        update_doctype("B2C Payment", payment_document, "status", "Pending")
 
         return response, status_code
 
     frappe.msgprint(
         "No valid certificate file found. Did you get the certificate from Safaricom?"
+    )
+
+
+def update_doctype(
+    doctype: str, document_to_update: Document, field: str, new_value: str
+) -> None:
+    """
+    Updates the specified doctype's field with the specified values.
+    Note: Only one field is updated at a time
+    """
+    frappe.db.set_value(
+        doctype, document_to_update.name, field, new_value, update_modified=True
     )

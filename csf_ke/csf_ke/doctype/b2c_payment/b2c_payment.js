@@ -12,6 +12,7 @@ frappe.ui.form.on("B2C Payment", {
     }
 
     if (frm.doc.amount < 10) {
+      // Validate amount to be greater then KShs. 10
       frappe.msgprint(
         "Amount entered is less than the least acceptable amount of Kshs. 1"
       );
@@ -19,7 +20,9 @@ frappe.ui.form.on("B2C Payment", {
     }
   },
   refresh: function (frm) {
-    if (!frm.doc.__islocal) {
+    if (!frm.doc.__islocal && frm.doc.status === "Not Initiated") {
+      // Only render the Initiate Payment button if document is saved, and
+      // payment status is Not Initiated
       frm.add_custom_button("Initiate Payment", async function () {
         frappe.call({
           method:
@@ -27,6 +30,7 @@ frappe.ui.form.on("B2C Payment", {
           args: {
             // Create request with a partial payload
             partial_payload: {
+              name: frm.doc.name,
               OriginatorConversationID: frm.doc.originatorconversationid,
               CommandID: frm.doc.commandid,
               Amount: frm.doc.amount,
@@ -36,13 +40,16 @@ frappe.ui.form.on("B2C Payment", {
             },
           },
           callback: function (response) {
-            frappe.msgprint(response);
+            // Redirect upon response. Response received is success since error responses
+            // raise an HTTPError on the server-side
+            location.reload();
           },
         });
       });
     }
 
     if (!frm.doc.originatorconversationid) {
+      // Set uuidv4 compliant string
       frm.set_value("originatorconversationid", generateUUIDv4());
     }
   },
