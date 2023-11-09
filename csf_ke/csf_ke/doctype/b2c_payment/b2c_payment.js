@@ -45,15 +45,13 @@ frappe.ui.form.on("B2C Payment", {
           callback: function (response) {
             // Redirect upon response. Response received is success since error responses
             // raise an HTTPError on the server-side
-            if (
-              response.message.includes("No certificate file found in server")
-            ) {
+            if (response.message === "No certificate file found in server") {
               frappe.msgprint({
                 title: __("Authentication Error"),
                 indicator: "red",
                 message: __(response.message),
               });
-            } else if (response.message.includes("successful")) {
+            } else if (response.message === "successful") {
               location.reload();
             } else {
               // TODO: Add proper cases

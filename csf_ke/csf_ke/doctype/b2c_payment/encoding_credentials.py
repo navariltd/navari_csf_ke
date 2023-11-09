@@ -62,7 +62,7 @@ def openssl_encrypt_encode(password: bytes, cert_file: str) -> bytes:
 
 
 def openssl_decrypt_decode(password: bytes, encoded_data: bytes) -> bytes:
-    """Define a function that decrypts and decodes a file with OpenSSL and base64"""
+    """Defines a function that decrypts and decodes a file with OpenSSL and base64"""
     # Extract the salt from the first 8 bytes of the encoded data
     salt = encoded_data[:8]
 

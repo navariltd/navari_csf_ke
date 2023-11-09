@@ -29,7 +29,7 @@ class B2CPayment(Document):
 @frappe.whitelist(methods="POST")
 def initiate_payment(partial_payload: str) -> None:
     """
-    Endpoint that initiates the payment process.
+    This endpoint initiates the payment process.
     This endpoint first checks if a valid (meaning un-expired) access token is available.
     If none is found, it fetches one from the authorization url provided in the MPesa B2C Settings and
     proceeds to initiate a payment request to the payment url also specified in the MPesa B2C Settings.
@@ -264,7 +264,6 @@ def handle_successful_result(
         "B2C Payments Transactions", transaction_values
     )
     frappe.response["transaction"] = transaction
-    return
 
 
 def handle_unsuccessful_result(
@@ -311,8 +310,6 @@ def handle_duplicate_request(
         b2c_payment_document.name,
         originator_conversation_id,
     )
-
-    return
 
 
 def extract_transaction_values(
@@ -439,8 +436,6 @@ def update_doctype_single_values(
     frappe.db.set_value(
         doctype, document_to_update.name, field, new_value, update_modified=True
     )
-
-    return
 
 
 def save_transaction_to_database(
