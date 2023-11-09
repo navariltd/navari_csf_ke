@@ -21,7 +21,7 @@ frappe.ui.form.on("B2C Payment", {
         title: __("Validation Error"),
         indicator: "red",
         message: __(
-          "Amount entered is less than the least acceptable amount of Kshs. 1"
+          "Amount entered is less than the least acceptable amount of Kshs. 10"
         ),
       });
       frappe.validated = false;

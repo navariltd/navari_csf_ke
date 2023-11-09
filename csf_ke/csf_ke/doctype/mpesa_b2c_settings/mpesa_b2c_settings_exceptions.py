@@ -1,9 +1,9 @@
 """Exceptions"""
 
 
-class InvalidURLException(Exception):
+class InvalidURLError(Exception):
     """Exception to raise when URLs fail validation"""
 
 
-class IncompleteDataException(Exception):
+class IncompleteDataError(Exception):
     """Exception to raise when saving form with incomplete data"""

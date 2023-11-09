@@ -5,7 +5,7 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils.password import get_decrypted_password
 
-from .mpesa_b2c_settings_exceptions import InvalidURLException
+from .mpesa_b2c_settings_exceptions import InvalidURLError
 
 
 def create_incomplete_b2c_settings():
@@ -43,7 +43,7 @@ class TestMPesaB2CSettings(FrappeTestCase):
 
     def test_invalid_urls_in_b2c_settings(self) -> None:
         """Tests for cases when an invalid url is supplied"""
-        with self.assertRaises(InvalidURLException):
+        with self.assertRaises(InvalidURLError):
             frappe.get_doc(
                 {
                     "doctype": "MPesa B2C Settings",

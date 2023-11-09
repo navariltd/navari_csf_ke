@@ -5,7 +5,9 @@ import ast
 import base64
 import datetime
 import json
+import re
 from typing import Literal
+from uuid import uuid4
 
 import frappe
 import requests
@@ -18,9 +20,48 @@ from csf_ke.csf_ke.doctype.b2c_payment.encoding_credentials import (
     openssl_encrypt_encode,
 )
 
+from .b2c_payment_exceptions import (
+    IncorrectStatusError,
+    InsufficientPaymentAmountError,
+    InvalidReceiverMobileNumberError,
+)
+
 
 class B2CPayment(Document):
     """MPesa B2C Payment Class"""
+
+    def validate(self) -> None:
+        """Validations"""
+        self.error = ""
+
+        if not self.originatorconversationid:
+            # Generate random UUID4
+            self.originatorconversationid = str(uuid4())
+
+        if self.partyb and not validate_receiver_mobile_number(self.partyb):
+            # Validate mobile number of receiver, i.e. PartyB
+            self.error = "The Receiver (mobile number) entered is incorrect."
+
+            api_logger.error(self.error)
+            raise InvalidReceiverMobileNumberError(self.error)
+
+        if self.amount < 10:
+            # Validates payment amount
+            self.error = (
+                "Amount entered is less than the least acceptable amount of Kshs. 10"
+            )
+
+            api_logger.error(self.error)
+            raise InsufficientPaymentAmountError(self.error)
+
+        if not self.status:
+            self.status = "Not Initiated"
+
+        if self.status == "Errored" and not (self.error_description or self.error_code):
+            self.error = "Incorrect Status"
+
+            api_logger.error(self.error)
+            raise IncorrectStatusError(self.error)
 
 
 @frappe.whitelist(methods="POST")
@@ -456,3 +497,15 @@ def save_transaction_to_database(
     )
 
     return transaction
+
+
+def validate_receiver_mobile_number(receiver: str) -> bool:
+    """Validates the Receiver's mobile number"""
+    receiver = receiver.replace("+", "").strip()
+    pattern1 = re.compile(r"^2547\d{8}$")
+    pattern2 = re.compile(r"(25410|25411)\d{7}$")
+
+    if receiver.startswith("2547"):
+        return bool(pattern1.match(receiver))
+
+    return bool(pattern2.match(receiver))

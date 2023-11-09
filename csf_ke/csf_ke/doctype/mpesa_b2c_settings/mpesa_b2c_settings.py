@@ -5,7 +5,8 @@ import re
 
 from frappe.model.document import Document
 
-from .mpesa_b2c_settings_exceptions import InvalidURLException
+from .. import api_logger
+from .mpesa_b2c_settings_exceptions import InvalidURLError
 
 
 class MPesaB2CSettings(Document):
@@ -25,7 +26,10 @@ class MPesaB2CSettings(Document):
                 and validate_url(self.authorization_url)
                 and validate_url(self.payment_url)
             ):
-                raise InvalidURLException(
+                api_logger.error(
+                    "The URLs Registered are not valid. Please review them"
+                )
+                raise InvalidURLError(
                     "The URLs Registered are not valid. Please review them"
                 )
 
