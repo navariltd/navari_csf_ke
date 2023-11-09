@@ -10,16 +10,13 @@ from typing import Literal
 import frappe
 import requests
 from frappe.model.document import Document
-from frappe.utils import logger
 from frappe.utils.file_manager import get_file_path
 from frappe.utils.password import get_decrypted_password
 
+from csf_ke.csf_ke.doctype import api_logger
 from csf_ke.csf_ke.doctype.b2c_payment.encoding_credentials import (
     openssl_encrypt_encode,
 )
-
-logger.set_log_level("DEBUG")
-api_logger = frappe.logger("api", allow_site=True, file_count=50)
 
 
 class B2CPayment(Document):

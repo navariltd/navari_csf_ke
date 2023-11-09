@@ -6,16 +6,24 @@ frappe.ui.form.on("B2C Payment", {
     if (frm.doc.partyb) {
       if (!validatePhoneNumber(frm.doc.partyb)) {
         // Validate if the receiver's mobile number is valid
-        frappe.msgprint("The Receiver (mobile number) entered is incorrect.");
+        frappe.msgprint({
+          title: __("Validation Error"),
+          indicator: "red",
+          message: __("The Receiver (mobile number) entered is incorrect."),
+        });
         frappe.validated = false;
       }
     }
 
     if (frm.doc.amount < 10) {
       // Validate amount to be greater then KShs. 10
-      frappe.msgprint(
-        "Amount entered is less than the least acceptable amount of Kshs. 1"
-      );
+      frappe.msgprint({
+        title: __("Validation Error"),
+        indicator: "red",
+        message: __(
+          "Amount entered is less than the least acceptable amount of Kshs. 1"
+        ),
+      });
       frappe.validated = false;
     }
   },
