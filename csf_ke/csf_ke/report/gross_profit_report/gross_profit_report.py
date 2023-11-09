@@ -55,6 +55,7 @@ def get_columns(filters):
             "fieldtype": "Link",
             "options": "Item Group",
             "width": 120,
+            "hidden": 1,
 
         },
         {
@@ -63,6 +64,7 @@ def get_columns(filters):
             "fieldtype": "Link",
             "options": "UOM",
             "width": 120,
+            "hidden": 1,
 
         },
         {
@@ -70,6 +72,7 @@ def get_columns(filters):
             "fieldname": "uom_required",
             "fieldtype": "Data",
             "width": 100,
+            "hidden": 1,
 
         },
         {
@@ -146,6 +149,7 @@ def get_columns(filters):
 
 
 def calculate_gross_profit(buying_amount, selling_amount):
+
     buying_amount = float(buying_amount) if buying_amount is not None else 0.0
     selling_amount = float(
         selling_amount) if selling_amount is not None else 0.0
@@ -307,7 +311,7 @@ def get_query(filters):
 def get_sales_invoices(item_code, from_date, to_date):
     # Implement the logic to fetch sales data
     sql_query = """
-        SELECT si.posting_date, si.title, si.update_stock, si.name,
+        SELECT si.posting_date, si.title, si.update_stock, si.name,si.amended_from,
         (SELECT AVG(sii.stock_qty)
          FROM `tabSales Invoice Item` AS sii
          WHERE sii.parent = si.name AND sii.item_code = %(item_code)s) as qty
@@ -374,6 +378,63 @@ def get_stock_ledger_entries(voucher_name, item_code, from_date, to_date):
     return sle_entries
 
 
+def get_stock_ledger_entries_recalculate(voucher_name, item_code, from_date, to_date):
+    filters = {
+        "voucher_no": voucher_name,
+        "item_code": item_code,
+        "docstatus": 1,
+        "is_cancelled": 0,
+        "recalculate_rate": 0,
+        "posting_date": [">=", from_date],
+    }
+
+    or_filters = {
+        "posting_date": ["<=", to_date],
+    }
+
+    fields = [
+        "stock_value_difference as valuation_change",
+        "voucher_no",
+        "voucher_type",
+        "item_code",
+        "name",
+        "posting_date"
+    ]
+
+    sle_entries = frappe.get_all(
+        "Stock Ledger Entry", filters=filters, or_filters=or_filters, fields=fields)
+
+    return sle_entries
+
+
+def get_stock_ledger_entries_cancelled_but_amended(voucher_name, item_code, from_date, to_date):
+    filters = {
+        "voucher_no": voucher_name,
+        "item_code": item_code,
+        "docstatus": 1,
+        "is_cancelled": 1,
+        "posting_date": [">=", from_date],
+    }
+
+    or_filters = {
+        "posting_date": ["<=", to_date],
+    }
+
+    fields = [
+        "stock_value_difference as valuation_change",
+        "voucher_no",
+        "voucher_type",
+        "item_code",
+        "name",
+        "posting_date"
+    ]
+
+    sle_entries = frappe.get_all(
+        "Stock Ledger Entry", filters=filters, or_filters=or_filters, fields=fields)
+
+    return sle_entries
+
+
 def get_delivery_notes(item_code, from_date, to_date):
     filters = {
         "item_code": item_code,
@@ -390,6 +451,7 @@ def get_delivery_notes(item_code, from_date, to_date):
 
 
 def get_valuation_change_sum(item_code, from_date, to_date):
+
     quantity = 0.0
     used_vouchers = set()
     valuation_change_sum = 0.0
@@ -399,8 +461,10 @@ def get_valuation_change_sum(item_code, from_date, to_date):
 
     sales_invoices = get_sales_invoices(item_code, from_date, to_date)
     # Initialize a list to store the titles of Sales Invoices
+
     sales_invoice_title = [
         si.get("title") for si in sales_invoices]
+
     filters = {}
 
     # Get all Delivery Notes within the date range
@@ -420,34 +484,49 @@ def get_valuation_change_sum(item_code, from_date, to_date):
         used_vouchers.add(delivery_note.get("title"))
 
     # proceed with Stock Ledger Entries for the filtered Delivery Notes
-    sle_entries = get_stock_ledger_entries(
-        filters["voucher_no"], item_code, from_date, to_date)
+    if item_code in ["60er Kali MOP gran - 50Kg", "60er Kali MOP gran B pink- 50Kg"]:
+        sle_entries = get_stock_ledger_entries_recalculate(
+            filters["voucher_no"], item_code, from_date, to_date)
+
+    else:
+        sle_entries = get_stock_ledger_entries(
+            filters["voucher_no"], item_code, from_date, to_date)
 
     if sle_entries:
+
         for entry in sle_entries:
             dl_used = entry.get("voucher_no")
             used_delivery_note.add(dl_used)
-            # frappe.msgprint(str(entry.get("name")))
             valuation_change_sum += flt(entry.get("valuation_change"))
             quantity += flt(entry.get("actual_qty"))
     else:
         for dl in filtered_delivery_note_names:
             if dl not in used_delivery_note:
                 un_used_delivery_note.add(dl)
-    # frappe.msgprint(str(un_used_delivery_note))
 
     for si in sales_invoices:
         update_stock = si.get("update_stock")
         quantity += si.get("qty")
-        if update_stock == 1:
-            voucher_name = si.get("name")
+        amended = si.get("amended_from")
+
+        if update_stock == 1 or amended is not None:
+            if amended is not None:
+                voucher_name = amended
+                sle_entries_from_si_amended = get_stock_ledger_entries_cancelled_but_amended(
+                    voucher_name, item_code, from_date, to_date)
+                if sle_entries_from_si_amended:
+                    for entry in sle_entries_from_si_amended:
+                        valuation_change_sum += flt(
+                            entry.get("valuation_change"))
+                        quantity += flt(entry.get("actual_qty"))
+            else:
+                voucher_name = si.get("name")
             voucher_title = si.get("title")
             used_vouchers.add(voucher_title)
-
             sle_entries_from_si = get_stock_ledger_entries(
                 voucher_name, item_code, from_date, to_date)
-            if sle_entries_from_si:
 
+            if sle_entries_from_si:
                 for entry in sle_entries_from_si:
 
                     valuation_change_sum += flt(entry.get("valuation_change"))
@@ -457,10 +536,8 @@ def get_valuation_change_sum(item_code, from_date, to_date):
 
             voucher_name = si.get("name")
             voucher_title_u = si.get("title")
-            # frappe.msgprint(str(used_vouchers))
             if voucher_title_u not in used_vouchers:
 
-                # frappe.msgprint(str(quantity))
                 stock_entry_valuation = get_stock_entry_valuation(item_code)
                 if stock_entry_valuation:
 
