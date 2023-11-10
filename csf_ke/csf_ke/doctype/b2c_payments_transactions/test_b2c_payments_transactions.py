@@ -40,9 +40,7 @@ def create_b2c_payment_transaction() -> None:
             "originatorconversationid": ORIGINATOR_CONVERSATION_ID_2,
             "commandid": "SalaryPayment",
             "remarks": "test remarks",
-            "status": random.choice(
-                ["Pending", "Errored", "Not Initiated", "Timed-Out"]
-            ),
+            "status": random.choice(["Pending", "Not Initiated", "Timed-Out"]),
             "partyb": "254712345678",
             "amount": 10,
             "occassion": "Testing",
