@@ -1,8 +1,6 @@
 # Copyright (c) 2023, Navari Limited and contributors
 # For license information, please see license.txt
 
-import frappe
-
 import frappe  # Assuming you are using Frappe framework
 from frappe.utils import add_days, flt
 from frappe.utils import flt, add_days
