@@ -6,7 +6,7 @@ import datetime
 import frappe
 from frappe.utils.password import get_decrypted_password
 from frappe.tests.utils import FrappeTestCase
-from .daraja_access_tokens_exceptions import InvalidTokenExpiryTime
+from ..csf_ke_exceptions import InvalidTokenExpiryTime
 
 
 TOKEN_ACCESS_TIME = datetime.datetime.now()
@@ -14,8 +14,12 @@ TOKEN_ACCESS_TIME = datetime.datetime.now()
 
 def create_access_token() -> None:
     """Creates a valid access token record for testing"""
-    expiry_time = TOKEN_ACCESS_TIME + datetime.timedelta(hours=1)
+    if frappe.flags.test_events_created:
+        return
 
+    frappe.set_user("Administrator")
+
+    expiry_time = TOKEN_ACCESS_TIME + datetime.timedelta(hours=1)
     frappe.get_doc(
         {
             "doctype": "Daraja Access Tokens",

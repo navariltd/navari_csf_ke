@@ -5,8 +5,12 @@ import re
 
 from frappe.model.document import Document
 
+from ..csf_ke_exceptions import InvalidURLError
+
 from .. import api_logger
-from .mpesa_b2c_settings_exceptions import InvalidURLError
+from ..csf_ke_exceptions import (
+    InvalidAuthenticationCertificateFileError,
+)
 
 
 class MPesaB2CSettings(Document):
@@ -31,6 +35,16 @@ class MPesaB2CSettings(Document):
                 )
                 raise InvalidURLError(
                     "The URLs Registered are not valid. Please review them"
+                )
+
+        if self.certificate_file:
+            if not (
+                self.certificate_file.endswith(".cer")
+                or self.certificate_file.endswith(".pem")
+            ):
+                api_logger.error("Invalid Authentication Certificate file uploaded")
+                raise InvalidAuthenticationCertificateFileError(
+                    "Invalid Authentication Certificate file uploaded"
                 )
 
 

@@ -1,3 +1,5 @@
+"""Utility functions that handle the encoding and decoding of credentials"""
+
 import base64
 import hashlib
 import os
@@ -35,7 +37,8 @@ def pkcs7_unpad(data: bytes) -> bytes:
 
 def openssl_encrypt_encode(password: bytes, cert_file: str) -> bytes:
     """
-    Defines a function that encrypts and encodes the password using a certificate file and OpenSSL and Base64 encoding
+    Defines a function that encrypts and encodes the password
+    using a certificate file and OpenSSL and Base64 encoding
     """
     with open(cert_file, "rb") as f:
         cert_data = f.read()

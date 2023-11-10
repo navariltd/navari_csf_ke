@@ -5,10 +5,13 @@ import frappe
 import pymysql
 from frappe.tests.utils import FrappeTestCase
 
-from .b2c_payment_exceptions import (
-    IncorrectStatusError,
+from ..csf_ke_exceptions import (
     InsufficientPaymentAmountError,
     InvalidReceiverMobileNumberError,
+)
+
+from ..csf_ke_exceptions import (
+    IncorrectStatusError,
 )
 
 
@@ -41,7 +44,7 @@ class TestB2CPayment(FrappeTestCase):
     def tearDown(self) -> None:
         frappe.set_user("Administrator")
 
-    def test_invalid_receiver(self) -> None:
+    def test_invalid_receiver_number(self) -> None:
         """Tests invalid receivers"""
         with self.assertRaises(InvalidReceiverMobileNumberError):
             frappe.get_doc(
@@ -92,6 +95,31 @@ class TestB2CPayment(FrappeTestCase):
                 }
             ).insert()
 
+    def test_empty_mandatory_fields(self) -> None:
+        """Tests when a mandatory field is not field"""
+        with self.assertRaises(frappe.exceptions.MandatoryError):
+            frappe.get_doc(
+                {
+                    "doctype": "B2C Payment",
+                    "commandid": "SalaryPayment",
+                    "status": "Not Initiated",
+                    "partyb": "254708993268",
+                    "amount": 10,
+                    "occassion": "Testing",
+                }
+            ).insert()
+
+            frappe.get_doc(
+                {
+                    "doctype": "B2C Payment",
+                    "remarks": "testing remarks",
+                    "status": "Not Initiated",
+                    "partyb": "254708993268",
+                    "amount": 10,
+                    "occassion": "Testing",
+                }
+            ).insert()
+
     def test_insufficient_amount(self) -> None:
         """Tests when an insufficient payment amount has been supplied"""
         with self.assertRaises(InsufficientPaymentAmountError):
@@ -123,7 +151,7 @@ class TestB2CPayment(FrappeTestCase):
                 }
             ).insert()
 
-    def test_valid_uuid_length(self) -> None:
+    def test_valid_originator_conversation_id_length(self) -> None:
         """Test that the created b2c settings have valid length uuids"""
         new_b2c_payment = frappe.get_doc(
             {
@@ -139,7 +167,7 @@ class TestB2CPayment(FrappeTestCase):
 
         self.assertEqual(len(new_b2c_payment.originatorconversationid), 36)
 
-    def test_errored_status_no_code_or_description(self) -> None:
+    def test_invalid_errored_status_no_code_or_error_description(self) -> None:
         """Tests when status is set to errored without a description or error code"""
         with self.assertRaises(IncorrectStatusError):
             frappe.get_doc(
@@ -153,3 +181,21 @@ class TestB2CPayment(FrappeTestCase):
                     "occassion": "Testing",
                 }
             ).insert()
+
+    def test_status_set_to_not_initiated_when_not_supplied(self) -> None:
+        """
+        Tests when status is not given on creation of a record.
+        Should be set to 'Not Initiated'
+        """
+        new_doc = frappe.get_doc(
+            {
+                "doctype": "B2C Payment",
+                "commandid": "SalaryPayment",
+                "remarks": "test remarks",
+                "partyb": "254708993268",
+                "amount": 10,
+                "occassion": "Testing",
+            }
+        ).insert()
+
+        self.assertEqual(new_doc.status, "Not Initiated")

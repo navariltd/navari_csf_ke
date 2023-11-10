@@ -19,11 +19,13 @@ from csf_ke.csf_ke.doctype import api_logger
 from csf_ke.csf_ke.doctype.b2c_payment.encoding_credentials import (
     openssl_encrypt_encode,
 )
-
-from .b2c_payment_exceptions import (
-    IncorrectStatusError,
+from ..csf_ke_exceptions import (
     InsufficientPaymentAmountError,
     InvalidReceiverMobileNumberError,
+)
+
+from ..csf_ke_exceptions import (
+    IncorrectStatusError,
 )
 
 
@@ -40,41 +42,43 @@ class B2CPayment(Document):
 
         if self.partyb and not validate_receiver_mobile_number(self.partyb):
             # Validate mobile number of receiver, i.e. PartyB
-            self.error = "The Receiver (mobile number) entered is incorrect."
+            self.error = (
+                "The Receiver (mobile number) entered is incorrect for payment: %s."
+            )
 
-            api_logger.error(self.error)
+            api_logger.error(self.error, self.name)
             raise InvalidReceiverMobileNumberError(self.error)
 
         if self.amount < 10:
             # Validates payment amount
-            self.error = (
-                "Amount entered is less than the least acceptable amount of Kshs. 10"
-            )
+            self.error = "Amount entered is less than the least acceptable amount of Kshs. 10, for payment: %s"
 
-            api_logger.error(self.error)
+            api_logger.error(self.error, self.name)
             raise InsufficientPaymentAmountError(self.error)
 
         if not self.status:
             self.status = "Not Initiated"
 
-        if self.status == "Errored" and not (self.error_description or self.error_code):
-            self.error = "Incorrect Status"
+        if self.status == "Errored":
+            if not (self.error_description and self.error_code):
+                self.error = "Status 'Errored' needs to have a corresponding error_code and error_description for payment: %s"
 
-            api_logger.error(self.error)
-            raise IncorrectStatusError(self.error)
+                api_logger.error(self.error, self.name)
+                raise IncorrectStatusError(self.error)
 
 
 @frappe.whitelist(methods="POST")
 def initiate_payment(partial_payload: str) -> None:
     """
     This endpoint initiates the payment process.
-    This endpoint first checks if a valid (meaning un-expired) access token is available.
+    The endpoint first checks if a valid (meaning un-expired) access token is available.
     If none is found, it fetches one from the authorization url provided in the MPesa B2C Settings and
     proceeds to initiate a payment request to the payment url also specified in the MPesa B2C Settings.
     If a valid token is found, a payment initialization request is placed immediately.
     """
     partial_payload = json.loads(frappe.form_dict.partial_payload)
     b2c_settings = frappe.db.get_singles_dict("MPesa B2C Settings")
+
     payment_document = frappe.db.get_value(
         "B2C Payment",
         {"name": partial_payload.get("name")},
@@ -120,27 +124,28 @@ def results_callback_url(Result: dict) -> None:
 
     if result_type == 0:
         if result_code == 0:
-            handle_successful_result(
+            handle_successful_result_response(
                 results, originator_conversation_id, transaction_id
             )
         else:
-            handle_unsuccessful_result(
+            handle_unsuccessful_result_response(
                 transaction_id,
                 originator_conversation_id,
                 result_code,
                 results_description,
             )
     else:
-        handle_duplicate_request(b2c_payment_document, originator_conversation_id)
+        handle_duplicate_request(originator_conversation_id)
 
 
 @frappe.whitelist(allow_guest=True)
 def queue_timeout_url(response):
     """Handles timeout responses from Safaricom"""
+    # TODO: Properly handle timeout responses. Not clearly specified in Safaricom
     frappe.msgprint(f"{response}")
 
 
-def get_hashed_token() -> str | list:
+def get_hashed_token() -> str | list[None]:
     """
     Checks if a valid (read un-expired) token is present in the database,
     fetches and returns it. Otherwise, returns an empty list
@@ -160,11 +165,11 @@ def get_hashed_token() -> str | list:
     if hashed_token:
         return hashed_token[0].name
 
-    return hashed_token
+    return []
 
 
 def get_b2c_settings(b2c_settings: Document) -> tuple[str, str, str]:
-    """Gets the consumer key, secret, and authorization url from the B2C Settings"""
+    """Gets the consumer key, secret, and authorization url from the MPesa B2C Settings doctype"""
     consumer_key = b2c_settings.get("consumer_key")
     authorization_url = b2c_settings.get("authorization_url")
     consumer_secret = get_decrypted_password(
@@ -177,25 +182,32 @@ def get_access_tokens(
     consumer_key: str, consumer_secret: str, url: str
 ) -> tuple[str, int]:
     """
-    Get the access token from the authorization url.
-    This is the first function called when initiating the B2C payment process
+    Gets the access token from the authorization url specified in the MPesa B2C Settings doctype.
     """
     keys = f"{consumer_key}:{consumer_secret}"
-    encoded_credentials = base64.b64encode(keys.encode("utf-8")).decode("utf-8")
-
-    response = requests.get(
-        url,
-        headers={
-            "Authorization": f"Basic {encoded_credentials}",
-            "Content-Type": "application/json",
-        },
-        timeout=60,
-    )
+    encoded_credentials = base64.b64encode(keys.encode()).decode()
 
     try:
+        response = requests.get(
+            url,
+            headers={
+                "Authorization": f"Basic {encoded_credentials}",
+                "Content-Type": "application/json",
+            },
+            timeout=60,
+        )
+
         response.raise_for_status()  # Raise HTTPError if status code >= 400
 
     except requests.HTTPError:
+        api_logger.exception("Exception Encountered when fetching access token")
+        raise
+
+    except requests.exceptions.ConnectionError:
+        api_logger.exception("Exception Encountered when fetching access token")
+        raise
+
+    except Exception:
         api_logger.exception("Exception Encountered")
         raise
 
@@ -228,17 +240,19 @@ def save_access_token_to_database(response: str) -> str:
     return response.get("access_token")
 
 
-def get_certificate_file() -> str | Literal[-1]:
-    """Get the uploaded certificate's file path from/in the server"""
-    certificate_path = frappe.get_value("File", {"file_type": "CER"}, ["file_url"])
-
+def get_certificate_file(certificate_path: str) -> str | Literal[-1]:
+    """
+    Gets the specified certificate's file path in the server.
+    This is the path of the file attached under the Authorisation Certificate File
+    in the MPesa B2C Settings field.
+    """
     if certificate_path:
         certificate: str | None = get_file_path(certificate_path)
 
         return certificate
 
     api_logger.error(
-        "No valid Authentication Certificate file (*.cer) found in the server."
+        "No valid Authentication Certificate file (*.cer or *.pem) found in the server."
     )
     return -1
 
@@ -262,9 +276,11 @@ def generate_payload(
     return json.dumps(partial_payload)
 
 
-def get_result_details(results: dict) -> tuple:
+def get_result_details(results: dict) -> tuple[str, str, str | int, str, str | int]:
     """
-    Takes the results callback's result object and returns the important parameters
+    Takes the results callback's result object and returns the
+    Originator Conversation ID, the Result Type, Result Code,
+    Result Description, and Transaction ID respectively
     """
     originator_conversation_id = results.get("OriginatorConversationID")
     result_type = int(results.get("ResultType"))
@@ -281,11 +297,11 @@ def get_result_details(results: dict) -> tuple:
     )
 
 
-def handle_successful_result(
+def handle_successful_result_response(
     results: dict, originator_conversation_id: str, transaction_id: str
 ) -> None:
     """
-    Handles the result callback's responses with a successful ResutlCode, i.e. ResultCode of 0
+    Handles the results callback's responses with a successful ResultCode, i.e. ResultCode of 0
     """
     b2c_payment_document = frappe.db.get_value(
         "B2C Payment",
@@ -297,21 +313,24 @@ def handle_successful_result(
     transaction_values = extract_transaction_values(
         result_parameters, transaction_id, originator_conversation_id
     )
+
     update_doctype_single_values("B2C Payment", b2c_payment_document, "status", "Paid")
+
     transaction = save_transaction_to_database(
         "B2C Payments Transactions", transaction_values
     )
+
     frappe.response["transaction"] = transaction
 
 
-def handle_unsuccessful_result(
+def handle_unsuccessful_result_response(
     transaction_id: str,
     originator_conversation_id: str,
     result_code: int,
     results_description: str,
 ) -> None:
     """
-    Handles the result callback's responses with an unsuccessful ResutlCode, i.e. ResultCode of 1
+    Handles the results callback's responses with an unsuccessful ResultCode, i.e. ResultCode != 0
     """
     b2c_payment_document = frappe.db.get_value(
         "B2C Payment",
@@ -337,15 +356,20 @@ def handle_unsuccessful_result(
     )
 
 
-def handle_duplicate_request(
-    b2c_payment_document: Document, originator_conversation_id: str
-) -> None:
+def handle_duplicate_request(originator_conversation_id: str) -> None:
     """
     Logs instances where multiple requests from same B2C payment record are initiated.
+    Normally, only one payment can be initiated from the client.
     """
+    b2c_payment = frappe.db.get_value(
+        "B2C Payment",
+        {"originatorconversationid": originator_conversation_id},
+        ["name"],
+        as_dict=True,
+    )
     api_logger.info(
         "Duplicate Request Encountered for: %s and originator conversation id: %s",
-        b2c_payment_document.name,
+        b2c_payment.name,
         originator_conversation_id,
     )
 
@@ -354,7 +378,11 @@ def extract_transaction_values(
     result_parameters: dict, transaction_id: str, originator_conversation_id: str
 ) -> dict[str, str | int]:
     """
-    Parses the ResultsParameter of successful responses to the results callback endpoint
+    Parses the ResultParameters of successful responses to the results callback endpoint
+    and returns the values as a dictionary.
+    Fields parsed include: TransactionAmount, TransactionReceipt, B2CRecipientIsRegisteredCustomer,
+    B2CChargesPaidAccountAvailableFunds, ReceiverPartyPublicName, TransactionCompletedDateTime,
+    B2CUtilityAccountAvailableFunds, B2CWorkingAccountAvailableFunds
     """
     transaction_values = {}
 
@@ -392,21 +420,29 @@ def extract_transaction_values(
 
 def send_payload(payload: str, access_token: str, url) -> tuple[str, int]:
     """Sends request to payment processing url with payload"""
-    response = requests.post(
-        url,
-        data=payload,
-        headers={
-            "Authorization": f"Bearer {access_token}",
-            "Content-Type": "application/json",
-        },
-        timeout=60,
-    )
-
     try:
+        response = requests.post(
+            url,
+            data=payload,
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Content-Type": "application/json",
+            },
+            timeout=60,
+        )
+
         response.raise_for_status()  # Raise HTTPError if status code >= 400
 
     except requests.HTTPError:
-        api_logger.exception("Exception encountered")
+        api_logger.exception("Exception Encountered when sending payment request")
+        raise
+
+    except requests.exceptions.ConnectionError:
+        api_logger.exception("Exception Encountered when sending payment request")
+        raise
+
+    except Exception:
+        api_logger.exception("Exception Encountered")
         raise
 
     frappe.msgprint("Payment Request Successful", title="Successful", indicator="green")
@@ -419,13 +455,17 @@ def make_payment(
     partial_payload: dict[str, str | int],
     payment_document: Document,
 ) -> None:
-    """Handle Making the payment"""
+    """
+    Handles making the Payment request.
+    This function sends the final response to the client after initiating the payment request.
+    """
     initiator_password = get_decrypted_password(
         "MPesa B2C Settings", "MPesa B2C Settings", "initiator_password"
     )
     payment_url = b2c_settings.get("payment_url")
+    certificate_relative_path = b2c_settings.get("certificate_file")
 
-    certificate = get_certificate_file()
+    certificate = get_certificate_file(certificate_relative_path)
 
     if isinstance(certificate, str):
         security_credentials = openssl_encrypt_encode(
@@ -481,7 +521,7 @@ def save_transaction_to_database(
     update_values: dict[str, str | int | float],
 ) -> Document:
     """
-    Saves Transaction details to database after successful B2C Payment
+    Saves Transaction details to database after successful B2C Payment and returns the record
     """
     update_values.update({"doctype": doctype})
 

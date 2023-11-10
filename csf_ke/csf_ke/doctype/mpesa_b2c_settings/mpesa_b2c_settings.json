@@ -17,7 +17,9 @@
     "consumer_secret",
     "initiator_password",
     "queue_timeout_url",
-    "payment_url"
+    "payment_url",
+    "section_break_tos4",
+    "certificate_file"
   ],
   "fields": [
     {
@@ -85,12 +87,23 @@
       "fieldtype": "Data",
       "label": "Payment URL",
       "reqd": 1
+    },
+    {
+      "fieldname": "section_break_tos4",
+      "fieldtype": "Section Break"
+    },
+    {
+      "description": "A Certificate file (.cer or .pem) received from Safaricom.",
+      "fieldname": "certificate_file",
+      "fieldtype": "Attach",
+      "label": "Authorisation Certificate File",
+      "reqd": 1
     }
   ],
   "index_web_pages_for_search": 1,
   "issingle": 1,
   "links": [],
-  "modified": "2023-11-07 13:57:54.610010",
+  "modified": "2023-11-10 10:39:53.942294",
   "modified_by": "Administrator",
   "module": "CSF KE",
   "name": "MPesa B2C Settings",

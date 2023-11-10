@@ -5,7 +5,11 @@ import frappe
 from frappe.tests.utils import FrappeTestCase
 from frappe.utils.password import get_decrypted_password
 
-from .mpesa_b2c_settings_exceptions import InvalidURLError
+from ..csf_ke_exceptions import InvalidURLError
+
+from ..csf_ke_exceptions import (
+    InvalidAuthenticationCertificateFileError,
+)
 
 
 def create_incomplete_b2c_settings():
@@ -29,7 +33,7 @@ def create_incomplete_b2c_settings():
             "queue_timeout_url": "https://example.com/api/method/handler",
             "payment_url": "https://example.com/api/method/handler",
         }
-    ).insert()
+    ).insert(ignore_mandatory=True)
 
 
 class TestMPesaB2CSettings(FrappeTestCase):
@@ -57,7 +61,7 @@ class TestMPesaB2CSettings(FrappeTestCase):
                     "queue_timeout_url": "https://example.com/api/method/handler",
                     "payment_url": "jkl",
                 }
-            ).insert()
+            ).insert(ignore_mandatory=True)
 
     def test_valid_b2c_settings(self) -> None:
         """Test valid B2C Settings"""
@@ -99,10 +103,29 @@ class TestMPesaB2CSettings(FrappeTestCase):
                 "queue_timeout_url": "https://example2.com/api/method/handler",
                 "payment_url": "https://example2.com/api/method/handler",
             }
-        ).insert()
+        ).insert(ignore_mandatory=True)
 
         new_doc = frappe.db.get_singles_dict("MPesa B2C Settings")
 
         self.assertEqual(new_doc.initiator_name, "tester2")
         self.assertEqual(new_doc.payment_url, "https://example2.com/api/method/handler")
         self.assertEqual(new_doc.consumer_key, "987654321")
+
+    def test_invalid_certificate_file(self) -> None:
+        """Tests when a user uploads an invalid certificate file"""
+        with self.assertRaises(InvalidAuthenticationCertificateFileError):
+            frappe.get_doc(
+                {
+                    "doctype": "MPesa B2C Settings",
+                    "consumer_key": "987654321",
+                    "initiator_name": "tester2",
+                    "results_url": "https://example2.com/api/method/handler",
+                    "authorization_url": "https://example2.com/api/method/handler",
+                    "organisation_shortcode": "951753",
+                    "consumer_secret": "secret",
+                    "initiator_password": "password",
+                    "queue_timeout_url": "https://example2.com/api/method/handler",
+                    "payment_url": "https://example2.com/api/method/handler",
+                    "certificate_file": "/files/AuthorizationCertificate",
+                }
+            ).insert()
