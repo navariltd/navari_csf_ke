@@ -1,6 +1,5 @@
 {
   "actions": [],
-  "allow_rename": 1,
   "autoname": "field:transaction_id",
   "creation": "2023-11-07 14:25:41.290770",
   "default_view": "List",
@@ -8,7 +7,7 @@
   "editable_grid": 1,
   "engine": "InnoDB",
   "field_order": [
-    "originatorcoversationid",
+    "b2c_payment_name",
     "section_break_ovxt",
     "transaction_id",
     "receiver_public_name",
@@ -88,20 +87,21 @@
       "fieldtype": "Column Break"
     },
     {
-      "fieldname": "originatorcoversationid",
-      "fieldtype": "Data",
-      "label": "Originator Conversation ID",
-      "read_only": 1,
-      "reqd": 1
-    },
-    {
       "fieldname": "section_break_ovxt",
       "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "b2c_payment_name",
+      "fieldtype": "Link",
+      "label": "B2C Payment Name",
+      "options": "B2C Payment",
+      "read_only": 1,
+      "reqd": 1
     }
   ],
   "index_web_pages_for_search": 1,
   "links": [],
-  "modified": "2023-11-07 15:37:32.183895",
+  "modified": "2023-11-10 13:27:08.432911",
   "modified_by": "Administrator",
   "module": "CSF KE",
   "name": "B2C Payments Transactions",

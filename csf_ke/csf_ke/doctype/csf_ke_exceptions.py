@@ -27,3 +27,14 @@ class InvalidURLError(Exception):
 
 class InvalidAuthenticationCertificateFileError(Exception):
     """Raised when an invalid - i.e. not a .cer - certificate file is uploaded"""
+
+
+class UnExistentB2CPaymentRecordError(Exception):
+    """Raised when referencing a B2C Payment that does not exist"""
+
+
+class InformationMismatchError(Exception):
+    """
+    Raised when there's a mismatch in the date of the B2C Payment's records
+    and the corresponding B2C Payments Transactions records
+    """

@@ -1,6 +1,5 @@
 {
   "actions": [],
-  "allow_rename": 1,
   "autoname": "naming_series:",
   "creation": "2023-10-30 11:38:30.870409",
   "default_view": "List",
@@ -106,7 +105,7 @@
   ],
   "index_web_pages_for_search": 1,
   "links": [],
-  "modified": "2023-11-07 14:07:38.208172",
+  "modified": "2023-11-10 13:26:31.724983",
   "modified_by": "Administrator",
   "module": "CSF KE",
   "name": "B2C Payment",

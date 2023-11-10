@@ -19,13 +19,11 @@ from csf_ke.csf_ke.doctype import api_logger
 from csf_ke.csf_ke.doctype.b2c_payment.encoding_credentials import (
     openssl_encrypt_encode,
 )
-from ..csf_ke_exceptions import (
-    InsufficientPaymentAmountError,
-    InvalidReceiverMobileNumberError,
-)
 
 from ..csf_ke_exceptions import (
     IncorrectStatusError,
+    InsufficientPaymentAmountError,
+    InvalidReceiverMobileNumberError,
 )
 
 
@@ -47,14 +45,14 @@ class B2CPayment(Document):
             )
 
             api_logger.error(self.error, self.name)
-            raise InvalidReceiverMobileNumberError(self.error)
+            raise InvalidReceiverMobileNumberError(self.error, self.name)
 
         if self.amount < 10:
             # Validates payment amount
             self.error = "Amount entered is less than the least acceptable amount of Kshs. 10, for payment: %s"
 
             api_logger.error(self.error, self.name)
-            raise InsufficientPaymentAmountError(self.error)
+            raise InsufficientPaymentAmountError(self.error, self.name)
 
         if not self.status:
             self.status = "Not Initiated"
@@ -64,7 +62,7 @@ class B2CPayment(Document):
                 self.error = "Status 'Errored' needs to have a corresponding error_code and error_description for payment: %s"
 
                 api_logger.error(self.error, self.name)
-                raise IncorrectStatusError(self.error)
+                raise IncorrectStatusError(self.error, self.name)
 
 
 @frappe.whitelist(methods="POST")
@@ -306,6 +304,7 @@ def handle_successful_result_response(
     b2c_payment_document = frappe.db.get_value(
         "B2C Payment",
         {"originatorconversationid": originator_conversation_id},
+        ["name"],
         as_dict=True,
     )
 
@@ -313,6 +312,7 @@ def handle_successful_result_response(
     transaction_values = extract_transaction_values(
         result_parameters, transaction_id, originator_conversation_id
     )
+    transaction_values.update({"b2c_payment_name": b2c_payment_document.name})
 
     update_doctype_single_values("B2C Payment", b2c_payment_document, "status", "Paid")
 
@@ -414,7 +414,6 @@ def extract_transaction_values(
         elif item["Key"] == "B2CWorkingAccountAvailableFunds":
             transaction_values["working_acct_avlbl_funds"] = item["Value"]
 
-    transaction_values.update({"originatorcoversationid": originator_conversation_id})
     return transaction_values
 
 
@@ -531,7 +530,7 @@ def save_transaction_to_database(
     api_logger.info(
         "Transaction ID: %s, originator conversation id: %s, amount: %s, transaction time: %s saved.",
         update_values["transaction_id"],
-        update_values["originatorcoversationid"],
+        update_values["b2c_payment_name"],
         update_values["transaction_amount"],
         update_values["transaction_completed_datetime"],
     )
