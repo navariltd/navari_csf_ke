@@ -1,7 +1,7 @@
 # Copyright (c) 2023, Navari Limited and contributors
 # For license information, please see license.txt
 
-# import frappe
+import frappe
 
 import frappe  # Assuming you are using Frappe framework
 from frappe.utils import add_days, flt
@@ -55,7 +55,7 @@ def get_columns(filters):
             "fieldtype": "Link",
             "options": "Item Group",
             "width": 120,
-            "hidden": 1,
+           
 
         },
         {
@@ -64,7 +64,7 @@ def get_columns(filters):
             "fieldtype": "Link",
             "options": "UOM",
             "width": 120,
-            "hidden": 1,
+           
 
         },
         {
@@ -72,7 +72,7 @@ def get_columns(filters):
             "fieldname": "uom_required",
             "fieldtype": "Data",
             "width": 100,
-            "hidden": 1,
+            
 
         },
         {
