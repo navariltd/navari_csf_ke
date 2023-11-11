@@ -17,7 +17,6 @@ from erpnext.stock.utils import get_incoming_rate
 
 
 # ... (Previous code remains the same)
-
 def execute(filters=None):
     columns, data = [], []
     columns = get_columns(filters)
