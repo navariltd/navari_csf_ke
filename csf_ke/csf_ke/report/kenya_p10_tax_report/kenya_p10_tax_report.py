@@ -98,7 +98,8 @@ def get_p10_report_data(filters):
     # Convert the dictionary into a list of rows for the report
     report_data = []
     for employee_key, components in employee_data.items():
-        employee_pin, employee_name = employee_key.split("-")
+        employee_pin, employee_name = employee_key.rsplit("-", 1)
+
         row = {"employee": employee_pin, "employee_name": employee_name}
         row.update(components)
         report_data.append(row)
