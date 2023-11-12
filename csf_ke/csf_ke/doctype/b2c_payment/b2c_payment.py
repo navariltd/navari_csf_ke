@@ -501,15 +501,16 @@ def update_doctype_single_values(
     Updates the specified doctype's field with the specified values.
     Note: Only one field is updated at a time
     """
+    frappe.db.set_value(
+        doctype, document_to_update.name, field, new_value, update_modified=True
+    )
+
     api_logger.info(
         "%s's %s's %s updated to %s",
         doctype,
         document_to_update.name,
         field,
         new_value,
-    )
-    frappe.db.set_value(
-        doctype, document_to_update.name, field, new_value, update_modified=True
     )
 
 
