@@ -35,6 +35,6 @@ class UnExistentB2CPaymentRecordError(Exception):
 
 class InformationMismatchError(Exception):
     """
-    Raised when there's a mismatch in the date of the B2C Payment's records
-    and the corresponding B2C Payments Transactions records
+    Raised when there's a mismatch in any of the B2C Payment's records
+    and the corresponding B2C Payments Transaction's records
     """

@@ -34,6 +34,8 @@ def create_b2c_payment() -> None:
         }
     ).insert()
 
+    frappe.flags.test_events_created = True
+
 
 class TestB2CPayment(FrappeTestCase):
     """B2C Payment Tests"""

@@ -29,6 +29,8 @@ def create_access_token() -> None:
         }
     ).insert()
 
+    frappe.flags.test_events_created = True
+
 
 class TestDarajaAccessTokens(FrappeTestCase):
     """Testing the Daraja Access Tokens doctype"""

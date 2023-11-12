@@ -139,7 +139,7 @@ def results_callback_url(Result: dict) -> None:
 @frappe.whitelist(allow_guest=True)
 def queue_timeout_url(response):
     """Handles timeout responses from Safaricom"""
-    # TODO: Properly handle timeout responses. Not clearly specified in Safaricom
+    # TODO: Properly handle timeout responses. Not clearly specified in Safaricom's documentations
     frappe.msgprint(f"{response}")
 
 
@@ -309,9 +309,7 @@ def handle_successful_result_response(
     )
 
     result_parameters = results.get("ResultParameters").get("ResultParameter")
-    transaction_values = extract_transaction_values(
-        result_parameters, transaction_id, originator_conversation_id
-    )
+    transaction_values = extract_transaction_values(result_parameters, transaction_id)
     transaction_values.update({"b2c_payment_name": b2c_payment_document.name})
 
     update_doctype_single_values("B2C Payment", b2c_payment_document, "status", "Paid")
@@ -375,7 +373,7 @@ def handle_duplicate_request(originator_conversation_id: str) -> None:
 
 
 def extract_transaction_values(
-    result_parameters: dict, transaction_id: str, originator_conversation_id: str
+    result_parameters: dict, transaction_id: str
 ) -> dict[str, str | int]:
     """
     Parses the ResultParameters of successful responses to the results callback endpoint
@@ -417,7 +415,7 @@ def extract_transaction_values(
     return transaction_values
 
 
-def send_payload(payload: str, access_token: str, url) -> tuple[str, int]:
+def send_payload(payload: str, access_token: str, url: str) -> tuple[str, int]:
     """Sends request to payment processing url with payload"""
     try:
         response = requests.post(
@@ -489,7 +487,7 @@ def make_payment(
 
         # This return is important since without it, execution will continue
         # to below and overwrite the "message" key in the response causing
-        # the front-end to enter an incorrect state
+        # the client to enter an incorrect state
         return
 
     frappe.response["message"] = "No certificate file found in server"

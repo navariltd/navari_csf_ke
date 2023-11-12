@@ -41,19 +41,19 @@ class B2CPaymentsTransactions(Document):
                 or b2c_payment.status == "Pending"
             ):
                 api_logger.error(
-                    "Incorrect B2C Payment Status: %s for records with originator conversation id: %s",
+                    "Incorrect B2C Payment Status: %s for B2C Payment: %s",
                     b2c_payment.status,
                     self.b2c_payment_name,
                 )
                 raise InformationMismatchError(
-                    f"Incorrect B2C Payment Status: {b2c_payment.status} for records with originator conversation id: {self.b2c_payment_name}"
+                    f"Incorrect B2C Payment Status: {b2c_payment.status} for B2C Payment: {self.b2c_payment_name}"
                 )
 
             if self.transaction_amount != b2c_payment.amount:
                 api_logger.error(
-                    "Incorrect Transaction and B2C Payment Amount for records with originator conversation id: %s",
+                    "Incorrect Transaction and B2C Payment Amount for B2C payment: %s",
                     self.b2c_payment_name,
                 )
                 raise InformationMismatchError(
-                    f"Incorrect Transaction and B2C Payment Amount for records with originator conversation id: {self.b2c_payment_name}"
+                    f"Incorrect Transaction and B2C Payment Amount for B2C payment: {self.b2c_payment_name}"
                 )
