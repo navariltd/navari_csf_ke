@@ -6,7 +6,7 @@ import datetime
 import frappe
 from frappe.utils.password import get_decrypted_password
 from frappe.tests.utils import FrappeTestCase
-from ..csf_ke_exceptions import InvalidTokenExpiryTime
+from ..csf_ke_custom_exceptions import InvalidTokenExpiryTime
 
 
 TOKEN_ACCESS_TIME = datetime.datetime.now()

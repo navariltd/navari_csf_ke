@@ -5,10 +5,10 @@ import re
 
 from frappe.model.document import Document
 
-from ..csf_ke_exceptions import InvalidURLError
+from ..csf_ke_custom_exceptions import InvalidURLError
 
 from .. import api_logger
-from ..csf_ke_exceptions import (
+from ..csf_ke_custom_exceptions import (
     InvalidAuthenticationCertificateFileError,
 )
 

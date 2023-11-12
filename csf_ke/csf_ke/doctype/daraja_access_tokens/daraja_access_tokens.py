@@ -3,7 +3,7 @@
 
 from frappe.model.document import Document
 
-from ..csf_ke_exceptions import InvalidTokenExpiryTime
+from ..csf_ke_custom_exceptions import InvalidTokenExpiryTime
 from .. import api_logger
 
 

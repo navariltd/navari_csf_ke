@@ -5,7 +5,7 @@ import frappe
 from frappe.model.document import Document
 
 from .. import api_logger
-from ..csf_ke_exceptions import (
+from ..csf_ke_custom_exceptions import (
     InformationMismatchError,
     UnExistentB2CPaymentRecordError,
 )

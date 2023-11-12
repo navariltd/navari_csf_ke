@@ -8,7 +8,7 @@ from uuid import uuid4
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
-from ..csf_ke_exceptions import InformationMismatchError
+from ..csf_ke_custom_exceptions import InformationMismatchError
 
 ORIGINATOR_CONVERSATION_ID = str(uuid4())
 ORIGINATOR_CONVERSATION_ID_2 = str(uuid4())

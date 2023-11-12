@@ -4,14 +4,14 @@
 import frappe
 from frappe.tests.utils import FrappeTestCase
 
-from ..csf_ke_exceptions import InvalidURLError
+from ..csf_ke_custom_exceptions import InvalidURLError
 
-from ..csf_ke_exceptions import (
+from ..csf_ke_custom_exceptions import (
     InvalidAuthenticationCertificateFileError,
 )
 
 
-def create_incomplete_b2c_settings():
+def create_b2c_settings():
     """Setup context for tests"""
     if frappe.flags.test_events_created:
         return
@@ -41,7 +41,7 @@ class TestMPesaB2CSettings(FrappeTestCase):
     """MPesa B2C Settings Tests"""
 
     def setUp(self) -> None:
-        create_incomplete_b2c_settings()
+        create_b2c_settings()
 
     def tearDown(self) -> None:
         frappe.set_user("Administrator")

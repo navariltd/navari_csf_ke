@@ -5,12 +5,12 @@ import frappe
 import pymysql
 from frappe.tests.utils import FrappeTestCase
 
-from ..csf_ke_exceptions import (
+from ..csf_ke_custom_exceptions import (
     InsufficientPaymentAmountError,
     InvalidReceiverMobileNumberError,
 )
 
-from ..csf_ke_exceptions import (
+from ..csf_ke_custom_exceptions import (
     IncorrectStatusError,
 )
 

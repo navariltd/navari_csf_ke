@@ -22,11 +22,11 @@ class InvalidTokenExpiryTime(Exception):
 
 
 class InvalidURLError(Exception):
-    """Raise when URLs fail validation"""
+    """Raised when URLs fail validation"""
 
 
 class InvalidAuthenticationCertificateFileError(Exception):
-    """Raised when an invalid - i.e. not a .cer - certificate file is uploaded"""
+    """Raised when an invalid certificate file, i.e. not a .cer or .pem, is uploaded"""
 
 
 class UnExistentB2CPaymentRecordError(Exception):

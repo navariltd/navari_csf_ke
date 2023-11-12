@@ -20,7 +20,7 @@ from csf_ke.csf_ke.doctype.b2c_payment.encoding_credentials import (
     openssl_encrypt_encode,
 )
 
-from ..csf_ke_exceptions import (
+from ..csf_ke_custom_exceptions import (
     IncorrectStatusError,
     InsufficientPaymentAmountError,
     InvalidReceiverMobileNumberError,
