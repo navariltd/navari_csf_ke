@@ -160,230 +160,123 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_data_when_grouped_by_invoice(
-	columns, gross_profit_data, filters, group_wise_columns, data
-):
-	column_names = get_column_names()
+def fetch_conversion_factors(data, include_uom):
+    conversion_factors = {}
 
-	# to display item as Item Code: Item Name
-	columns[0] = "Sales Invoice:Link/Item:300"
-	# removing Item Code and Item Name columns
-	del columns[4:6]
+    # Example: populate conversion factors based on your data
+    for row in data:
+        item_code = row.get("item_code")
+        conversion_factor = get_conversion_factor(
+            item_code, include_uom)  # Implement this function
+        conversion_factors[item_code] = conversion_factor
 
-	for src in gross_profit_data.si_list:
-		row = frappe._dict()
-		row.indent = src.indent
-		row.parent_invoice = src.parent_invoice
-		row.currency = filters.currency
-
-		for col in group_wise_columns.get(scrub(filters.group_by)):
-			row[column_names[col]] = src.get(col)
-
-		data.append(row)
+    return conversion_factors
 
 
-def get_data_when_not_grouped_by_invoice(gross_profit_data, filters, group_wise_columns, data):
-	for src in gross_profit_data.grouped_data:
-		row = []
-		for col in group_wise_columns.get(scrub(filters.group_by)):
-			row.append(src.get(col))
+def get_columns(filters):
+    columns = [
+        {
+            "label": "Item Code",
+            "fieldname": "item_code",
+            "fieldtype": "Link",
+            "options": "Item",
+            "width": 120
+        },
+        {
+            "label": "Item Group",
+            "fieldname": "item_group",
+            "fieldtype": "Link",
+            "options": "Item Group",
+            "width": 120,
+            "hidden": 1,
 
-		row.append(filters.currency)
+        },
+        {
+            "label": "Default UOM",
+            "fieldname": "default_uom",
+            "fieldtype": "Link",
+            "options": "UOM",
+            "width": 120,
+            "hidden": 1,
 
-		data.append(row)
+        },
+        {
+            "label": "UOM Required",
+            "fieldname": "uom_required",
+            "fieldtype": "Data",
+            "width": 100,
+            "hidden": 1,
+
+        },
+        {
+            "label": "Qty",
+            "fieldname": "qty",
+            "fieldtype": "Float",
+            "width": 100
+        },
+    ]
+
+    if filters.get("uom"):
+        columns.append(
+            {
+                "label": f"Qty ({filters.get('uom')})",
+                "fieldname": "qty_uom",
+                "fieldtype": "Float",
+                "width": 120,
+                'indicator': 'Green',
+            }
+        )
+
+    columns += [
+
+        {
+            "label": "Average Selling Rate",
+            "fieldname": "average_selling_rate",
+            "fieldtype": "Currency",
+            "width": 120,
+
+        },
+        {
+            "label": "Valuation Rate",
+            "fieldname": "valuation_rate",
+            "fieldtype": "Currency",
+            "width": 120,
 
 
-def get_columns(group_wise_columns, filters):
-	columns = []
-	column_map = frappe._dict(
-		{
-			"parent": {
-				"label": _("Sales Invoice"),
-				"fieldname": "parent_invoice",
-				"fieldtype": "Link",
-				"options": "Sales Invoice",
-				"width": 120,
-			},
-			"invoice_or_item": {
-				"label": _("Sales Invoice"),
-				"fieldtype": "Link",
-				"options": "Sales Invoice",
-				"width": 120,
-			},
-			"posting_date": {
-				"label": _("Posting Date"),
-				"fieldname": "posting_date",
-				"fieldtype": "Date",
-				"width": 100,
-			},
-			"posting_time": {
-				"label": _("Posting Time"),
-				"fieldname": "posting_time",
-				"fieldtype": "Data",
-				"width": 100,
-			},
-			"item_code": {
-				"label": _("Item Code"),
-				"fieldname": "item_code",
-				"fieldtype": "Link",
-				"options": "Item",
-				"width": 100,
-			},
-			"item_name": {
-				"label": _("Item Name"),
-				"fieldname": "item_name",
-				"fieldtype": "Data",
-				"width": 100,
-			},
-			"item_group": {
-				"label": _("Item Group"),
-				"fieldname": "item_group",
-				"fieldtype": "Link",
-				"options": "Item Group",
-				"width": 100,
-			},
-			"brand": {"label": _("Brand"), "fieldtype": "Link", "options": "Brand", "width": 100},
-			"description": {
-				"label": _("Description"),
-				"fieldname": "description",
-				"fieldtype": "Data",
-				"width": 100,
-			},
-			"warehouse": {
-				"label": _("Warehouse"),
-				"fieldname": "warehouse",
-				"fieldtype": "Link",
-				"options": "Warehouse",
-				"width": 100,
-			},
-   "default_uom": {
-				"label": _("Default UOM"),
-				"fieldname": "default_uom",
-				"fieldtype": "Link",
-				"options": "UOM",
-				"width": 100,
-			},
-   "uom_required": {
-				"label": _("UOM Required"),
-				"fieldname": "uom_required",
-				"fieldtype": "Link",
-				"options": "UOM",
-				"width": 100,
-			},
-			"qty": {"label": _("Qty"), "fieldname": "qty", "fieldtype": "Float", "width": 80},
-   "qty_uom": {"label": f"Qty ({filters.get('uom')})", "fieldname": "qty_uom", "fieldtype": "Float", "width": 80} if filters.get("uom") else {"label": _("Qty"), "fieldname": "qty", "fieldtype": "Float", "width": 80, "hidden": 1},
-			"base_rate": {
-				"label": _("Avg. Selling Rate"),
-				"fieldname": "avg._selling_rate",
-				"fieldtype": "Currency",
-				"options": "currency",
-				"width": 100,
-			},
-			"buying_rate": {
-				"label": _("Valuation Rate"),
-				"fieldname": "valuation_rate",
-				"fieldtype": "Currency",
-				"options": "currency",
-				"width": 100,
-			},
-			"base_amount": {
-				"label": _("Selling Amount"),
-				"fieldname": "selling_amount",
-				"fieldtype": "Currency",
-				"options": "currency",
-				"width": 100,
-			},
-			"buying_amount": {
-				"label": _("Buying Amount"),
-				"fieldname": "buying_amount",
-				"fieldtype": "Currency",
-				"options": "currency",
-				"width": 100,
-			},
-			"gross_profit": {
-				"label": _("Gross Profit"),
-				"fieldname": "gross_profit",
-				"fieldtype": "Currency",
-				"options": "currency",
-				"width": 100,
-			},
-			"gross_profit_percent": {
-				"label": _("Gross Profit Percent"),
-				"fieldname": "gross_profit_%",
-				"fieldtype": "Percent",
-				"width": 100,
-			},
-			"project": {
-				"label": _("Project"),
-				"fieldname": "project",
-				"fieldtype": "Link",
-				"options": "Project",
-				"width": 100,
-			},
-			"sales_person": {
-				"label": _("Sales Person"),
-				"fieldname": "sales_person",
-				"fieldtype": "Link",
-				"options": "Sales Person",
-				"width": 100,
-			},
-			"allocated_amount": {
-				"label": _("Allocated Amount"),
-				"fieldname": "allocated_amount",
-				"fieldtype": "Currency",
-				"options": "currency",
-				"width": 100,
-			},
-			"customer": {
-				"label": _("Customer"),
-				"fieldname": "customer",
-				"fieldtype": "Link",
-				"options": "Customer",
-				"width": 100,
-			},
-			"customer_group": {
-				"label": _("Customer Group"),
-				"fieldname": "customer_group",
-				"fieldtype": "Link",
-				"options": "Customer Group",
-				"width": 100,
-			},
-			"territory": {
-				"label": _("Territory"),
-				"fieldname": "territory",
-				"fieldtype": "Link",
-				"options": "Territory",
-				"width": 100,
-			},
-			"monthly": {
-				"label": _("Monthly"),
-				"fieldname": "monthly",
-				"fieldtype": "Data",
-				"width": 100,
-			},
-			"payment_term": {
-				"label": _("Payment Term"),
-				"fieldname": "payment_term",
-				"fieldtype": "Link",
-				"options": "Payment Term",
-				"width": 170,
-			},
-		}
-	)
-	
+        },
+        {
+            "label": "Selling Amount",
+            "fieldname": "selling_amount",
+            "fieldtype": "Currency",
+            "width": 120,
 
-	for col in group_wise_columns.get(scrub(filters.group_by)):
-		columns.append(column_map.get(col))
+        },
+        {
+            "label": "Buying Amount",
+            "fieldname": "buying_amount",
+            "fieldtype": "Currency",
+            "width": 120,
 
-	columns.append(
-		{
-			"fieldname": "currency",
-			"label": _("Currency"),
-			"fieldtype": "Link",
-			"options": "Currency",
-			"hidden": 1,
-		}
-	)
+
+        },
+
+        {
+            "label": "Gross Profit",
+            "fieldname": "gross_profit",
+            "fieldtype": "Currency",
+            "width": 120,
+
+
+        },
+        {
+            "label": "Gross Profit Percentage",
+            "fieldname": "gross_profit_percentage",
+            "fieldtype": "Percent",
+            "width": 120,
+
+
+        },
+    ]
 
 	return columns
 
