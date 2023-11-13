@@ -374,3 +374,4 @@ def get_p9a_tax_deduction_card_fixed_component_amt(p9a_tax_deduction_card_type):
         p9a_tax_deduction_card_fixed_component_amt += flt(d.amt)
 
     return p9a_tax_deduction_card_fixed_component_amt
+
