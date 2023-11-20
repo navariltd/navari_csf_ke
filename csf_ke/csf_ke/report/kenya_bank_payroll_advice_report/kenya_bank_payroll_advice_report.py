@@ -61,36 +61,42 @@ def get_columns():
 		
 	return columns
 
-def get_data(filters,company_currency,conditions=""):
-	conditions = get_conditions(filters,company_currency)
-
+def get_data(filters,company_currency):
 	if filters.from_date > filters.to_date:
 		frappe.throw(_("To Date cannot be before From Date. {}").format(filters.to_date))
-
-	data = frappe.db.sql("""
-	SELECT 	ss.employee, ss.employee_name,
-	        ss.start_date, ss.end_date, 
-			ss.bank_name, ss.bank_account_no,
-			ss.branch, ss.net_pay, e.national_id
-	FROM `tabSalary Slip` ss, `tabEmployee` e
-	WHERE %s
-	    and e.name = ss.employee
-	""" % conditions, filters, as_dict=1)
-
-	return data
-
-def get_conditions(filters,company_currency):
-	conditions = ""
-	doc_status = {"Draft": 0, "Submitted": 1, "Cancelled": 2}
-
-	if filters.get("docstatus"):
-		conditions += "ss.docstatus = {0}".format(doc_status[filters.get("docstatus")])
-
-	if filters.get("from_date"): conditions += " and ss.start_date = %(from_date)s"
-	if filters.get("to_date"): conditions += " and ss.end_date = %(to_date)s"
-	if filters.get("company"): conditions += " and ss.company = %(company)s"
-	if filters.get("bank_name"): conditions += " and ss.bank_name = %(bank_name)s"
-	if filters.get("currency") and filters.get("currency") != company_currency:
-		conditions += " and ss.currency = %(currency)s"
+  
+	employee = frappe.qb.DocType("Employee")
+	salary_slip = frappe.qb.DocType("Salary Slip")
 	
-	return conditions
+	query = frappe.qb.from_(salary_slip)\
+		.inner_join(employee)\
+		.on(salary_slip.employee == employee.name)\
+		.select(salary_slip.employee, employee.employee_name, 
+				employee.national_id, salary_slip.bank_name, 
+				salary_slip.bank_account_no, salary_slip.branch,
+				salary_slip.net_pay)
+  
+	query= get_conditions(query, filters, company_currency, salary_slip)
+	results= query.run(as_dict=True) 
+	return results
+
+def get_conditions(query, filters, company_currency, salary_slip):
+    doc_status = {"Draft": 0, "Submitted": 1, "Cancelled": 2}
+
+    for filter_key, filter_value in filters.items():
+        if filter_key == "from_date":
+            query = query.where(salary_slip.start_date == filter_value)
+        elif filter_key == "to_date":
+            query = query.where(salary_slip.end_date == filter_value)
+        elif filter_key == "company":
+            query = query.where(salary_slip.company == filter_value)
+        elif filter_key =="bank_name":
+            query = query.where(salary_slip.bank_name == filter_value)
+        elif filter_key == "currency" and filter_value != company_currency:
+            query = query.where(salary_slip.currency == filter_value)
+        elif filter_key == "docstatus":
+            query = query.where(salary_slip.docstatus == doc_status.get(filter_value, 0))
+
+    return query
+
+
