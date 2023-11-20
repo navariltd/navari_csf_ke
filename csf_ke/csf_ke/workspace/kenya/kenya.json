@@ -2,6 +2,7 @@
  "charts": [],
  "content": "[{\"id\":\"fu_Qea0T9L\",\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px;\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"ez66GJZq3i\",\"type\":\"card\",\"data\":{\"card_name\":\"Accounting Reports\",\"col\":4}},{\"id\":\"7bKksk7AZV\",\"type\":\"card\",\"data\":{\"card_name\":\"Payroll Reports\",\"col\":4}}]",
  "creation": "2022-11-03 16:41:03.405594",
+ "custom_blocks": [],
  "docstatus": 0,
  "doctype": "Workspace",
  "for_user": "",
@@ -11,6 +12,34 @@
  "is_hidden": 0,
  "label": "Kenya",
  "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Accounting Reports",
+   "link_count": 2,
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Sales Tax Report",
+   "link_count": 0,
+   "link_to": "Kenya Sales Tax Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Purchase Tax Report",
+   "link_count": 0,
+   "link_to": "Kenya Purchase Tax Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
   {
    "hidden": 0,
    "is_query_report": 0,
@@ -81,34 +110,16 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 0,
-   "label": "Accounting Reports",
-   "link_count": 2,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
    "is_query_report": 1,
-   "label": "Sales Tax Report",
+   "label": "P10A Tax Report",
    "link_count": 0,
-   "link_to": "Kenya Sales Tax Report",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Purchase Tax Report",
-   "link_count": 0,
-   "link_to": "Kenya Purchase Tax Report",
+   "link_to": "Kenya P10 Tax Report",
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
   }
  ],
- "modified": "2023-03-23 14:33:59.055815",
+ "modified": "2023-11-11 08:33:10.477551",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya",
