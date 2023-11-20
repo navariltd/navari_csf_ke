@@ -4,9 +4,11 @@
 from __future__ import unicode_literals
 import frappe, erpnext
 from frappe import _
+from ..kenya_helb_report.kenya_helb_report import apply_filters
+from collections import defaultdict
+
 
 def execute(filters=None):
-	
 	company_currency = erpnext.get_company_currency(filters.get("company"))
 	columns = get_columns()
 	data = get_data(filters,company_currency)
@@ -62,38 +64,45 @@ def get_columns():
 
 	return columns
 
-def get_data(filters,company_currency,conditions=""):
-	conditions = get_conditions(filters, company_currency)
-
-	if filters.from_date > filters.to_date:
-		frappe.throw(_("To Date cannot be before From Date. {}").format(filters.to_date))
-	
-	data = frappe.db.sql("""
-	SELECT	ss.employee, IFNULL(e.last_name,'') AS last_name,
-	        CONCAT(IFNULL(e.first_name,''), ' ', IFNULL(e.middle_name,'')) AS other_name,
-			e.national_id, e.tax_id, e.nssf_no,	ss.start_date,
-			ss.end_date, ss.gross_pay, ss.company, sc.salary_component
-	FROM `tabEmployee` e, `tabSalary Slip` ss, `tabSalary Component` sc
-	WHERE %s
-		and e.name = ss.employee
-	""" % conditions, filters, as_dict=1)
-
-	return data
-
-def get_conditions(filters, company_currency):
-	conditions = ""
-	doc_status = {"Draft": 0, "Submitted": 1, "Cancelled": 2}
-
-	if filters.get("docstatus"):
-		conditions += "ss.docstatus = {0}".format(doc_status[filters.get("docstatus")])
-
-	if filters.get("from_date"): conditions += " and ss.start_date = %(from_date)s"
-	if filters.get("to_date"): conditions += " and ss.end_date = %(to_date)s"
-	if filters.get("company"): conditions += " and ss.company = %(company)s"
-	if filters.get("salary_component"): conditions += " and sc.salary_component = %(salary_component)s"
-	if filters.get("currency") and filters.get("currency") != company_currency:
-		conditions += " and ss.currency = %(currency)s"
-
-	return conditions
-
-
+def get_data(filters, company_currency, conditions=""):
+    employee = frappe.qb.DocType("Employee")
+    salary_slip = frappe.qb.DocType("Salary Slip")
+    salary_details = frappe.qb.DocType("Salary Detail")
+    
+    query = frappe.qb.from_(employee) \
+        .inner_join(salary_slip) \
+        .on(employee.name == salary_slip.employee) \
+        .inner_join(salary_details) \
+        .on(salary_slip.name == salary_details.parent) \
+        .select(
+            salary_slip.employee,
+            employee.last_name if (employee.last_name) else "",
+            employee.first_name,
+            employee.middle_name,
+            employee.national_id,
+            employee.tax_id,
+            employee.nssf_no,
+            salary_slip.gross_pay,
+            salary_slip.company,
+            salary_details.salary_component
+        ).where(salary_details.amount != 0)
+    
+    query = apply_filters(query, filters, company_currency, salary_slip, salary_details)
+    data = query.run(as_dict=True)
+    
+    # Group the data by the primary key (employee ID) to avoid issue to do with duplication of data
+    grouped_data = defaultdict(dict)
+    for entry in data:
+        key = entry["employee"]
+        if key not in grouped_data:
+            grouped_data[key] = entry
+    
+    # Post-process the grouped data to concatenate middle_name and first_name
+    for entry in grouped_data.values():
+        entry["other_name"] = (
+            f"{entry['middle_name']} {entry['first_name']}"
+            if entry.get("middle_name")
+            else entry["first_name"]
+        )
+    
+    return list(grouped_data.values())

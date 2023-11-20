@@ -81,4 +81,5 @@ def get_data(filters, company_currency):
 
     query = apply_filters(query, filters, company_currency, salary_slip, salary_detail)
     data = query.run(as_dict=True)
+    
     return data
