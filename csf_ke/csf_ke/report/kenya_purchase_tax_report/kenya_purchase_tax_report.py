@@ -119,7 +119,6 @@ class KenyaPurchaseTaxReport(object):
 					purchase_invoice_.base_grand_total.as_("invoice_total_purchases"),
 					purchase_invoice_.return_against.as_("return_against"))\
          
-		
 		if (company):
 			purchase_invoices_query=purchase_invoices_query.where(purchase_invoice_.company == company)
 		if (is_return =="Is Return"):
