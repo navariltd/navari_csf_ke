@@ -854,18 +854,29 @@ class GrossProfitGenerator(object):
 			as_dict=1,
 		)
 
-		primary_data=GrossProfitGenerator.get_query_uom(filters)
-		for item in primary_data:
-			item_code=item.get("item_code")
-			default_uom=item.get("default_uom")
-			uom_required=item.get("uom_required")
-			chosen_uom = filters.get('uom')
-			quantity=item.get("qty")
+		total_quantities = {}
+		# Loop through the rows to aggregate quantities for each item code
+		for row in self.si_list:
+			item_code = row.get("item_code")
+			quantity = row.get("qty")
+
+			# Check if item code already exists in the dictionary
+			if item_code in total_quantities:
+				total_quantities[item_code] += quantity
+			else:
+				total_quantities[item_code] = quantity
+
+		for item_code, total_quantity in total_quantities.items():
+		# Update rows' qty_uom based on the total quantity for each item code
 			for row in self.si_list:
-				if row.item_code==item_code:
-					row.default_uom=default_uom
-					row.uom_required=uom_required
-					row.qty_uom=GrossProfitGenerator.calculate_qty_in_chosen_uom(item_code,quantity,chosen_uom,uom_required,default_uom)	
+
+				if row.get("item_code") == item_code:
+					quantity = total_quantity
+					uom_required = row.uom_required
+					default_uom=row.default_uom
+					chosen_uom=filters.get("uom")
+					row.qty_uom = GrossProfitGenerator.calculate_qty_in_chosen_uom(
+					item_code, quantity, chosen_uom, uom_required, default_uom)
 			
 	def get_delivery_notes(self):
 		self.delivery_notes = frappe._dict({})
@@ -1051,7 +1062,6 @@ class GrossProfitGenerator(object):
 	)
 
 	def get_conversion_factor(item_code, default_uom):
-	# Get the conversion factor from the UOM Conversion Detail table
 		conversion_factor = frappe.get_value("UOM Conversion Detail",
 											{"parent": item_code, "uom": default_uom},
 											"conversion_factor")
@@ -1077,61 +1087,3 @@ class GrossProfitGenerator(object):
 
 		return calculated_qty
 
-
-	def get_query_uom(filters):
-		sql_query = """
-		SELECT
-			si_item.item_code AS item_code,
-			si_item.item_group AS item_group,
-			si_item.stock_uom AS default_uom,
-			si_item.uom AS uom_required,
-			
-			CAST(SUM(si_item.stock_qty) AS DECIMAL(10, 2)) AS qty,
-
-			SUM(si_item.base_amount) AS selling_amount,
-			
-			SUM(si_item.base_amount)/SUM(si_item.stock_qty) AS average_selling_rate
-			
-		FROM
-			`tabSales Invoice Item` si_item
-		INNER JOIN
-			`tabSales Invoice` si ON si_item.parent = si.name
-
-		WHERE
-			si.docstatus = 1 AND si.status != 'Cancelled' AND si.return_against IS NULL AND si_item.item_code IS NOT NULL
-	"""
-
-		# Add dynamic conditions based on the selected filters
-		conditions = []
-
-		if filters.get("company"):
-			conditions.append(f"si.company = '{filters.get('company')}'")
-
-		if filters.get("from_date"):
-			conditions.append(f"si.posting_date >= '{filters.get('from_date')}'")
-
-		if filters.get("to_date"):
-			conditions.append(f"si.posting_date <= '{filters.get('to_date')}'")
-
-		if filters.get("sales_invoice"):
-			conditions.append(f"si.name = '{filters.get('sales_invoice')}'")
-
-		if filters.get("item_group"):
-			conditions.append(
-				f"si_item.item_group = '{filters.get('item_group')}'")
-
-		# Add the following conditions for item, warehouse, and UOM filters
-		if filters.get("item"):
-			conditions.append(f"si_item.item_code = '{filters.get('item')}'")
-
-		if filters.get("warehouse"):
-			conditions.append(f"si_item.warehouse = '{filters.get('warehouse')}'")
-
-		if conditions:
-			sql_query += " AND " + " AND ".join(conditions)
-
-		sql_query += """
-			GROUP BY
-				si_item.item_code, si_item.item_group, si_item.stock_uom, si_item.uom
-		"""
-		return frappe.db.sql(sql_query, as_dict=True)

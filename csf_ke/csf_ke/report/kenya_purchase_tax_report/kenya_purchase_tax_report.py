@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from pypika import functions as fn
 
 def execute(filters=None):
 	return KenyaPurchaseTaxReport(filters).run()

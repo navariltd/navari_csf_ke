@@ -96,7 +96,4 @@ def get_conditions(query, filters, company_currency, salary_slip):
             query = query.where(salary_slip.currency == filter_value)
         elif filter_key == "docstatus":
             query = query.where(salary_slip.docstatus == doc_status.get(filter_value, 0))
-
     return query
-
-
