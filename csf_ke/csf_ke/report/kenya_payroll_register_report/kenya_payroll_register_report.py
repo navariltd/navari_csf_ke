@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 import frappe, erpnext
 from frappe.utils import flt
 from frappe import _
+from functools import reduce 
+
 
 def execute(filters=None):
 	if not filters: filters = {}
@@ -92,13 +94,34 @@ def get_columns(salary_slips):
 	]
 
 	salary_components = {_("Earning"): [], _("Deduction"): []}
+	
+	salary_detail_doc=frappe.qb.DocType("Salary Detail")
+	salary_component_doc=frappe.qb.DocType("Salary Component")
+	salary_component_query = frappe.qb.from_(salary_detail_doc) \
+		.inner_join(salary_component_doc) \
+		.on(salary_detail_doc.salary_component == salary_component_doc.name) \
+		.select(
+			frappe.qb.functions("Distinct", salary_detail_doc.salary_component).as_("salary_component"),
+			salary_component_doc.type.as_("type")
+		)
+	
+	salary_slips = [d.name for d in salary_slips]  
 
-	for component in frappe.db.sql("""select distinct sd.salary_component, sc.type
-		from `tabSalary Detail` sd, `tabSalary Component` sc
-		where sc.name=sd.salary_component and sd.amount != 0 and sd.parent in (%s)""" %
-		(', '.join(['%s']*len(salary_slips))), tuple([d.name for d in salary_slips]), as_dict=1):
+	# Constructing the OR conditions for names in salary_slips
+	conditions = [
+		salary_detail_doc.parent.like("%" + name + "%") for name in salary_slips
+	]
+
+	# Combining the conditions with OR logic
+	if conditions:
+		combined_condition = conditions[0] if len(conditions) == 1 else reduce(lambda x, y: x | y, conditions[1:], conditions[0])
+		salary_component_query = salary_component_query.where(combined_condition)
+  
+	salary_components_data = salary_component_query.run(as_dict=True)
+	
+	for component in salary_components_data:
 		salary_components[_(component.type)].append(component.salary_component)
-
+  
 	columns = columns + [(e + ":Currency:120") for e in salary_components[_("Earning")]] + \
 		[_("Gross Pay") + ":Currency:120"] + [(d + ":Currency:120") for d in salary_components[_("Deduction")]] + \
 		[_("Loan Repayment") + ":Currency:120", _("Total Deduction") + ":Currency:120", _("Net Pay") + ":Currency:120"]
@@ -131,37 +154,94 @@ def get_conditions(filters, company_currency):
 
 def get_employee_doj_map():
 	doj_map = frappe._dict()
-	for d in frappe.db.sql(""" SELECT name, date_of_joining, national_id, nssf_no, nhif_no, tax_id FROM `tabEmployee` """, as_dict=1):
+	employee=frappe.qb.DocType("Employee")
+	employee_query=frappe.qb.from_(employee).select(
+		employee.name.as_("name"),
+		employee.date_of_joining.as_("date_of_joining"),
+		employee.national_id.as_("national_id"),
+		employee.nssf_no.as_("nssf_no"),
+		employee.nhif_no.as_("nhif_no"),
+		employee.tax_id.as_("tax_id")
+	)
+	
+	for d in employee_query.run(as_dict=True):
 		doj_map.setdefault(d.name, d)
-
 	return doj_map
 
 def get_ss_earning_map(salary_slips, currency, company_currency):
-	ss_earnings = frappe.db.sql("""select sd.parent, sd.salary_component, sd.amount, ss.exchange_rate, ss.name
-		from `tabSalary Detail` sd, `tabSalary Slip` ss where sd.parent=ss.name and sd.parent in (%s)""" %
-		(', '.join(['%s']*len(salary_slips))), tuple([d.name for d in salary_slips]), as_dict=1)
+	
+	salary_slips = [d.name for d in salary_slips]  
+	salary_slip_doc = frappe.qb.DocType("Salary Slip")
+	salary_detail_doc = frappe.qb.DocType("Salary Detail")
 
+	# Building the query
+	salary_slip_earning_query = frappe.qb.from_(salary_slip_doc) \
+		.inner_join(salary_detail_doc) \
+		.on(salary_slip_doc.name == salary_detail_doc.parent) \
+		.select(
+			salary_detail_doc.parent,
+			salary_slip_doc.name.as_("salary_slip_name"),
+			salary_detail_doc.salary_component.as_("salary_component"),
+			salary_detail_doc.amount.as_("amount"),
+			salary_slip_doc.exchange_rate.as_("exchange_rate"),
+			salary_slip_doc.name
+		)
+
+	# Constructing the OR conditions for names in salary_slips
+	conditions = [
+		salary_detail_doc.parent.like("%" + name + "%") for name in salary_slips
+	]
+
+	# Combining the conditions with OR logic
+	if conditions:
+		combined_condition = conditions[0] if len(conditions) == 1 else reduce(lambda x, y: x | y, conditions[1:], conditions[0])
+		salary_slip_earning_query = salary_slip_earning_query.where(combined_condition)
+	salary_slip_earnings=salary_slip_earning_query.run(as_dict=True)
+ 
 	ss_earning_map = {}
-	for d in ss_earnings:
+	for d in salary_slip_earnings:
 		ss_earning_map.setdefault(d.parent, frappe._dict()).setdefault(d.salary_component, [])
 		if currency == company_currency:
 			ss_earning_map[d.parent][d.salary_component] = flt(d.amount) * flt(d.exchange_rate if d.exchange_rate else 1)
 		else:
 			ss_earning_map[d.parent][d.salary_component] = flt(d.amount)
-
 	return ss_earning_map
 
 def get_ss_ded_map(salary_slips, currency, company_currency):
-	ss_deductions = frappe.db.sql("""select sd.parent, sd.salary_component, sd.amount, ss.exchange_rate, ss.name
-		from `tabSalary Detail` sd, `tabSalary Slip` ss where sd.parent=ss.name and sd.parent in (%s)""" %
-		(', '.join(['%s']*len(salary_slips))), tuple([d.name for d in salary_slips]), as_dict=1)
+	salary_slips = [d.name for d in salary_slips]  
 
+	salary_slip_doc = frappe.qb.DocType("Salary Slip")
+	salary_detail_doc = frappe.qb.DocType("Salary Detail")
+
+	# Building the query
+	salary_slip_deduction_query = frappe.qb.from_(salary_slip_doc) \
+		.inner_join(salary_detail_doc) \
+		.on(salary_slip_doc.name == salary_detail_doc.parent) \
+		.select(
+			salary_detail_doc.parent,
+			salary_slip_doc.name.as_("salary_slip_name"),
+			salary_detail_doc.salary_component.as_("salary_component"),
+			salary_detail_doc.amount.as_("amount"),
+			salary_slip_doc.exchange_rate.as_("exchange_rate"),
+			salary_slip_doc.name
+		)
+
+	# Constructing the OR conditions for names in salary_slips
+	conditions = [
+		salary_detail_doc.parent.like("%" + name + "%") for name in salary_slips
+	]
+
+	# Combining the conditions with OR logic
+	if conditions:
+		combined_condition = conditions[0] if len(conditions) == 1 else reduce(lambda x, y: x | y, conditions[1:], conditions[0])
+		salary_slip_deduction_query = salary_slip_deduction_query.where(combined_condition)
+	salary_slip_deductions=salary_slip_deduction_query.run(as_dict=True)
+  
 	ss_ded_map = {}
-	for d in ss_deductions:
+	for d in salary_slip_deductions:
 		ss_ded_map.setdefault(d.parent, frappe._dict()).setdefault(d.salary_component, [])
 		if currency == company_currency:
 			ss_ded_map[d.parent][d.salary_component] = flt(d.amount) * flt(d.exchange_rate if d.exchange_rate else 1)
 		else:
 			ss_ded_map[d.parent][d.salary_component] = flt(d.amount)
-
 	return ss_ded_map
