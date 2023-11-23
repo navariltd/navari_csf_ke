@@ -264,9 +264,12 @@ def get_employees(filters):
                 'employee': filters.get("employee"),
                 'company': filters.get("company")
             }, as_dict =True)
+    
+    
 
     return employees
 
+    
 def get_p9a_tax_deduction_card_amt(filters, employee, month_start_date, month_end_date, p9a_tax_deduction_card_type, currency, company_currency): 
     currency_filter = ''
     if filters.get("currency") and filters.get("currency") != company_currency:

@@ -12,7 +12,6 @@ from erpnext.controllers.queries import get_match_cond
 from erpnext.stock.report.stock_ledger.stock_ledger import get_item_group_condition
 from erpnext.stock.utils import get_incoming_rate
 
-
 def execute(filters=None):
 	if not filters:
 		filters = frappe._dict()
@@ -598,20 +597,21 @@ class GrossProfitGenerator(object):
 		)
 
 	def get_returned_invoice_items(self):
-		returned_invoices = frappe.db.sql(
-			"""
-			select
-				si.name, si_item.item_code, si_item.stock_qty as qty, si_item.base_net_amount as base_amount, si.return_against
-			from
-				`tabSales Invoice` si, `tabSales Invoice Item` si_item
-			where
-				si.name = si_item.parent
-				and si.docstatus = 1
-				and si.is_return = 1
-		""",
-			as_dict=1,
-		)
-
+		sales_invoices_doc=frappe.qb.DocType("Sales Invoice")
+		sales_invoices_item_doc=frappe.qb.DocType("Sales Invoice Item")
+  
+		query = frappe.qb.from_(sales_invoices_doc)\
+			.inner_join(sales_invoices_item_doc)\
+			.on(sales_invoices_doc.name == sales_invoices_item_doc.parent)\
+				.select(sales_invoices_doc.name.as_("name"), sales_invoices_item_doc.item_code.as_("item_code"),
+				sales_invoices_item_doc.stock_qty.as_("qty"), sales_invoices_item_doc.base_net_amount.as_("base_amount"), 
+				sales_invoices_doc.return_against.as_("return_against"))\
+			.where(
+				(sales_invoices_doc.docstatus == 1) &
+				(sales_invoices_doc.is_return == 1))
+    
+		returned_invoices = query.run(as_dict=True)
+		
 		self.returned_invoices = frappe._dict()
 		for inv in returned_invoices:
 			self.returned_invoices.setdefault(inv.return_against, frappe._dict()).setdefault(
@@ -1056,10 +1056,10 @@ class GrossProfitGenerator(object):
 			).setdefault(d.parent_item, []).append(d)
 
 	def load_non_stock_items(self):
-		self.non_stock_items = frappe.db.sql_list(
-			"""select name from tabItem
-			where is_stock_item=0"""
-	)
+		item_doc=frappe.qb.DocType("Item")
+		query = frappe.qb.from_(item_doc).select(item_doc.name.as_("name")).where(item_doc.is_stock_item == 0)
+		self.non_stock_items = query.run(as_dict=True)
+		
 
 	def get_conversion_factor(item_code, default_uom):
 		conversion_factor = frappe.get_value("UOM Conversion Detail",

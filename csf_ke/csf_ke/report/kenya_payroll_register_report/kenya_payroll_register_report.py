@@ -7,7 +7,6 @@ from frappe.utils import flt
 from frappe import _
 from functools import reduce 
 
-
 def execute(filters=None):
 	if not filters: filters = {}
 	currency = None
@@ -120,7 +119,7 @@ def get_columns(salary_slips):
 	
 	for component in salary_components_data:
 		salary_components[_(component.type)].append(component.salary_component)
-  
+	
 	columns = columns + [(e + ":Currency:120") for e in salary_components[_("Earning")]] + \
 		[_("Gross Pay") + ":Currency:120"] + [(d + ":Currency:120") for d in salary_components[_("Deduction")]] + \
 		[_("Loan Repayment") + ":Currency:120", _("Total Deduction") + ":Currency:120", _("Net Pay") + ":Currency:120"]
@@ -129,27 +128,31 @@ def get_columns(salary_slips):
 
 def get_salary_slips(filters, company_currency):
 	filters.update({"from_date": filters.get("from_date"), "to_date":filters.get("to_date")})
-	conditions, filters = get_conditions(filters, company_currency)
-	salary_slips = frappe.db.sql("""select * from `tabSalary Slip` where %s
-		order by employee""" % conditions, filters, as_dict=1)
-
+	salary_slip_doc=frappe.qb.DocType("Salary Slip")
+	salary_slip_query = frappe.qb.from_(salary_slip_doc).select("*").orderby(salary_slip_doc.employee)
+	salary_slip_query = get_conditions(salary_slip_query, filters, company_currency, salary_slip_doc)
+	salary_slips = salary_slip_query.run(as_dict=True)
+	
 	return salary_slips or []
 
-def get_conditions(filters, company_currency):
-	conditions = ""
+def get_conditions(query, filters, company_currency, salary_slip):
 	doc_status = {"Draft": 0, "Submitted": 1, "Cancelled": 2}
 
-	if filters.get("docstatus"):
-		conditions += "docstatus = {0}".format(doc_status[filters.get("docstatus")])
+	for filter_key, filter_value in filters.items():
+		if filter_key == "from_date":
+			query = query.where(salary_slip.start_date == filter_value)
+		if filter_key == "to_date":
+			query = query.where(salary_slip.end_date == filter_value)
+		if filter_key == "company":
+			query = query.where(salary_slip.company == filter_value)
+		if filter_key == "currency" and filter_value != company_currency:
+			query = query.where(salary_slip.currency == filter_value)
+		if filter_key == "docstatus":
+			query = query.where(salary_slip.docstatus == doc_status.get(filter_value, 0))
+		if filter_key == "employee":
+			query = query.where(salary_slip.employee == filter_value)
 
-	if filters.get("from_date"): conditions += " and start_date = %(from_date)s"
-	if filters.get("to_date"): conditions += " and end_date = %(to_date)s"
-	if filters.get("company"): conditions += " and company = %(company)s"
-	if filters.get("employee"): conditions += " and employee = %(employee)s"
-	if filters.get("currency") and filters.get("currency") != company_currency:
-		conditions += " and currency = %(currency)s"
-
-	return conditions, filters
+	return query
 
 def get_employee_doj_map():
 	doj_map = frappe._dict()
@@ -212,4 +215,3 @@ def get_ss_earning_map(salary_slips, currency, company_currency):
 
 def get_ss_ded_map(salary_slips, currency, company_currency):
     return get_ss_deduction_and_earnings(salary_slips, currency, company_currency, is_earning=False)
-
