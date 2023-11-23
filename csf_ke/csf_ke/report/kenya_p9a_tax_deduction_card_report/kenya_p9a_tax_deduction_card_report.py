@@ -250,23 +250,16 @@ def get_columns():
     return columns
 
 def get_employees(filters):
-    employees = frappe.db.sql("""
-            SELECT
-                emp.name,
-	            emp.company
-	        FROM
-                `tabEmployee` emp
-	        WHERE
-                emp.name = %(employee)s
-                AND emp.company = %(company)s
-		    ORDER BY
-                emp.name """, {
-                'employee': filters.get("employee"),
-                'company': filters.get("company")
-            }, as_dict =True)
-    
-    
-
+    employees_doc=frappe.qb.DocType("Employee")
+    employee_query=frappe.qb.from_(employees_doc).select(employees_doc.name,employees_doc.company)\
+        .where(
+            (employees_doc.name==filters.get("employee")) &
+            (employees_doc.company==filters.get("company"))
+        ).orderby(
+            (employees_doc.name) & (employees_doc.company)
+        )
+    employees=employee_query.run(as_dict=True)
+       
     return employees
 
     
@@ -276,42 +269,37 @@ def get_p9a_tax_deduction_card_amt(filters, employee, month_start_date, month_en
         currency_filter = currency
     else:
         currency_filter = filters.get("currency")
-
-    ss_p9a_tax_deduction_card_component = frappe.db.sql("""
-        SELECT
-            ss.employee, ss.docstatus,
-	        ss.currency, ss.start_date,
-            ss.end_date, ss.company,
-	        IFNULL(sd.amount,0) as amt,
-            ss.exchange_rate,
-		    sc.p9a_tax_deduction_card_type
-		FROM
-            `tabSalary Detail` sd,
-            `tabSalary Slip` ss,
-            `tabSalary Component` sc
-		WHERE
-            sd.parent=ss.name
-            AND sd.salary_component = sc.name
-            AND ss.docstatus = 1
-            AND sc.p9a_tax_deduction_card_type =  %(p9a_tax_deduction_card_type)s
-            AND ss.employee = %(employee)s
-            AND ss.company = %(company)s
-            AND ss.start_date = %(month_start_date)s
-            AND ss.end_date = %(month_end_date)s
-            AND ss.currency = %(currency_filter)s
-		ORDER BY
-            ss.employee,
-            ss.start_date """, {
-                'p9a_tax_deduction_card_type' : p9a_tax_deduction_card_type,
-                'employee': employee,
-                'company': filters.get("company"),
-                'month_start_date': month_start_date,
-                'month_end_date': month_end_date,
-                'currency_filter': currency_filter
-    }, as_dict =True)
+    
+    salary_slip_doc=frappe.qb.DocType("Salary Slip")
+    salary_detail_doc=frappe.qb.DocType("Salary Detail")
+    salary_component_doc=frappe.qb.DocType("Salary Component")
+    salary_slip_query=frappe.qb.from_(salary_slip_doc)\
+                        .inner_join(salary_detail_doc)\
+                        .on(salary_slip_doc.name==salary_detail_doc.parent)\
+                        .inner_join(salary_component_doc)\
+                        .on(salary_detail_doc.salary_component==salary_component_doc.name)\
+                    .select(salary_slip_doc.employee,salary_slip_doc.docstatus,
+                        salary_slip_doc.currency,salary_slip_doc.start_date,
+                        salary_slip_doc.end_date,salary_slip_doc.company,
+                        (salary_detail_doc.amount.as_("amt") if salary_detail_doc.amount else 0).as_("amt"),salary_slip_doc.exchange_rate,
+                        salary_component_doc.p9a_tax_deduction_card_type)\
+                    .where(
+                        (salary_slip_doc.docstatus==1) &
+                        (salary_component_doc.p9a_tax_deduction_card_type==p9a_tax_deduction_card_type) &
+                        (salary_slip_doc.employee==employee) &
+                        (salary_slip_doc.company==filters.get("company")) &
+                        (salary_slip_doc.start_date==month_start_date) &
+                        (salary_slip_doc.end_date==month_end_date) &
+                        (salary_slip_doc.currency==currency_filter)
+                        
+                    ).orderby(
+                        (salary_slip_doc.employee) & (salary_slip_doc.start_date)
+                    )
+                    
+    ss_p9a_tax_deduction_card_component_=salary_slip_query.run(as_dict=True)
     
     p9a_tax_deduction_card_amount = 0
-    for d in ss_p9a_tax_deduction_card_component:
+    for d in ss_p9a_tax_deduction_card_component_:
         if currency != company_currency:
             p9a_tax_deduction_card_amount += flt(d.amt) * flt(d.exchange_rate if d.exchange_rate else 1)
         else:
@@ -325,34 +313,29 @@ def get_p9a_tax_deduction_card_gross_pay(filters, employee, month_start_date, mo
         currency_filter = currency
     else:
         currency_filter = filters.get("currency")
-
-    ss_p9a_tax_deduction_card_gross_pay = frappe.db.sql("""
-        SELECT
-            ss.employee, ss.docstatus,
-	        ss.currency, ss.start_date,
-            ss.end_date, ss.company,
-	        IFNULL(ss.gross_pay,0) as amt,
-            ss.exchange_rate
-		FROM
-            `tabSalary Slip` ss
-		WHERE ss.docstatus = 1
-            AND ss.employee = %(employee)s
-            AND ss.company = %(company)s
-            AND ss.start_date = %(month_start_date)s
-            AND ss.end_date = %(month_end_date)s
-            AND ss.currency = %(currency_filter)s
-		ORDER BY
-            ss.employee,
-            ss.start_date """, {
-                'employee': employee,
-                'company': filters.get("company"),
-                'month_start_date': month_start_date,
-                'month_end_date': month_end_date,
-                'currency_filter': currency_filter
-    }, as_dict =True)
+    
+    salary_slip_doc=frappe.qb.DocType("Salary Slip")
+    salary_slip_query=frappe.qb.from_(salary_slip_doc)\
+                    .select(salary_slip_doc.employee,salary_slip_doc.docstatus,
+                        salary_slip_doc.currency,salary_slip_doc.start_date,
+                        salary_slip_doc.end_date,salary_slip_doc.company,
+                        (salary_slip_doc.gross_pay.as_("amt") if salary_slip_doc.gross_pay else 0).as_("amt"),salary_slip_doc.exchange_rate)\
+                    .where(
+                        (salary_slip_doc.docstatus==1) &
+                        (salary_slip_doc.employee==employee) &
+                        (salary_slip_doc.company==filters.get("company")) &
+                        (salary_slip_doc.start_date==month_start_date) &
+                        (salary_slip_doc.end_date==month_end_date) &
+                        (salary_slip_doc.currency==currency_filter)
+                        
+                    ).orderby(
+                        (salary_slip_doc.employee) & (salary_slip_doc.start_date)
+                    
+                    )
+    ss_p9a_tax_deduction_card_gross_pay_=salary_slip_query.run(as_dict=True)
     
     p9a_tax_deduction_card_gross_pay = 0
-    for d in ss_p9a_tax_deduction_card_gross_pay:
+    for d in ss_p9a_tax_deduction_card_gross_pay_:
         if currency != company_currency:
             p9a_tax_deduction_card_gross_pay += flt(d.amt) * flt(d.exchange_rate if d.exchange_rate else 1)
         else:
@@ -361,16 +344,14 @@ def get_p9a_tax_deduction_card_gross_pay(filters, employee, month_start_date, mo
     return p9a_tax_deduction_card_gross_pay
 
 def get_p9a_tax_deduction_card_fixed_component_amt(p9a_tax_deduction_card_type):
-    p9a_tax_deduction_card_fixed_component = frappe.db.sql("""
-            SELECT
-                IFNULL(sc.amount,0) as amt
-		    FROM
-                `tabSalary Component` sc
-            WHERE
-                sc.p9a_tax_deduction_card_type = %(p9a_tax_deduction_card_type)s
-            """, {
-                'p9a_tax_deduction_card_type': p9a_tax_deduction_card_type
-            }, as_dict=True)
+    salary_component_doc=frappe.qb.DocType("Salary Component")
+    salary_component_query=frappe.qb.from_(salary_component_doc)\
+        .select((salary_component_doc.amount.as_("amt") if salary_component_doc.amount else 0).as_('amt'))\
+        .where(
+            (salary_component_doc.p9a_tax_deduction_card_type==p9a_tax_deduction_card_type)
+        )
+    p9a_tax_deduction_card_fixed_component=salary_component_query.run(as_dict=True)
+    # frappe.msgprint(str(p9a_tax_deduction_card_fixed_component))
 
     p9a_tax_deduction_card_fixed_component_amt = 0
     for d in p9a_tax_deduction_card_fixed_component:
