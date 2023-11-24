@@ -75,10 +75,7 @@ def get_data(filters,company_currency,conditions=""):
 			employee.first_name,
 			employee.middle_name,
 			employee.national_id,
-			
 			employee.nhif_no,
-			
-			
 			salary_details.amount
 		).where(salary_details.amount != 0)
 	

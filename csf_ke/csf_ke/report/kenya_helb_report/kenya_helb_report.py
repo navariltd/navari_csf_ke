@@ -58,7 +58,6 @@ def apply_filters(query, filters, company_currency, salary_slip, salary_detail):
 			query = query.where(salary_slip.currency == filter_value)
 		elif filter_key == "docstatus":
 			query = query.where(salary_slip.docstatus == doc_status.get(filter_value, 0))
-
 	return query
 
 
@@ -76,7 +75,7 @@ def get_data(filters, company_currency):
 		.inner_join(salary_detail) \
 		.on(salary_detail.parent == salary_slip.name) \
 		.select(
-			employee.name,
+			employee.name.as_("employee"),
 			employee.employee_name,
 			employee.national_id,
 			salary_detail.amount

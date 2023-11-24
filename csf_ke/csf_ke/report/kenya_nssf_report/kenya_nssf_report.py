@@ -53,11 +53,18 @@ def get_columns():
 		'fieldtype': 'Data',
 		'width': 140
 		},
+  
 		{
 		'label': _('Gross Pay'),
 		'fieldname': 'gross_pay',
 		"fieldtype": "Currency",		
 		'width': 200
+		},
+  {
+		'label': _('NSSF Amount'),
+		'fieldname': 'amount',
+		'fieldtype': 'Currency',
+		'width': 140
 		}
 	]
 
@@ -85,6 +92,7 @@ def get_data(filters, company_currency):
 			employee.tax_id,
 			employee.nssf_no,
 			salary_slip.gross_pay,
+			salary_details.amount,
 			salary_slip.company,
 			salary_details.salary_component
 		).where(salary_details.amount != 0)

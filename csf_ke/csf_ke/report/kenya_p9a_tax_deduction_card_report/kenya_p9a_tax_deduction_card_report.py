@@ -351,7 +351,6 @@ def get_p9a_tax_deduction_card_fixed_component_amt(p9a_tax_deduction_card_type):
             (salary_component_doc.p9a_tax_deduction_card_type==p9a_tax_deduction_card_type)
         )
     p9a_tax_deduction_card_fixed_component=salary_component_query.run(as_dict=True)
-    # frappe.msgprint(str(p9a_tax_deduction_card_fixed_component))
 
     p9a_tax_deduction_card_fixed_component_amt = 0
     for d in p9a_tax_deduction_card_fixed_component:

@@ -160,7 +160,6 @@ class KenyaSalesTaxReport(object):
 	def get_data(self):
 		if self.filters.from_date > self.filters.to_date:
 			frappe.throw(_("To Date cannot be before From Date. {}").format(self.filters.to_date))
-
 		report_details = []
 
 		sales_invoices = self.get_sales_invoices()
