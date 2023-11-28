@@ -1,6 +1,17 @@
 // Copyright (c) 2023, Navari Limited and contributors
 // For license information, please see license.txt
 
+frappe.ui.form.on('Salary Slip', {
+    onload: function(frm) {
+        let today = frappe.datetime.now_date();
+        let startOfMonth = frappe.datetime.month_start(today);
+        let endOfMonth = frappe.datetime.month_end(today);
+
+        frm.set_df_property('from_date', 'default', startOfMonth);
+        frm.set_df_property('to_date', 'default', endOfMonth);
+    }
+});
+
 frappe.query_reports["Kenya P10 Tax Report"] = {
 	"filters": [
 		{
@@ -25,17 +36,13 @@ frappe.query_reports["Kenya P10 Tax Report"] = {
 			"fieldname": "from_date",
 			"label": __("From Date"),
 			"fieldtype": "Date",
-			"default": frappe.datetime.add_months(frappe.datetime.get_today(),-1),
-			"reqd": 1,
-			"width": "100px"
+			"default": frappe.datetime.month_start(frappe.datetime.now_date())
 		},
 		{
 			"fieldname": "to_date",
-			"label": __("End Date"),
+			"label": __("To Date"),
 			"fieldtype": "Date",
-			"default": frappe.datetime.get_today(),
-			"reqd": 1,
-			"width": "100px"
+			"default": frappe.datetime.month_end(frappe.datetime.now_date())
 		},
 		{
 			"fieldname": "employee",
