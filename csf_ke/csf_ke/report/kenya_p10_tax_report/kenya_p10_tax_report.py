@@ -3,6 +3,9 @@
 
 import frappe
 from frappe import _
+from pypika import Case
+from functools import reduce
+
 
 
 def execute(filters=None):
@@ -76,42 +79,46 @@ def get_columns():
 
 
 def get_p10_report_data(filters):
-    employee = filters.get("employee")
-    company = filters.get("company")
-    from_date = filters.get("from_date")
-    to_date = filters.get("to_date")
+    employee = frappe.qb.DocType("Employee")
+    salary_slip = frappe.qb.DocType("Salary Slip")
+    salary_detail = frappe.qb.DocType("Salary Detail")
 
-    conditions = " AND ss.docstatus = 1 "
-    if company:
-        conditions += f" AND ss.company = '{company}'"
-    if employee:
-        conditions += f" AND ss.employee = '{employee}'"
-    if from_date and to_date:
-        conditions += f" AND ss.posting_date BETWEEN '{from_date}' AND '{to_date}'"
-   
+    conditions = [ salary_slip.docstatus == 1]
+    if filters.get("company"):
+        conditions.append(salary_slip.company == filters.get("company"))
+    if filters.get("employee"):
+        conditions.append(salary_slip.employee == filters.get("employee"))
+    if filters.get("from_date") and filters.get("to_date"):
+        conditions.append(
+            salary_slip.posting_date.between(filters.get("from_date"), filters.get("to_date"))
+        )
 
-    salary_components = ['Basic Salary','House Allowance','Transport Allowance','Leave Allowance','Overtime','Commissions','PAYE' ]
+    salary_components = [
+        'Basic Salary', 'House Allowance', 'Transport Allowance',
+        'Leave Allowance', 'Overtime', 'Commissions', 'PAYE']
 
-    p10_salary_component = ", ".join([f"'{component}'" for component in salary_components])
-
-    ss_p10_tax_deduction_card = frappe.db.sql(f"""
-                SELECT
-                    emp.tax_id,
-                    ss.employee_name,
-                    ss.posting_date,
-                    sd.salary_component, 
-                    IFNULL(sd.amount,0) as amount 
-                FROM `tabSalary Slip` ss
-                INNER JOIN `tabSalary Detail` sd ON ss.name=sd.parent
-                INNER JOIN `tabEmployee` emp ON emp.name=ss.employee
-                WHERE sd.salary_component IN ({p10_salary_component})
-                 {conditions}
-                ORDER BY ss.employee
-            """, as_dict=True)
-
+    query = frappe.qb.from_(salary_slip) \
+        .inner_join(employee) \
+        .on(employee.name == salary_slip.employee) \
+        .inner_join(salary_detail) \
+        .on(salary_slip.name == salary_detail.parent) \
+        .select(
+            employee.tax_id,
+            salary_slip.employee_name,
+            salary_slip.posting_date,
+            salary_detail.salary_component,
+            Case()
+            .when(salary_detail.amount.isnull(), 0)
+            .else_(salary_detail.amount)
+            .as_('amount')
+        ).where(salary_detail.salary_component.isin(salary_components)& 
+                reduce(lambda x, y: x & y, conditions)).orderby(salary_slip.employee)
+    
+    data = query.run(as_dict=True)
+    
 
     employee_data = {}
-    for row in ss_p10_tax_deduction_card:
+    for row in data:
         employee_pin = row["tax_id"]
         employee_name = row["employee_name"]
         salary_component = row["salary_component"]
@@ -128,9 +135,9 @@ def get_p10_report_data(filters):
 
     report_data = []
     for employee_key, components in employee_data.items():
-        employee_pin, employee_name = employee_key.split("-", 1)
+        employee_pin, employee_name = employee_key.rsplit("-", 1)
         row = {"tax_id": employee_pin, "employee_name": employee_name}
         row.update(components)
         report_data.append(row)
-
+        
     return report_data
