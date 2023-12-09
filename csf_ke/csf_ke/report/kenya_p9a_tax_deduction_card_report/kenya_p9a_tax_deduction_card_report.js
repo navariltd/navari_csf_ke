@@ -97,3 +97,4 @@ frappe.query_reports["Kenya P9A Tax Deduction Card Report"] = {
 
 	]
 };
+

@@ -37,6 +37,14 @@ frappe.query_reports["Kenya Bank Payroll Advice Report"] = {
 			"default": erpnext.get_currency(frappe.defaults.get_default("Company")),
 			"width": "50px"
 		},
+
+		{
+			"fieldname":"bank_name",
+			"label": __("Bank"),
+			"fieldtype": "Link",
+			"options": "Bank",	
+			"width": "100px"
+		},
 		{
 			"fieldname":"docstatus",
 			"label":__("Document Status"),
