@@ -4,7 +4,6 @@
 from __future__ import unicode_literals
 import frappe
 from frappe import _
-from pypika import functions as fn
 
 def execute(filters=None):
 	return KenyaPurchaseTaxReport(filters).run()
@@ -83,73 +82,79 @@ class KenyaPurchaseTaxReport(object):
 			]
 		return columns
 
-	def get_data(self):	
-		if self.filters.from_date > self.filters.to_date:
-			frappe.throw(_("To Date cannot be before From Date. {}").format(self.filters.to_date))
-
+	def get_purchase_invoices(self):
 		company = self.filters.company
 		from_date = self.filters.from_date
 		to_date = self.filters.to_date
 		is_return = self.filters.is_return
-		tax_template = self.filters.tax_template
 
-		conditions = " AND purchase_invoice.docstatus = 1 "
+		purchase_invoice_ = frappe.qb.DocType("Purchase Invoice")
+		supplier_ = frappe.qb.DocType("Supplier")
 
-		if(company):
-			conditions += f" AND purchase_invoice.company = '{company}'"
-		if(is_return == "Is Return"):
-			conditions += " AND purchase_invoice.is_return = 1"
-		if(is_return == "Normal Purchase Invoice"):
-			conditions += " AND purchase_invoice.is_return = 0"
+		purchase_invoices_query = frappe.qb.from_(purchase_invoice_) \
+			.inner_join(supplier_) \
+			.on(purchase_invoice_.supplier == supplier_.name) \
+			.select(
+				supplier_.tax_id.as_("pin_of_supplier") if supplier_.tax_id else " ".as_("pin_of_supplier"),
+				purchase_invoice_.supplier_name.as_("name_of_supplier"),
+					purchase_invoice_.etr_invoice_number.as_("etr_invoice_number"),
+					purchase_invoice_.posting_date.as_("invoice_date"),
+					purchase_invoice_.name.as_("invoice_name"),
+					purchase_invoice_.base_grand_total.as_("invoice_total_purchases"),
+					purchase_invoice_.return_against.as_("return_against"))\
+			
+		if company:
+			purchase_invoices_query = purchase_invoices_query.where(purchase_invoice_.company == company)
+		if is_return == "Is Return":
+			purchase_invoices_query = purchase_invoices_query.where(purchase_invoice_.is_return == 1)
+		if is_return == "Normal Purchase Invoice":
+			purchase_invoices_query = purchase_invoices_query.where(purchase_invoice_.is_return == 0)
+		if from_date is not None:
+			purchase_invoices_query = purchase_invoices_query.where(purchase_invoice_.posting_date >= from_date)
+		if to_date:
+			purchase_invoices_query = purchase_invoices_query.where(purchase_invoice_.posting_date <= to_date)
+
+		purchase_invoices = purchase_invoices_query.run(as_dict=True)
+		return purchase_invoices
+	
+	
+	def get_purchase_invoice_items(self, purchase_invoice_name, tax_template=None):
+		purchase_invoice_item_ = frappe.qb.DocType("Purchase Invoice Item")
+		purchase_invoice_items_query = frappe.qb.from_(purchase_invoice_item_).select(
+			purchase_invoice_item_.amount.as_("amount"),
+			purchase_invoice_item_.base_net_amount.as_("taxable_value"),
+			purchase_invoice_item_.item_tax_template.as_("item_tax_template")
+		).where(purchase_invoice_item_.parent == purchase_invoice_name)
+
+		if tax_template:
+			purchase_invoice_items_query = purchase_invoice_items_query.where(
+				purchase_invoice_item_.item_tax_template == tax_template)
+
+		items_or_services = purchase_invoice_items_query.run(as_dict=True)
+		return items_or_services
+
+	def get_data(self):
+		if self.filters.from_date > self.filters.to_date:
+			frappe.throw(_("To Date cannot be before From Date. {}").format(self.filters.to_date))
 
 		report_details = []
 
-		purchase_invoices = frappe.db.sql(f"""
-			SELECT
-				IFNULL(supplier.tax_id, NULL) as pin_of_supplier,
-				purchase_invoice.supplier_name as name_of_supplier,
-				purchase_invoice.etr_invoice_number as etr_invoice_number,
-				purchase_invoice.posting_date as invoice_date,
-				purchase_invoice.name as invoice_name,
-				purchase_invoice.base_grand_total as invoice_total_purchases,
-				purchase_invoice.return_against as return_against
-			FROM 
-    			`tabPurchase Invoice` as `purchase_invoice`
-			INNER JOIN 
-    			`tabSupplier` as `supplier` 
-			ON
-    			supplier.name = purchase_invoice.supplier
-			WHERE (purchase_invoice.posting_date BETWEEN '{from_date}' AND '{to_date}') {conditions};
-		""", as_dict = 1)
+		purchase_invoices = self.get_purchase_invoices()
 
 		for purchase_invoice in purchase_invoices:
 			report_details.append(purchase_invoice)
 
-			condition_tax_template = " AND 1=1 "
+			items_or_services = self.get_purchase_invoice_items(purchase_invoice.invoice_name, self.filters.tax_template)
 
-			if tax_template:
-				condition_tax_template += f"AND purchase_invoice_item.item_tax_template = '{tax_template}'"
-
-			items_or_services = frappe.db.sql(f"""
-				SELECT 
-					purchase_invoice_item.amount as amount,
-					purchase_invoice_item.base_net_amount as taxable_value,
-					purchase_invoice_item.item_tax_template as item_tax_template
-				FROM
-    				`tabPurchase Invoice Item` as `purchase_invoice_item`
-				WHERE parent = '{purchase_invoice.invoice_name}' {condition_tax_template};
-			""", as_dict = 1)
-
-			# total_taxable_value and total_vat for every single invoice
 			total_taxable_value = 0
 			total_vat = 0
 
 			for item_or_service in items_or_services:
-				# get tax rate for each item and calculate VAT
 				tax_rate = frappe.db.get_value('Item Tax Template Detail',
-					{'parent': item_or_service['item_tax_template']},
-					['tax_rate'])
-				item_or_service['amount_of_vat'] = 0 if not tax_rate else item_or_service['taxable_value'] * (tax_rate / 100)
+											{'parent': item_or_service['item_tax_template']},
+											['tax_rate'])
+				item_or_service['amount_of_vat'] = 0 if not tax_rate else item_or_service['taxable_value'] * (
+						tax_rate / 100)
 
 				total_taxable_value += item_or_service['taxable_value']
 				total_vat += item_or_service['amount_of_vat']
@@ -160,16 +165,16 @@ class KenyaPurchaseTaxReport(object):
 
 		report_details = list(filter(lambda report_entry: report_entry['taxable_value'], report_details))
 
-		for report_entry in report_details: 
+		for report_entry in report_details:
 			if report_entry['pin_of_supplier']:
 				self.registered_suppliers_total_purchases += report_entry['invoice_total_purchases']
 				self.registered_suppliers_total_vat += report_entry['amount_of_vat']
 			else:
-				self.unregistered_suppliers_total_purchases += report_entry['invoice_total_purchases']	
+				self.unregistered_suppliers_total_purchases += report_entry['invoice_total_purchases']
 				self.unregistered_suppliers_total_vat += report_entry['amount_of_vat']
 
 		return report_details
-
+	
 	def get_report_summary(self):
 		return [{
 			"value": self.registered_suppliers_total_purchases,
@@ -196,3 +201,4 @@ class KenyaPurchaseTaxReport(object):
 			"datatype": "Currency",
 			"currency": "KES"
 		}]
+  

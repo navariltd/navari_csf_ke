@@ -46,6 +46,7 @@ class CSFKESMSCenter(Document):
                     " and dl.link_name = '%s'" % self.supplier.replace("'", "'")
                     or " and ifnull(dl.link_name, '') != ''"
                 )
+        
         if self.send_to == "All Sales Partner Contact":
             where_clause = " and dl.link_doctype = 'Sales Partner'"
             if self.sales_partner:
@@ -53,7 +54,7 @@ class CSFKESMSCenter(Document):
                     "and dl.link_name = '%s'" % self.sales_partner.replace("'", "'")
                     or " and ifnull(dl.link_name, '') != ''"
                 )
-
+        
         if self.send_to == "All Customer Contact":
             rec = frappe.db.sql(
                 f"""select distinct(CONCAT(ifnull(c.first_name,''), ' ', ifnull(c.last_name,''))), c.mobile_no

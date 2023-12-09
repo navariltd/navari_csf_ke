@@ -14,7 +14,6 @@ def execute(filters=None):
 
     return get_columns(), get_p10_report_data(filters)
 
-
 def get_columns():
     columns = [
         {

@@ -61,36 +61,39 @@ def get_columns():
 		
 	return columns
 
-def get_data(filters,company_currency,conditions=""):
-	conditions = get_conditions(filters,company_currency)
-
+def get_data(filters,company_currency):
 	if filters.from_date > filters.to_date:
 		frappe.throw(_("To Date cannot be before From Date. {}").format(filters.to_date))
-
-	data = frappe.db.sql("""
-	SELECT 	ss.employee, ss.employee_name,
-	        ss.start_date, ss.end_date, 
-			ss.bank_name, ss.bank_account_no,
-			ss.branch, ss.net_pay, e.national_id
-	FROM `tabSalary Slip` ss, `tabEmployee` e
-	WHERE %s
-	    and e.name = ss.employee
-	""" % conditions, filters, as_dict=1)
-
+  
+	employee_doc = frappe.qb.DocType("Employee")
+	salary_slip_doc = frappe.qb.DocType("Salary Slip")
+	
+	query = frappe.qb.from_(salary_slip_doc)\
+		.inner_join(employee_doc)\
+		.on(salary_slip_doc.employee == employee_doc.name)\
+		.select(salary_slip_doc.employee, employee_doc.employee_name, 
+				employee_doc.national_id, salary_slip_doc.bank_name, 
+				salary_slip_doc.bank_account_no, salary_slip_doc.branch,
+				salary_slip_doc.net_pay)
+  
+	query= get_conditions(query, filters, company_currency, salary_slip_doc)
+	data= query.run(as_dict=True) 
 	return data
 
-def get_conditions(filters,company_currency):
-	conditions = ""
-	doc_status = {"Draft": 0, "Submitted": 1, "Cancelled": 2}
-
-	if filters.get("docstatus"):
-		conditions += "ss.docstatus = {0}".format(doc_status[filters.get("docstatus")])
-
-	if filters.get("from_date"): conditions += " and ss.start_date = %(from_date)s"
-	if filters.get("to_date"): conditions += " and ss.end_date = %(to_date)s"
-	if filters.get("company"): conditions += " and ss.company = %(company)s"
-	if filters.get("bank_name"): conditions += " and ss.bank_name = %(bank_name)s"
-	if filters.get("currency") and filters.get("currency") != company_currency:
-		conditions += " and ss.currency = %(currency)s"
-	
-	return conditions
+def get_conditions(query, filters, company_currency, salary_slip_doc):
+    doc_status = {"Draft": 0, "Submitted": 1, "Cancelled": 2}
+    
+    for filter_key, filter_value in filters.items():
+        if filter_key == "from_date":
+            query = query.where(salary_slip_doc.start_date == filter_value)
+        elif filter_key == "to_date":
+            query = query.where(salary_slip_doc.end_date == filter_value)
+        elif filter_key == "company":
+            query = query.where(salary_slip_doc.company == filter_value)
+        elif filter_key =="bank_name":
+            query = query.where(salary_slip_doc.bank_name == filter_value)
+        elif filter_key == "currency" and filter_value != company_currency:
+            query = query.where(salary_slip_doc.currency == filter_value)
+        elif filter_key == "docstatus":
+            query = query.where(salary_slip_doc.docstatus == doc_status.get(filter_value, 0))
+    return query
