@@ -27,6 +27,12 @@ fixtures = [
             ]
         ],
     },
+    {
+        "doctype": "Salary Component"
+    },
+    {
+        "doctype": "Salary Structure"
+    },
 ]
 
 # Includes in <head>
