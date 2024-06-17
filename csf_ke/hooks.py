@@ -3,7 +3,9 @@ from . import __version__ as app_version
 app_name = "csf_ke"
 app_title = "Navari Country Specific Customizations for Kenya"
 app_publisher = "Navari Ltd"
-app_description = "ERPNext and FrappeHR Country Specific Customizations for Kenya by Navari Ltd"
+app_description = (
+    "ERPNext and FrappeHR Country Specific Customizations for Kenya by Navari Ltd"
+)
 app_icon = "drag"
 app_color = "grey"
 app_email = "info@navari.co.ke"
@@ -11,31 +13,8 @@ app_license = "GNU General Public License (v3)"
 required_apps = ["frappe/erpnext"]
 
 
-fixtures = [
-    {
-        "doctype": "Custom Field",
-        "filters": [
-            [
-                "name",
-                "in",
-                (
-                    "Employee-national_id",
-                    "Employee-nhif_no",
-                    "Employee-nssf_no",
-                    "Employee-tax_id",
-                    "Salary Component-p9a_tax_deduction_card_type",
-                   
-                ),
-            ]
-        ],
-    },
-    {
-        "doctype": "Salary Component"
-    },
-    {
-        "doctype": "Salary Structure"
-    },
-]
+after_migrate = "csf_ke.install.load_custom_fixtures"
+after_install = "csf_ke.install.load_custom_fixtures"
 
 # Includes in <head>
 # ------------------
@@ -205,4 +184,3 @@ user_data_fields = [
 # auth_hooks = [
 # 	"csf_ke.auth.validate"
 # ]
-
