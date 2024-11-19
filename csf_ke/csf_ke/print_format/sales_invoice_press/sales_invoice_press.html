@@ -1,0 +1,126 @@
+
+{% set customer_address = frappe.db.get_value('Address', doc.customer_address, 'name') %}
+{% if customer_address %}
+    {% set pincode = frappe.db.get_value('Address', customer_address, 'pincode') %}
+{% endif %}
+
+{% set letterhead = frappe.db.get_value('Letter Head', {'is_default': 1, 'disabled': 0}, 'content') %}
+
+<div style="height: 200px; font-size: 13px;">
+    {% if letterhead %}
+        {{ letterhead | safe }}
+    {% else %}
+        <!-- Fallback to hardcoded details if no default letterhead is set -->
+        <div style="text-align: left;"><img src="/files/NewNavariLogo.PNG" style="width: 25%;"></div>
+        <div style="text-align: left;">Eden Square 7th floor block 1, Chiromo Road,</div>
+        <div style="text-align: left;">P.O Box 56248-00200, Nairobi Kenya.</div>
+        <div style="text-align: left;">Tel: +254 203673104 Mobile: +254 723 575 670</div>
+        <div style="text-align: left;">Email: solutions@navari.co.ke</div>
+        <div style="text-align: left;"><a href="https://www.navari.co.ke">www.navari.co.ke</a></div>
+    {% endif %}
+</div>
+
+<div class="print-heading">
+    <h2>
+        <div>{% if doc.status == 'Credit Note Issued' or doc.is_return %}Credit Note {% else %} Sales Invoice {% endif %}</div>
+        <small class="sub-heading"><b>{{ doc.name }}</b></small>
+    </h2>
+</div>
+
+
+<div style = 'display: flex; justify-content: space-between; font-size: 13px;'>
+    <div>
+        <p><b>Customer Name:</b></p>
+        <p>{{ doc.customer }}</p>
+        
+        {% if doc.tax_id %}
+            <p><b>Tax Id:</b></p>
+            <p>{{ doc.tax_id }}</p>
+        {% endif %}
+        
+        {% if customer_address %}
+            <p><b>Address:</b></p>
+            {% if pincode %}<p>{{ pincode }}</p>{% endif %}
+        {% endif %}
+        
+        {% if doc.po_no %}
+            <p><b>LPO:</b></p>
+            <p>{{ doc.po_no }}</p>
+        {% endif %}
+    {% if doc.is_return %}
+            <p><b>Return Against:</b></p>
+            <p>{{ doc.return_against }}</p>
+        {% endif %}
+    </div>
+    
+    <div style="text-align: right;">
+        <p><b>Date:</b></p>
+        <p>{{ doc.posting_date }}</p>
+        <p><b>Mode of Payment:</b></p>
+        <p>Mpesa Express</p>
+        
+        {% if doc.custom_customer_hs_code %}
+            <p><b>HS Code:</b></p>
+            <p>{{ doc.custom_customer_hs_code }}</p>
+        {% endif %}
+    </div>
+</div>
+
+<div>
+    <table class="table table-bordered" style="font-size: 13px;">
+        <thead>
+            <tr>
+                <th style = 'width: 100px; text-align: right'><b>Item Code</b></th>
+                <th style = 'width: 200px; text-align: left'><b>Description</b></th>
+                <th style = 'width: 30px'><b>Quantity</b></th>
+                <th style = 'width: 30px'><b>Uom</b></th>
+                <th style = 'width: 120px'><b>Rate </b></th>
+                <th style = 'width: 120px'><b>Amount</b></th>
+            </tr>
+        </thead>
+        
+        {%- for item in doc.items -%}
+            <tr>
+                <td>{{ item.item_code }}</td>
+                <td>{{ item.description }}</td>
+                <td>{{ item.get_formatted("qty") }}</td>
+                <td>{{ item.uom }}</td>
+                <td>{{ item.get_formatted("rate").replace(' ', '&nbsp;<span style="margin-left: 5px;"></span>') | safe }}</td>
+                <td>{{ item.get_formatted("amount") }}</td>
+            </tr>
+        {%- endfor -%}
+    </table>
+</div>
+
+
+<div style="width: 100%; text-align: right; margin-bottom: 20px; font-size: 13px;">
+    <div>Net Total: {{ doc.get_formatted("net_total") }}</div><br>
+    <div>VAT 16%: {{ doc.get_formatted("total_taxes_and_charges") }}</div><br>
+    <div>Grand Total: <b>{{ doc.get_formatted("grand_total") }}</b></div><br>
+</div>
+
+
+
+{% if doc.tc_name and doc.terms %}
+    <div style="font-size: 10px;">
+        <p><b><u>{{ doc.tc_name }}</u></b></p>
+        <p>{{ doc.terms }}</p>
+    </div>
+    <br>
+{% endif %}
+
+<div class = "footer" style="display: flex; font-size: 13px; margin-bottom:100px;">
+<p>Thank you!</p>
+</div>
+
+<style>
+    @media print {
+        .footer:last-child {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+    }
+</style>
+
