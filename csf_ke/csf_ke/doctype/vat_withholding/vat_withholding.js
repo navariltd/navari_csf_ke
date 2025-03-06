@@ -24,5 +24,16 @@ frappe.ui.form.on("VAT Withholding", {
                 );
             });
         }
+    },
+
+    company(frm) {
+        frm.set_query("voucher_no", function () {
+            return {
+                filters: {
+                    docstatus: 1,
+                    company: frm.doc.company,
+                },
+            };
+        });
     }
 });
