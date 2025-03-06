@@ -2,24 +2,27 @@
 // For license information, please see license.txt
 
 frappe.ui.form.on("VAT Withholding", {
-	before_submit(frm) {
+    before_submit(frm) {
+
         if (frm.doc.vat_withholding_amount === frm.doc.outstanding_amount && !frm.doc.allocate_payment) {
-            if (!frm.__confirmed_allocation) {
+            
+            return new Promise((resolve) => {
                 frappe.confirm(
-                    __("Would you like to allocate payment to the Journal Entry for this VAT Withholding?"),
+                    __("The Withholding Amount ({0}) equals the Outstanding Amount ({1}). Would you like to allocate payment to the Journal Entry for Sales Invoice {2}?", 
+                        [frm.doc.vat_withholding_amount, frm.doc.outstanding_amount, frm.doc.voucher_no]),
                     () => {
+
                         frm.set_value("allocate_payment", 1);
-                        frm.__confirmed_allocation = true;
-                        frm.savesubmit();
+                        frm.save('Submit');
+                        frm.refresh();
+                        
                     },
                     () => {
-                        frm.__confirmed_allocation = true;
-                        frm.savesubmit();
+                        frm.save('Submit');
+                        frm.refresh();
                     }
                 );
-            }
-            
-            frappe.validated = false;
+            });
         }
-	}
+    }
 });
