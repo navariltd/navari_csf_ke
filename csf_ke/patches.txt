@@ -9,3 +9,4 @@ csf_ke.csf_ke.patches.employee_separation_type
 csf_ke.csf_ke.patches.appointment_letter_introduction
 csf_ke.csf_ke.patches.appointment_letter_template_introduction
 csf_ke.csf_ke.patches.remove_hscode_description
+csf_ke.csf_ke.patches.customer_group_custom_field

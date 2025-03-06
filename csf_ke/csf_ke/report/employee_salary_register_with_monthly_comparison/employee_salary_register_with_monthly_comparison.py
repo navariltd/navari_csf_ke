@@ -3,7 +3,7 @@
 
 import frappe
 from erpnext import get_company_currency
-from frappe import _, msgprint
+from frappe import _
 from frappe.utils import getdate, flt, cstr, cint
 from frappe.utils.nestedset import get_descendants_of
 
@@ -28,24 +28,9 @@ def execute(filters):
     cur_salary_slips = get_cur_salary_slips(filters, company_currency)
 
     if len(prev_salary_slips) == 0:
-        msgprint(
-            _(
-                "No salary slip found for the previous month: {0} {1}".format(
-                    frappe.bold(calendar.month_name[prev_month]), frappe.bold(prev_year)
-                )
-            )
-        )
         return columns, cur_salary_slips
 
     if len(cur_salary_slips) == 0:
-        msgprint(
-            _(
-                "No salary slip found for the this month: {0} {1}".format(
-                    frappe.bold(calendar.month_name[getdate(filters.from_date).month]),
-                    frappe.bold(getdate(filters.from_date).year),
-                )
-            )
-        )
         return columns, prev_salary_slips
 
     data = get_data(prev_salary_slips, cur_salary_slips)

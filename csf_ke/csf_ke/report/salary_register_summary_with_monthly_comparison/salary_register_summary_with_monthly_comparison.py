@@ -4,7 +4,7 @@
 import frappe
 import erpnext
 from frappe.utils import flt, cstr, getdate
-from frappe import _, msgprint
+from frappe import _
 from frappe.utils.nestedset import get_descendants_of
 
 import calendar
@@ -21,13 +21,6 @@ def execute(filters=None):
         filters, company_currency, prev_first_date, prev_last_date
     )
     if len(prev_salary_slips) == 0:
-        msgprint(
-            _(
-                "No salary slip found for the previous month: {0} {1}".format(
-                    frappe.bold(calendar.month_name[prev_month]), frappe.bold(prev_year)
-                )
-            )
-        )
         return []
 
     columns = get_columns(filters, prev_month, prev_year)
@@ -87,14 +80,6 @@ def get_data(filters, company_currency, prev_salary_slips):
 
     salary_slips = get_salary_slips(filters, company_currency)
     if len(salary_slips) == 0:
-        msgprint(
-            _(
-                "No salary slip found for the this month: {0} {1}".format(
-                    frappe.bold(calendar.month_name[getdate(filters.from_date).month]),
-                    frappe.bold(getdate(filters.from_date).year),
-                )
-            )
-        )
         return []
 
     no_employee_diff = len(salary_slips) - len(prev_salary_slips)
