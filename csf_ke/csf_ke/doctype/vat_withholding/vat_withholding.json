@@ -13,6 +13,7 @@
   "column_break_ynaf",
   "currency",
   "withholding_account",
+  "allocate_payment",
   "section_break_onfc",
   "withholder_pin",
   "withholdee_pin",
@@ -26,6 +27,7 @@
   "column_break_tsyd",
   "wht_certificate_no",
   "pay_point_name",
+  "outstanding_amount",
   "section_break_weug",
   "vat_withholding_amount",
   "column_break_xcti",
@@ -182,6 +184,20 @@
    "fieldtype": "Link",
    "label": "Journal Entry",
    "options": "Journal Entry"
+  },
+  {
+   "fetch_from": "voucher_no.outstanding_amount",
+   "fieldname": "outstanding_amount",
+   "fieldtype": "Currency",
+   "label": "Outstanding Amount",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "depends_on": "eval: doc.vat_withholding_amount == doc.outstanding_amount",
+   "fieldname": "allocate_payment",
+   "fieldtype": "Check",
+   "label": "Allocate Payment"
   }
  ],
  "index_web_pages_for_search": 1,
@@ -192,7 +208,7 @@
    "link_fieldname": "cheque_no"
   }
  ],
- "modified": "2025-02-21 14:50:08.071401",
+ "modified": "2025-03-05 19:42:45.064530",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "VAT Withholding",
@@ -200,6 +216,8 @@
  "owner": "Administrator",
  "permissions": [
   {
+   "amend": 1,
+   "cancel": 1,
    "create": 1,
    "delete": 1,
    "email": 1,
