@@ -13,7 +13,8 @@ frappe.query_reports["Customer Contacts"] = {
     {
       fieldname: "customer_name",
       label: "Customer Name",
-      fieldtype: "Data",
+      fieldtype: "Link",
+      options: "Customer",
       reqd: 0,
     },
   ],
