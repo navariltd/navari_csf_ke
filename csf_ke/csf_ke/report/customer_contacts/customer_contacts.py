@@ -15,7 +15,7 @@ def execute(filters=None):
 
     query = (
         frappe.qb.from_(Customer)
-        .left_join(User)
+        .inner_join(User)
         .on(User.name == Customer.account_manager)
         .left_join(DynamicLink)
         .on((DynamicLink.link_name == Customer.name) & (DynamicLink.link_doctype == "Customer"))
@@ -28,81 +28,87 @@ def execute(filters=None):
             Contact.first_name.as_("Contact First Name"),
             Contact.last_name.as_("Contact Last Name"),
         )
+        .where(Customer.account_manager.isnotnull())
     )
     
     if filters.get("account_manager"):
         query = query.where(User.name == filters["account_manager"])
     
     if filters.get("customer_name"):
-        query = query.where(Customer.name.like(f"%{filters['customer_name']}%"))
+        query = query.where(Customer.name.like(f"%{filters["customer_name"]}%"))
     
-    query = query.orderby(User.full_name).orderby(Customer.name).orderby(Contact.name, order=frappe.qb.asc)
+    query = query.orderby(User.full_name).orderby(Customer.name).orderby(Contact.name)
 
-    data = query.run(as_dict=True)
+    try:
+        data = query.run(as_dict=True)
+    except Exception as e:
+        frappe.log_error(f"Error fetching report data: {e}")
+        return [], []
+    
+    contact_ids = [row["Contact ID"] for row in data if row["Contact ID"]]
+    emails = frappe.get_all("Contact Email", filters={"parent": ["in", contact_ids]}, fields=["parent", "email_id"])
+    phones = frappe.get_all("Contact Phone", filters={"parent": ["in", contact_ids]}, fields=["parent", "phone"])
+    
+    email_map = defaultdict(list)
+    for email in emails:
+        email_map[email["parent"]].append(email["email_id"])
+    
+    phone_map = defaultdict(list)
+    for phone in phones:
+        phone_map[phone["parent"]].append(phone["phone"])
+    
+    account_manager_map = defaultdict(lambda: defaultdict(list))
+    for row in data:
+        contact_id = row["Contact ID"]
+        customer_name = row["Customer Name"]
+        if not contact_id and any(d["Customer Name"] == customer_name and d["Contact ID"] for d in data):
+            continue
+        
+        account_manager = row["Account Manager"]
+        customer_name = row["Customer Name"]
+        contact_id = row["Contact ID"]
+        
+        contact_info = {
+            "Contact First Name": row["Contact First Name"] or "",
+            "Contact Last Name": row["Contact Last Name"] or "",
+            "Contact Email": ", ".join(email_map.get(contact_id, [])),
+            "Contact Phone": ", ".join(phone_map.get(contact_id, [])),
+        }
+        
+        account_manager_map[account_manager][customer_name].append(contact_info)
     
     final_data = []
-    for row in data:
-        contact_id = row.get("Contact ID")
-        contact_email, contact_phone = "", ""
-        
-        if contact_id:
-            emails = frappe.get_all("Contact Email", filters={"parent": contact_id}, pluck="email_id")
-            phones = frappe.get_all("Contact Phone", filters={"parent": contact_id}, pluck="phone")
-            contact_email = ", ".join(emails) if emails else ""
-            contact_phone = ", ".join(phones) if phones else ""
-        
-        final_data.append({
-            "Account Manager": row.get("Account Manager") or "",
-            "Customer Name": row.get("Customer Name"),
-            "Contact First Name": row.get("Contact First Name") or "",
-            "Contact Last Name": row.get("Contact Last Name") or "",
-            "Contact Email": contact_email,
-            "Contact Phone": contact_phone
-        })
-    
-    seen = set()
-    deduped_data = []
-    for row in final_data:
-        key = (
-            row["Account Manager"],
-            row["Customer Name"],
-            row["Contact First Name"],
-            row["Contact Last Name"],
-            row["Contact Email"],
-            row["Contact Phone"]
-        )
-        if key not in seen:
-            seen.add(key)
-            deduped_data.append(row)
-    
-    grouped = defaultdict(list)
-    for row in deduped_data:
-        grouped[row["Customer Name"]].append(row)
-    
-    final_filtered_data = []
-    for customer, rows in grouped.items():
-        rows_with_contact = [r for r in rows if (r["Contact First Name"] or r["Contact Last Name"] or r["Contact Email"] or r["Contact Phone"])]
-        if rows_with_contact:
-            final_filtered_data.extend(rows_with_contact)
-        else:
-            final_filtered_data.append(rows[0])
-    
-    def sort_key(row):
-        manager_sort = 0 if row["Account Manager"] else 1
-        contact_exists = bool(
-            row["Contact First Name"] or row["Contact Last Name"] or row["Contact Email"] or row["Contact Phone"]
-        )
-        contact_sort = 0 if contact_exists else 1
-        return (manager_sort, row["Account Manager"], row["Customer Name"], contact_sort, row["Contact First Name"], row["Contact Last Name"])
-    
-    final_filtered_data.sort(key=sort_key)
+    for account_manager, customers in account_manager_map.items():
+        first_customer = next(iter(customers.keys()), "")
+        for customer_name, contacts in customers.items():
+            first_contact = contacts[0] if contacts else {}
+            
+            final_data.append({
+                "Account Manager": account_manager if customer_name == first_customer else "",
+                "Customer Name": customer_name,
+                "Contact First Name": first_contact.get("Contact First Name", ""),
+                "Contact Last Name": first_contact.get("Contact Last Name", ""),
+                "Contact Email": first_contact.get("Contact Email", ""),
+                "Contact Phone": first_contact.get("Contact Phone", ""),
+            })
+            
+            for contact in contacts[1:]:
+                final_data.append({
+                    "Account Manager": "",
+                    "Customer Name": "",
+                    "Contact First Name": contact["Contact First Name"],
+                    "Contact Last Name": contact["Contact Last Name"],
+                    "Contact Email": contact["Contact Email"],
+                    "Contact Phone": contact["Contact Phone"],
+                })
     
     columns = [
+        {"fieldname": "Account Manager", "label": "Account Manager", "fieldtype": "Data", "width": 250},
         {"fieldname": "Customer Name", "label": "Customer Name", "fieldtype": "Data", "width": 250},
-        {"fieldname": "Contact First Name", "label": "Contact First Name", "fieldtype": "Data", "width": 150},
-        {"fieldname": "Contact Last Name", "label": "Contact Last Name", "fieldtype": "Data", "width": 150},
-        {"fieldname": "Contact Email", "label": "Contact Email(s)", "fieldtype": "Data", "width": 350},
+        {"fieldname": "Contact First Name", "label": "Contact First Name", "fieldtype": "Data", "width": 200},
+        {"fieldname": "Contact Last Name", "label": "Contact Last Name", "fieldtype": "Data", "width": 200},
+        {"fieldname": "Contact Email", "label": "Contact Email(s)", "fieldtype": "Data", "width": 300},
         {"fieldname": "Contact Phone", "label": "Contact Phone(s)", "fieldtype": "Data", "width": 300},
     ]
     
-    return columns, final_filtered_data
+    return columns, final_data
