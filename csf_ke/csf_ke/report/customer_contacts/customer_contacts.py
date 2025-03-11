@@ -23,7 +23,9 @@ def execute(filters=None):
         .on(Contact.name == DynamicLink.parent)
         .select(
             User.full_name.as_("Account Manager"),
+            User.name.as_("Account Manager ID"),
             Customer.name.as_("Customer Name"),
+            Customer.customer_group.as_("Customer Group"),
             Contact.name.as_("Contact ID"),
             Contact.first_name.as_("Contact First Name"),
             Contact.last_name.as_("Contact Last Name"),
@@ -36,6 +38,9 @@ def execute(filters=None):
     
     if filters.get("customer_name"):
         query = query.where(Customer.name.like(f"%{filters['customer_name']}%"))
+    
+    if filters.get("customer_group"):
+        query = query.where(Customer.customer_group == filters["customer_group"])
     
     query = query.orderby(User.full_name).orderby(Customer.name).orderby(Contact.name)
 
@@ -65,6 +70,7 @@ def execute(filters=None):
             continue
         
         account_manager = row["Account Manager"]
+        account_manager_id = row["Account Manager ID"]
         customer_name = row["Customer Name"]
         contact_id = row["Contact ID"]
         
@@ -84,7 +90,7 @@ def execute(filters=None):
             first_contact = contacts[0] if contacts else {}
             
             final_data.append({
-                "Account Manager": account_manager if customer_name == first_customer else "",
+                "Account Manager": f'<a href="/app/user/{account_manager_id}">{account_manager}</a>' if customer_name == first_customer else "",
                 "Customer Name": customer_name,
                 "Contact First Name": first_contact.get("Contact First Name", ""),
                 "Contact Last Name": first_contact.get("Contact Last Name", ""),
@@ -104,7 +110,7 @@ def execute(filters=None):
     
     columns = [
         {"fieldname": "Account Manager", "label": "Account Manager", "fieldtype": "Data", "width": 250},
-        {"fieldname": "Customer Name", "label": "Customer Name", "fieldtype": "Data", "width": 250},
+        {"fieldname": "Customer Name", "label": "Customer", "fieldtype": "Link", "options": "Customer", "width": 250},
         {"fieldname": "Contact First Name", "label": "Contact First Name", "fieldtype": "Data", "width": 200},
         {"fieldname": "Contact Last Name", "label": "Contact Last Name", "fieldtype": "Data", "width": 200},
         {"fieldname": "Contact Email", "label": "Contact Email(s)", "fieldtype": "Data", "width": 300},

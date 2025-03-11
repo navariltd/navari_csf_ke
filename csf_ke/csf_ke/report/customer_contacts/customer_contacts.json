@@ -9,7 +9,7 @@
  "idx": 0,
  "is_standard": "Yes",
  "letterhead": null,
- "modified": "2025-03-06 08:52:41.484876",
+ "modified": "2025-03-11 12:02:11.922483",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Customer Contacts",
@@ -20,7 +20,10 @@
  "report_type": "Script Report",
  "roles": [
   {
-   "role": "System Manager"
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Sales User"
   }
  ],
  "timeout": 0
