@@ -12,9 +12,16 @@ frappe.query_reports["Customer Addresses"] = {
     },
     {
       fieldname: "customer_name",
-      label: "Customer Name",
+      label: "Customer",
       fieldtype: "Link",
       options: "Customer",
+      reqd: 0,
+    },
+    {
+      fieldname: "customer_group",
+      label: "Customer Group",
+      fieldtype: "Link",
+      options: "Customer Group",
       reqd: 0,
     },
   ],

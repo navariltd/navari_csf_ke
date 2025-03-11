@@ -1,3 +1,4 @@
+
 # Copyright (c) 2025, Navari Ltd and contributors
 # For license information, please see license.txt
 
@@ -23,7 +24,9 @@ def execute(filters=None):
         .on(Address.name == DynamicLink.parent)
         .select(
             User.full_name.as_("Account Manager"),
+            User.name.as_("Account Manager ID"),
             Customer.name.as_("Customer Name"),
+            Customer.customer_group.as_("Customer Group"),
             Address.name.as_("Address ID"),
             Address.address_title.as_("Address Title"),
             Address.address_type.as_("Address Type"),
@@ -42,6 +45,9 @@ def execute(filters=None):
     
     if filters.get("customer_name"):
         query = query.where(Customer.name.like(f"%{filters['customer_name']}%"))
+        
+    if filters.get("customer_group"):
+        query = query.where(Customer.customer_group == filters["customer_group"])
     
     query = query.orderby(User.full_name).orderby(Customer.name).orderby(Address.name)
 
@@ -58,6 +64,7 @@ def execute(filters=None):
             continue
         
         account_manager = row["Account Manager"]
+        account_manager_id = row["Account Manager ID"]
         address_info = {
             "Address Title": row["Address Title"] or "",
             "Address Type": row["Address Type"] or "",
@@ -69,16 +76,17 @@ def execute(filters=None):
             "Phone": row["Phone"] or "",
         }
         
-        account_manager_map[account_manager][customer_name].append(address_info)
+        account_manager_map[account_manager][customer_name].append((account_manager_id, address_info))
     
     final_data = []
     for account_manager, customers in account_manager_map.items():
         first_customer = next(iter(customers.keys()), "")
         for customer_name, addresses in customers.items():
-            first_address = addresses[0] if addresses else {}
+            first_address = addresses[0][1] if addresses else {}
+            account_manager_id = addresses[0][0] if addresses else ""
             
             final_data.append({
-                "Account Manager": account_manager if customer_name == first_customer else "",
+                "Account Manager": f'<a href="/app/user/{account_manager_id}">{account_manager}</a>' if customer_name == first_customer else "",
                 "Customer Name": customer_name,
                 "Address Title": first_address.get("Address Title", ""),
                 "Address Type": first_address.get("Address Type", ""),
@@ -94,19 +102,19 @@ def execute(filters=None):
                 final_data.append({
                     "Account Manager": "",
                     "Customer Name": "",
-                    "Address Title": address["Address Title"],
-                    "Address Type": address["Address Type"],
-                    "Address Line 1": address["Address Line 1"],
-                    "Address Line 2": address["Address Line 2"],
-                    "City": address["City"],
-                    "Country": address["Country"],
-                    "Email ID": address["Email ID"],
-                    "Phone": address["Phone"],
+                    "Address Title": address[1]["Address Title"],
+                    "Address Type": address[1]["Address Type"],
+                    "Address Line 1": address[1]["Address Line 1"],
+                    "Address Line 2": address[1]["Address Line 2"],
+                    "City": address[1]["City"],
+                    "Country": address[1]["Country"],
+                    "Email ID": address[1]["Email ID"],
+                    "Phone": address[1]["Phone"],
                 })
     
     columns = [
         {"fieldname": "Account Manager", "label": "Account Manager", "fieldtype": "Data", "width": 250},
-        {"fieldname": "Customer Name", "label": "Customer Name", "fieldtype": "Data", "width": 250},
+        {"fieldname": "Customer Name", "label": "Customer", "fieldtype": "Link", "options": "Customer", "width": 250},
         {"fieldname": "Address Title", "label": "Address Title", "fieldtype": "Data", "width": 200},
         {"fieldname": "Address Type", "label": "Address Type", "fieldtype": "Data", "width": 200},
         {"fieldname": "Address Line 1", "label": "Address Line 1", "fieldtype": "Data", "width": 200},

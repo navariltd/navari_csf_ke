@@ -9,7 +9,7 @@
  "idx": 0,
  "is_standard": "Yes",
  "letterhead": null,
- "modified": "2025-03-06 09:46:09.735791",
+ "modified": "2025-03-11 12:02:18.760287",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Customer Addresses",
@@ -20,7 +20,10 @@
  "report_type": "Script Report",
  "roles": [
   {
-   "role": "System Manager"
+   "role": "Sales Manager"
+  },
+  {
+   "role": "Sales User"
   }
  ],
  "timeout": 0
