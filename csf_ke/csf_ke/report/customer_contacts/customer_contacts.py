@@ -35,7 +35,7 @@ def execute(filters=None):
         query = query.where(User.name == filters["account_manager"])
     
     if filters.get("customer_name"):
-        query = query.where(Customer.name.like(f"%{filters["customer_name"]}%"))
+        query = query.where(Customer.name.like(f"%{filters['customer_name']}%"))
     
     query = query.orderby(User.full_name).orderby(Customer.name).orderby(Contact.name)
 
