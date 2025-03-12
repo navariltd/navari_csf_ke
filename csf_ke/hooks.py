@@ -29,6 +29,7 @@ fixtures = [
                     "Employee-nssf_no",
                     "Employee-tax_id",
                     "Salary Component-p9a_tax_deduction_card_type",
+                    "Salary Component-custom_p10a_tax_deduction_card_type",
                     "Item Tax-custom_column_break",
                     "Item Tax-custom_tims_hscode",
                     "Customer Group-custom_is_kra_pin_mandatory_in",
@@ -46,9 +47,7 @@ fixtures = [
             [
                 "link_doctype",
                 "in",
-                (
-                    "Employee Dependent and Beneficiary",
-                ),
+                ("Employee Dependent and Beneficiary",),
             ]
         ],
     },
@@ -77,9 +76,7 @@ fixtures = [
 
 # include js in doctype views
 
-doctype_js = {
-    "Customer": "csf_ke/overrides/customer.js"
-}
+doctype_js = {"Customer": "csf_ke/overrides/customer.js"}
 
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -174,7 +171,7 @@ doc_events = {
     },
     "Sales Invoice": {
         "before_submit": "csf_ke.csf_ke.overrides.sales_doc.validate_customer_kra"
-    }
+    },
 }
 # Scheduled Tasks
 # ---------------
@@ -252,11 +249,7 @@ user_data_fields = [
 # ]
 
 # add methods to jinja environment
-jinja = {
-    "methods": [
-        "csf_ke.csf_ke.utils.qr_code_generator.get_qr_code"
-    ]
-}
+jinja = {"methods": ["csf_ke.csf_ke.utils.qr_code_generator.get_qr_code"]}
 
 # include js in doctype views
 # doctype_js = {
