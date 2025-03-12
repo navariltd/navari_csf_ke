@@ -13,83 +13,7 @@ def execute(filters=None):
     if filters.from_date > filters.to_date:
         frappe.throw(_("From Date cannot be greater than To Date"))
 
-    execute2(filters)
-
     return get_columns(), get_p10_report_data(filters)
-
-
-def execute2(filters=None):
-    employees = get_employees(filters)
-    if not employees:
-        return [], []
-
-    for employee in employees:
-        component = get_p10a_tax_deduction(filters, employee.name, "PAYE Tax")
-
-        # TODO: Get each component individually and process the data, then render(report)
-        # TODO: Create another function to get the data for components whose value are not currencies
-
-
-def get_employees(filters):
-    employees_doc = frappe.qb.DocType("Employee")
-    employees_query = (
-        frappe.qb.from_(employees_doc)
-        .select(employees_doc.name, employees_doc.tax_id, employees_doc.company)
-        .where(employees_doc.company == filters.get("company"))
-    )
-
-    if filters.get("employee"):
-        employees_query = employees_query.where(
-            employees_doc.name == filters.get("employee")
-        )
-
-    employees = employees_query.run(as_dict=True)
-
-    return employees
-
-
-def get_p10a_tax_deduction(filters, employee, p10a_tax_deduction_card_type):
-    salary_slip_doc = frappe.qb.DocType("Salary Slip")
-    salary_detail_doc = frappe.qb.DocType("Salary Detail")
-    salary_component_doc = frappe.qb.DocType("Salary Component")
-
-    salary_slip_query = (
-        frappe.qb.from_(salary_slip_doc)
-        .inner_join(salary_detail_doc)
-        .on(salary_slip_doc.name == salary_detail_doc.parent)
-        .inner_join(salary_component_doc)
-        .on(salary_detail_doc.salary_component == salary_component_doc.name)
-        .select(
-            salary_slip_doc.employee,
-            salary_slip_doc.docstatus,
-            salary_slip_doc.company,
-            salary_detail_doc.amount,
-            salary_component_doc.p10a_tax_deduction_card_type,
-        )
-        .where(
-            (salary_slip_doc.docstatus == 1)
-            & (
-                salary_component_doc.p10a_tax_deduction_card_type
-                == p10a_tax_deduction_card_type
-            )
-            & (salary_slip_doc.employee == employee)
-            & (salary_slip_doc.company == filters.get("company"))
-            & (salary_slip_doc.posting_date >= getdate(filters.get("from_date")))
-            & (salary_slip_doc.posting_date <= getdate(filters.get("to_date")))
-        )
-    )
-
-    deduction_component = salary_slip_query.run(as_dict=True)
-    if not deduction_component:
-        return []
-    else:
-        db_key = "_".join(p10a_tax_deduction_card_type.split()).lower()
-        component_total = defaultdict(lambda: defaultdict(int))
-        for component in deduction_component:
-            key = component.get("p10a_tax_deduction_card_type")
-            component_total[key][db_key] += component.get("amount")
-        total = list(component_total.values())
-        return total[0][db_key]
 
 
 def get_columns():
@@ -139,8 +63,14 @@ def get_columns():
             "width": 150,
         },
         {
-            "fieldname": "director_fee",
+            "fieldname": "directors_fee",
             "label": _("Director's Fee"),
+            "fieldtype": "Currency",
+            "width": 150,
+        },
+        {
+            "fieldname": "lump_sum_payment",
+            "label": _("Lump Sum Payment"),
             "fieldtype": "Currency",
             "width": 150,
         },
@@ -217,6 +147,12 @@ def get_columns():
             "width": 150,
         },
         {
+            "fieldname": "30_percent_of_cash_pay",
+            "label": _("30 Percent of Cash Pay"),
+            "fieldtype": "Currency",
+            "width": 150,
+        },
+        {
             "fieldname": "actual_contribution",
             "label": _("Actual Contribution"),
             "fieldtype": "Currency",
@@ -282,18 +218,6 @@ def get_columns():
             "fieldtype": "Currency",
             "width": 150,
         },
-        {
-            "fieldname": "lump_sum_payment",
-            "label": _("Lump Sum Payment"),
-            "fieldtype": "Currency",
-            "width": 150,
-        },
-        {
-            "fieldname": "paye",
-            "label": _("PAYE"),
-            "fieldtype": "Currency",
-            "width": 150,
-        },
     ]
 
     return columns
@@ -303,6 +227,7 @@ def get_p10_report_data(filters):
     employee = frappe.qb.DocType("Employee")
     salary_slip = frappe.qb.DocType("Salary Slip")
     salary_detail = frappe.qb.DocType("Salary Detail")
+    salary_component_doc = frappe.qb.DocType("Salary Component")
 
     conditions = [salary_slip.docstatus == 1]
     if filters.get("company"):
@@ -318,12 +243,36 @@ def get_p10_report_data(filters):
 
     salary_components = [
         "Basic Salary",
-        "House Allowance",
+        "Housing Allowance",
         "Transport Allowance",
-        "Leave Allowance",
+        "Leave Pay",
         "Overtime",
-        "Commissions",
-        "PAYE",
+        "Directors Fee",
+        "Lump Sum Payment",
+        "Other Allowance",
+        "Total Cash Pay",
+        "Value of Car Benefit",
+        "Other Non Cash Benefits",
+        "Total Non Cash Pay",
+        "Global Income",
+        "Type of Housing",
+        "Rent of House",
+        "Computed Rent of House",
+        "Rent Recovered from Employee",
+        "Net Value of Housing",
+        "Total Gross Pay",
+        "30 Percent of Cash Pay",
+        "Actual Contribution",
+        "Permissible Limit",
+        "Mortgage Interest",
+        "Affordable Housing Relief",
+        "Amount of Benefit",
+        "Taxable Pay",
+        "Tax Payable",
+        "Monthly Personal Relief",
+        "Amount of Insurance",
+        "PAYE Tax",
+        "Self Assessed PAYE Tax",
     ]
 
     query = (
@@ -332,18 +281,20 @@ def get_p10_report_data(filters):
         .on(employee.name == salary_slip.employee)
         .inner_join(salary_detail)
         .on(salary_slip.name == salary_detail.parent)
+        .inner_join(salary_component_doc)
+        .on(salary_component_doc.name == salary_detail.salary_component)
         .select(
             employee.tax_id,
             salary_slip.employee_name,
             salary_slip.posting_date,
-            salary_detail.salary_component,
+            salary_component_doc.p10a_tax_deduction_card_type.as_("salary_component"),
             Case()
             .when(salary_detail.amount.isnull(), 0)
             .else_(salary_detail.amount)
             .as_("amount"),
         )
         .where(
-            salary_detail.salary_component.isin(salary_components)
+            salary_component_doc.p10a_tax_deduction_card_type.isin(salary_components)
             & reduce(lambda x, y: x & y, conditions)
         )
         .orderby(salary_slip.employee)
