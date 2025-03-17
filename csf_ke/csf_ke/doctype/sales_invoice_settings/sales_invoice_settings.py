@@ -39,6 +39,7 @@ class SalesInvoiceSettings(Document):
 
 					frappe.get_doc({
 						"doctype": "Property Setter",
+						"doctype_or_field": "DocField",
 						"doc_type": DOCTYPE,
 						"field_name": FIELD_NAME,
 						"property": PROPERTY,
