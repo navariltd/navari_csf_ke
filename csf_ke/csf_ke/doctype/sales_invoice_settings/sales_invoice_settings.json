@@ -1,0 +1,47 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-03-14 09:23:18.991487",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "set_item_code_mandatory",
+  "column_break_bgjq"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "fieldname": "set_item_code_mandatory",
+   "fieldtype": "Check",
+   "label": "Set Item Code Mandatory"
+  },
+  {
+   "fieldname": "column_break_bgjq",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-03-17 10:34:21.865325",
+ "modified_by": "Administrator",
+ "module": "CSF KE",
+ "name": "Sales Invoice Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
