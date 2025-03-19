@@ -18,6 +18,10 @@ class VATWithholding(Document):
 		self.voucher_no = frappe.get_value("Sales Invoice", {'etr_invoice_number': self.invoice_no}, "name")
 		self.outstanding_amount = frappe.get_value("Sales Invoice", self.voucher_no, "outstanding_amount")
 		self.withholding_account = frappe.get_value("Company", self.company, "default_debitors_withholding_account")
+		
+		if self.outstanding_amount == self.vat_withholding_amount:
+			self.allocate_payment = True
+			self.submit_journal_entry = True
 
 	def on_submit(self):
 		if not self.withholding_account:
