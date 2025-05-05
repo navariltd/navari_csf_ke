@@ -172,6 +172,9 @@ doc_events = {
     "Sales Invoice": {
         "before_submit": "csf_ke.csf_ke.overrides.sales_doc.validate_customer_kra"
     },
+    "Job Card":{
+        "before_submit": "csf_ke.csf_ke.overrides.job_card.before_submit"
+    }
 }
 # Scheduled Tasks
 # ---------------
