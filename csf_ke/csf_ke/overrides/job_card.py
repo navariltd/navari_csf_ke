@@ -5,8 +5,8 @@ from datetime import timedelta
 import frappe
 
 def before_submit(doc, method=None):
-    allow_default_time_logs = allow_default_time_logs()
-    if not allow_default_time_logs:
+    allow_default_time_log = allow_default_time_logs()
+    if not allow_default_time_log:
         return
     now = frappe.utils.now_datetime()
     one_hour_ago = now - timedelta(hours=1)
@@ -26,8 +26,4 @@ def before_submit(doc, method=None):
 
 
 def allow_default_time_logs():
-    manufacturing_settings = frappe.get_single("Manufacturing Settings")
-    if manufacturing_settings.custom_allow_default_time_logs:
-        return True
-    else:
-        return False
+    return frappe.get_single("Manufacturing Settings").custom_allow_default_time_logs
