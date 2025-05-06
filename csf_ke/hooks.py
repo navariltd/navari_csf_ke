@@ -37,6 +37,7 @@ fixtures = [
                     "Company-custom_withholding_accounts",
                     "Company-custom_default_debitors_withholding_account",
                     "Company-custom_default_creditors_withholding_account",
+                    "Manufacturing Settings-custom_allow_default_time_logs"
                 ),
             ]
         ],
