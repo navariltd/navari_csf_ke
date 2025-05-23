@@ -28,6 +28,8 @@ fixtures = [
                     "Employee-nhif_no",
                     "Employee-nssf_no",
                     "Employee-tax_id",
+                    "Sales Invoice-etr_invoice_no",
+                    "Purchase Invoice-etr_invoice_no",
                     "Salary Component-p9a_tax_deduction_card_type",
                     "Salary Component-custom_p10a_tax_deduction_card_type",
                     "Item Tax-custom_column_break",
