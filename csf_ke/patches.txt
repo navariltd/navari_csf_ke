@@ -1,10 +1,5 @@
 [pre_model_sync]
+csf_ke.csf_ke.patches.delete_custom_fields # 05/06/25
+csf_ke.csf_ke.patches.remove_hscode_description # 05/06/25
 
 [post_model_sync]
-csf_ke.csf_ke.patches.patch_employee
-csf_ke.csf_ke.patches.job_offer_valid_date
-csf_ke.csf_ke.patches.employee_separation_type
-csf_ke.csf_ke.patches.appointment_letter_introduction
-csf_ke.csf_ke.patches.appointment_letter_template_introduction
-csf_ke.csf_ke.patches.remove_hscode_description
-csf_ke.csf_ke.patches.customer_group_custom_field
