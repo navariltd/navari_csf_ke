@@ -155,3 +155,4 @@ After installation, configure the app to suit your business needs:
 2. Set up your preferred **Price List**, **Margin Type**, **Margin Amount** and **Items**
 3. **Save** and **Submit** the newly created document.
 4. The system automatically calculates the **margin percentage** for analysis on Purchase Receipt or Purchase Invoice submission.
+
