@@ -31,11 +31,6 @@ def execute():
         {"dt": "Sales Invoice", "fieldname": "cu_link"},
         {"dt": "Sales Invoice", "fieldname": "is_filed"},
         {"dt": "Purchase Invoice", "fieldname": "etr_data"},
-        {"dt": "Purchase Invoice", "fieldname": "etr_serial_number"},
-        {"dt": "Purchase Invoice", "fieldname": "cu_invoice_date"},
-        {"dt": "Purchase Invoice", "fieldname": "etr_column_break"},
-        {"dt": "Purchase Invoice", "fieldname": "etr_invoice_number"},
-        {"dt": "Purchase Invoice", "fieldname": "cu_link"},
         {"dt": "Purchase Invoice", "fieldname": "is_filed"},
     ]
 
