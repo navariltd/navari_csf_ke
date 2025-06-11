@@ -34,6 +34,9 @@ fixtures = [
             ]
         ],
     },
+    {
+        "doctype": "POS Invoice"
+    }
 ]
 
 # Includes in <head>
