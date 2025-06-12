@@ -15,7 +15,7 @@ class VATWithholding(Document):
 		self.currency = "KES"
 		self.company = frappe.defaults.get_user_default("Company")
 		self.customer = frappe.get_value("Customer", {'tax_id': self.withholder_pin}, "name")
-		self.voucher_no = frappe.get_value("Sales Invoice", {'etr_invoice_number': self.invoice_no}, "name")
+		self.voucher_no = frappe.get_value("Sales Invoice", {'etr_invoice_number': self.invoice_no}, "name") or frappe.get_value("Sales Invoice", {'name': self.invoice_no}, "name")
 		self.outstanding_amount = frappe.get_value("Sales Invoice", self.voucher_no, "outstanding_amount")
 		self.withholding_account = frappe.get_value("Company", self.company, "default_debitors_withholding_account")
 		
