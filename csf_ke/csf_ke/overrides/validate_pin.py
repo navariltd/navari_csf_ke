@@ -7,7 +7,6 @@ def validate_pin(doctype: Document, customer: Document) -> None:
     is_kra_mandatory = frappe.get_value(
         "Customer Group", customer.customer_group, "custom_is_kra_pin_mandatory_in"
     )
-
     if not is_kra_mandatory:
         return
 
@@ -17,9 +16,10 @@ def validate_pin(doctype: Document, customer: Document) -> None:
         "Sales Invoice": ["Sales Invoice", "All", "Sales Order and Invoice"],
     }
 
+    doctype_name = doctype.doctype
     if (
-        doctype.doctype not in applicable_doctypes
-        or is_kra_mandatory not in applicable_doctypes[doctype.doctype]
+        doctype_name not in applicable_doctypes
+        or not any(option.lower() == is_kra_mandatory.lower() for option in applicable_doctypes[doctype_name])
     ):
         return
 

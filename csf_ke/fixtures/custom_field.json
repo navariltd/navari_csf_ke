@@ -95,7 +95,7 @@
   "name": "Customer Group-custom_is_kra_pin_mandatory_in",
   "no_copy": 0,
   "non_negative": 0,
-  "options": "\nCustomer\nSales Order\nSales Invoice\nSales order and Invoice\nAll",
+  "options": "\nCustomer\nSales Order\nSales Invoice\nSales Order and Invoice\nAll",
   "permlevel": 0,
   "placeholder": null,
   "precision": "",
