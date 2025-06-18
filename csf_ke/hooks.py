@@ -13,7 +13,7 @@ app_icon = "drag"
 app_color = "grey"
 app_email = "support@navari.co.ke"
 app_license = "GNU General Public License (v3)"
-required_apps = ["frappe/erpnext"]
+required_apps = ["erpnext", "hrms"]
 
 
 fixtures = [
