@@ -9,7 +9,6 @@ frappe.query_reports['Kenya SHIF Contribution'] = {
       fieldtype: 'Link',
       options: 'Company',
       default: frappe.defaults.get_user_default('Company'),
-      width: '100px',
       reqd: 1,
     },
     {
@@ -18,15 +17,13 @@ frappe.query_reports['Kenya SHIF Contribution'] = {
       fieldtype: 'Date',
       default: frappe.datetime.add_months(frappe.datetime.get_today(), -1), // Default to last month
       reqd: 1,
-      width: '100px',
     },
     {
       fieldname: 'to_date',
       label: __('To Date'),
       fieldtype: 'Date',
-      default: frappe.datetime.get_today(), // Default to today
+      default: frappe.datetime.get_today(),
       reqd: 1,
-      width: '100px',
     },
     {
       fieldname: 'employee',
@@ -39,7 +36,7 @@ frappe.query_reports['Kenya SHIF Contribution'] = {
         return {
           doctype: 'Employee',
           filters: {
-            company: company,
+            company,
           },
         };
       },
