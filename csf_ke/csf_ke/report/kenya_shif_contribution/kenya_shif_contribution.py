@@ -5,6 +5,7 @@ import frappe
 
 
 def execute(filters=None):
+    print("Generating Kenya SHIF Contributions report...")
     columns = get_columns()
     data = get_data(filters)
 
@@ -12,12 +13,10 @@ def execute(filters=None):
 
 
 def get_columns():
-    print("Generating columns for Kenya SHIF Contributions report...")
-
     return [
         {
             "fieldname": "payslip_number",
-            "label": "Payroll Number",
+            "label": "Payslip",
             "fieldtype": "Link",
             "options": "Salary Slip",
             "width": 150,
@@ -26,22 +25,22 @@ def get_columns():
             "fieldname": "first_name",
             "label": "First Name",
             "fieldtype": "Data",
-            "width": 150,
+            "width": 100,
         },
         {
             "fieldname": "last_name",
             "label": "Last Name",
             "fieldtype": "Data",
-            "width": 150,
+            "width": 100,
         },
         {
             "fieldname": "identity_type",
             "label": "Identity Type",
             "fieldtype": "Data",
-            "width": 100,
+            "width": 150,
         },
         {
-            "fieldname": "identity_number",
+            "fieldname": "national_id",
             "label": "Identity Number",
             "fieldtype": "Data",
             "width": 150,
@@ -53,36 +52,66 @@ def get_columns():
             "width": 150,
         },
         {
-            "fieldname": "contribution",
+            "fieldname": "nhif_no",
+            "label": "SHIF No",
+            "fieldtype": "Data",
+            "width": 150,
+        },
+        {
+            "fieldname": "amount",
             "label": "Contribution Amount",
             "fieldtype": "Currency",
+            "width": 150,
+        },
+        {
+            "fieldname": "cell_number",
+            "label": "Phone",
+            "fieldtype": "Data",
             "width": 150,
         },
     ]
 
 
 def get_data(filters):
-    SalarySlip = frappe.qb.DocType("Salary Slip")
-    Employee = frappe.qb.DocType("Employee")
-    SalaryDetail = frappe.qb.DocType("Salary Detail")
+    employee = frappe.qb.DocType("Employee")
+    salary_slip = frappe.qb.DocType("Salary Slip")
+    salary_details = frappe.qb.DocType("Salary Detail")
 
     query = (
-        frappe.qb.select(
-            SalarySlip.name.as_("payslip_number"),
-            Employee.first_name,
-            Employee.last_name,
-            Employee.tax_id,
-            Employee.national_id.as_("identity_number"),
-            SalaryDetail.amount.as_("contribution"),
+        frappe.qb.from_(employee)
+        .inner_join(salary_slip)
+        .on(employee.name == salary_slip.employee)
+        .inner_join(salary_details)
+        .on(salary_slip.name == salary_details.parent)
+        .select(
+            salary_slip.name.as_("payslip_number"),
+            salary_slip.employee,
+            employee.last_name if (employee.last_name) else "",
+            employee.first_name,
+            employee.national_id,
+            employee.passport_number,
+            employee.nhif_no,
+            employee.cell_number,
+            employee.tax_id,
+            salary_details.amount,
         )
-        .from_(SalarySlip)
-        .join(Employee)
-        .on(SalarySlip.employee == Employee.name)
-        .join(SalaryDetail)
-        .on(SalarySlip.name == SalaryDetail.parent)
-        .where((SalarySlip.docstatus == 1) & (SalaryDetail.salary_component == "SHIF"))
+        .where(
+            (salary_details.amount != 0)
+            & (salary_slip.docstatus == 1)
+            & (salary_details.salary_component == "SHIF")
+        )
     )
 
     data = query.run(as_dict=True)
+
+    for row in data:
+        row["identity_type"] = None
+
+        if row.get("national_id"):
+            row["identity_type"] = "National ID"
+            row["national_id"] = row.get("national_id")
+        elif row.get("passport_number"):
+            row["identity_type"] = "Passport"
+            row["national_id"] = row.get("passport_number")
 
     return data
