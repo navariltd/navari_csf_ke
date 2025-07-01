@@ -5,7 +5,6 @@ import frappe
 
 
 def execute(filters=None):
-    print("Generating Kenya SHIF Contributions report...")
     columns = get_columns()
     data = get_data(filters)
 
