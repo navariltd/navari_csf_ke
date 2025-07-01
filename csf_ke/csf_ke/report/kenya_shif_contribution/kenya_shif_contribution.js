@@ -30,7 +30,6 @@ frappe.query_reports['Kenya SHIF Contribution'] = {
       label: __('Employee'),
       fieldtype: 'Link',
       options: 'Employee',
-      width: '150px',
       get_query: function () {
         var company = frappe.query_report.get_filter_value('company');
         return {
