@@ -1,5 +1,4 @@
 {
- "app": "csf_ke",
  "charts": [],
  "content": "[{\"id\":\"lFoD5lNDQb\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"Xb7n0Do4eW\",\"type\":\"card\",\"data\":{\"card_name\":\"TIMs HSCodes\",\"col\":4}},{\"id\":\"arLUtR6bvV\",\"type\":\"card\",\"data\":{\"card_name\":\"Pricing Margins\",\"col\":4}},{\"id\":\"fu_Qea0T9L\",\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px;\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"ez66GJZq3i\",\"type\":\"card\",\"data\":{\"card_name\":\"Accounting Reports\",\"col\":4}},{\"id\":\"7bKksk7AZV\",\"type\":\"card\",\"data\":{\"card_name\":\"Payroll Reports\",\"col\":4}}]",
  "creation": "2022-11-03 16:41:03.405594",
@@ -13,74 +12,6 @@
  "is_hidden": 0,
  "label": "Kenya",
  "links": [
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Payroll Reports",
-   "link_count": 6,
-   "onboard": 0,
-   "type": "Card Break"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "NHIF Report",
-   "link_count": 0,
-   "link_to": "Kenya NHIF Report",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "NSSF Report",
-   "link_count": 0,
-   "link_to": "Kenya NSSF Report",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "HELB Report",
-   "link_count": 0,
-   "link_to": "Kenya HELB Report",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Payroll Register Report",
-   "link_count": 0,
-   "link_to": "Kenya Payroll Register Report",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Bank Payroll Advice Report",
-   "link_count": 0,
-   "link_to": "Kenya Bank Payroll Advice Report",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "P9A Tax Deduction Card Report",
-   "link_count": 0,
-   "link_to": "Kenya P9A Tax Deduction Card Report",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
   {
    "hidden": 0,
    "is_query_report": 1,
@@ -189,9 +120,128 @@
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Payroll Reports",
+   "link_count": 11,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "NHIF Report",
+   "link_count": 0,
+   "link_to": "Kenya NHIF Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "NSSF Report",
+   "link_count": 0,
+   "link_to": "Kenya NSSF Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "HELB Report",
+   "link_count": 0,
+   "link_to": "Kenya HELB Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Payroll Register Report",
+   "link_count": 0,
+   "link_to": "Kenya Payroll Register Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Bank Payroll Advice Report",
+   "link_count": 0,
+   "link_to": "Kenya Bank Payroll Advice Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "P9A Tax Deduction Card Report",
+   "link_count": 0,
+   "link_to": "Kenya P9A Tax Deduction Card Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "P10A Tax Report",
+   "link_count": 0,
+   "link_to": "Kenya P10 Tax Report",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Employee Salary Register",
+   "link_count": 0,
+   "link_to": "Employee Salary Register With Monthly Comparison",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Salary Register Summary",
+   "link_count": 0,
+   "link_to": "Salary Register Summary With Monthly Comparison",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "Housing Levy Report",
+   "link_count": 0,
+   "link_to": "Kenya Housing Levy Contribution",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 1,
+   "label": "SHIF Contribution",
+   "link_count": 0,
+   "link_to": "Kenya SHIF Contribution",
+   "link_type": "Report",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2025-02-17 11:53:57.817713",
+ "modified": "2025-07-02 14:47:56.769544",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya",
@@ -203,6 +253,5 @@
  "roles": [],
  "sequence_id": 37.0,
  "shortcuts": [],
- "title": "Kenya",
- "type": "Workspace"
+ "title": "Kenya"
 }
