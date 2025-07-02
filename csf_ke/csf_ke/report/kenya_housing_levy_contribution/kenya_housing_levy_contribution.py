@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from ..kenya_shif_contribution.kenya_shif_contribution import apply_filters
 
 
 def execute(filters=None):
@@ -70,28 +71,3 @@ def get_data(filters):
     data = query.run(as_dict=True)
 
     return data
-
-
-def apply_filters(query, filters, employee, salary_slip):
-    """
-    Applies relevant filters to the query.
-
-    Args:
-        query: The Frappe Query Builder query object.
-        filters (dict): A dictionary of filters passed from the report.
-        employee: The Frappe DocType for Employee.
-        salary_slip: The Frappe DocType for Salary Slip.
-
-    Returns:
-        The modified query object with filters applied.
-    """
-    if filters.get("company"):
-        query = query.where(employee.company == filters["company"])
-    if filters.get("from_date"):
-        query = query.where(salary_slip.start_date >= filters["from_date"])
-    if filters.get("to_date"):
-        query = query.where(salary_slip.end_date <= filters["to_date"])
-    if filters.get("employee"):
-        query = query.where(employee.name == filters["employee"])
-
-    return query
