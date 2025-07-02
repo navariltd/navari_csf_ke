@@ -15,13 +15,13 @@ def get_columns():
     return [
         {
             "fieldname": "national_id",
-            "label": "Identity Number",
+            "label": "Member Number (ID Number)",
             "fieldtype": "Data",
             "width": 150,
         },
         {
             "fieldname": "full_name",
-            "label": "Employee Name",
+            "label": "Member Name",
             "fieldtype": "Data",
             "width": 250,
         },
@@ -33,7 +33,7 @@ def get_columns():
         },
         {
             "fieldname": "amount",
-            "label": "Gross Pay",
+            "label": "Gross Salary",
             "fieldtype": "Currency",
             "width": 150,
         },
@@ -55,7 +55,6 @@ def get_data(filters):
             salary_slip.employee,
             employee.employee_name.as_("full_name"),
             employee.national_id,
-            employee.passport_number,
             employee.tax_id,
             salary_details.amount,
         )
@@ -69,14 +68,6 @@ def get_data(filters):
     query = apply_filters(query, filters, employee, salary_slip)
 
     data = query.run(as_dict=True)
-
-    for row in data:
-        row["identity_type"] = None
-
-        if row.get("national_id"):
-            row["national_id"] = row.get("national_id")
-        elif row.get("passport_number"):
-            row["national_id"] = row.get("passport_number")
 
     return data
 
