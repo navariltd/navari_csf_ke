@@ -15,7 +15,7 @@ def get_columns():
     return [
         {
             "fieldname": "payslip_number",
-            "label": "Payslip",
+            "label": "Payroll Number",
             "fieldtype": "Link",
             "options": "Salary Slip",
             "width": 150,
@@ -40,7 +40,7 @@ def get_columns():
         },
         {
             "fieldname": "national_id",
-            "label": "Identity Number",
+            "label": "ID Number",
             "fieldtype": "Data",
             "width": 150,
         },
