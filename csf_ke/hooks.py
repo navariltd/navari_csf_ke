@@ -1,7 +1,7 @@
 from . import __version__ as app_version
 
 app_name = "csf_ke"
-app_title = "Navari CSF Ke"
+app_title = "Kenya ERPNext Customization"
 app_publisher = "Navari Ltd"
 app_description = (
     "ERPNext and FrappeHR Country Specific Customizations for Kenya by Navari Ltd"
