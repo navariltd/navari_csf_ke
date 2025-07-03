@@ -23,6 +23,16 @@ def execute(filters=None):
     return columns, data
 
 
+def validate_date_filters(filters):
+    start = filters.get("from_date")
+    end = filters.get("to_date")
+
+    if not consecutive_months(start, end):
+        frappe.throw(
+            "Start Date must be the first day of the selected month and End Date must be the last day of the next consecutive month."
+        )
+
+
 def consecutive_months(date_1, date_2):
     start = datetime.strptime(date_1, "%Y-%m-%d")
     end = datetime.strptime(date_2, "%Y-%m-%d")
@@ -46,16 +56,6 @@ def consecutive_months(date_1, date_2):
         expected_end = datetime(next_year, next_month, days_in_the_next_month)
 
     return end == expected_end
-
-
-def validate_date_filters(filters):
-    start = filters.get("from_date")
-    end = filters.get("to_date")
-
-    if not consecutive_months(start, end):
-        frappe.throw(
-            "Start Date must be the first day of the selected month and End Date must be the last day of the next consecutive month."
-        )
 
 
 def get_columns(filters):
@@ -103,36 +103,44 @@ def get_columns(filters):
 
 
 def get_conditions(filters, company_currency):
-    conditions = ""
-    doc_status = {"Draft": 0, "Submitted": 1, "Cancelled": 2}
+    conditions = []
+    params = {}
 
+    doc_status_map = {"Draft": 0, "Submitted": 1, "Cancelled": 2}
     if filters.get("docstatus"):
-        # conditions += "docstatus = {0}".format(doc_status[filters.get("docstatus")])
-        conditions += "docstatus = 1"
+        conditions.append("docstatus = %(docstatus)s")
+        params["docstatus"] = doc_status_map[filters["docstatus"]]
+    else:
+        conditions.append("docstatus = 1")
 
-    print("DOCSTATUS", conditions)
+    if filters.get("start_date"):
+        conditions.append("start_date >= %(start_date)s")
+        params["start_date"] = filters["start_date"]
 
-    if filters.get("from_date"):
-        conditions += " and start_date >= %(from_date)s"
-    if filters.get("to_date"):
-        conditions += " and end_date <= %(to_date)s"
+    if filters.get("end_date"):
+        conditions.append("end_date <= %(end_date)s")
+        params["end_date"] = filters["end_date"]
+
     if filters.get("company"):
-        conditions += " and company = %(company)s"
-    if filters.get("employee"):
-        conditions += " and employee = %(employee)s"
-    if filters.get("currency") and filters.get("currency") != company_currency:
-        conditions += " and currency = %(currency)s"
-    if filters.get("department") and filters.get("company"):
-        department_list = get_departments(
-            filters.get("department"), filters.get("company")
-        )
-        conditions += (
-            "and department in ("
-            + ",".join(("'" + n + "'" for n in department_list))
-            + ")"
-        )
+        conditions.append("company = %(company)s")
+        params["company"] = filters["company"]
 
-    return conditions, filters
+    if filters.get("employee"):
+        conditions.append("employee = %(employee)s")
+        params["employee"] = filters["employee"]
+
+    if filters.get("currency") and filters.get("currency") != company_currency:
+        conditions.append("currency = %(currency)s")
+        params["currency"] = filters["currency"]
+
+    if filters.get("department") and filters.get("company"):
+        department_list = get_departments(filters["department"], filters["company"])
+        if department_list:
+            placeholders = ",".join(["%s"] * len(department_list))
+            conditions.append(f"department IN ({placeholders})")
+            params.update({f"dept_{i}": dept for i, dept in enumerate(department_list)})
+
+    return " AND ".join(conditions), params
 
 
 def get_departments(department, company):
@@ -166,12 +174,8 @@ def get_number_of_employees(salary_slips):
 
 
 def group_per_department(filters, company_currency):
-    # temp_old_date = getdate(filters.get("from_date"))
-    # old_end_date = datetime(temp_old_date.year, temp_old_date.month + 1, 1) - timedelta(days=1)
-    old_end_date = get_last_day(getdate(filters.get("from_date")))
-    new_start_date = get_first_day(getdate(filters.get("to_date")))
-
-    # print("OLD, NEW", old_end_date, new_start_date)
+    old_end_date = get_last_day(getdate(filters.get("from_date"))).strftime("%Y-%m-%d")
+    new_start_date = get_first_day(getdate(filters.get("to_date"))).strftime("%Y-%m-%d")
 
     old_ss_filters = filters.copy()
     old_ss_filters.update(
@@ -183,28 +187,32 @@ def group_per_department(filters, company_currency):
         {"start_date": new_start_date, "end_date": filters.get("to_date")}
     )
 
-    # print("FILTERS", new_ss_filters)
-
     # Get previous month - 1 salary slips
     old_salary_slips = get_salary_slips(old_ss_filters, company_currency)
 
     # Get previous month salary slips
     new_salary_slips = get_salary_slips(new_ss_filters, company_currency)
 
-    if old_salary_slips and new_salary_slips:
-        data = get_earnings_data(old_salary_slips, new_salary_slips)
+    earnings_data = get_salary_slip_data(old_salary_slips, new_salary_slips)
+    deductions_data = get_salary_slip_data(
+        old_salary_slips, new_salary_slips, "deductions"
+    )
 
-        return data
-        # get both earnings previous - 1 and previous and compare
+    if earnings_data and deductions_data:
+        grouped_data = group_data_per_department(earnings_data, deductions_data)
 
-        # get both deductions previous - 1 and previous compare
+    return deductions_data
+
+
+def group_data_per_department(earnings_data, deductions_data):
+    pass
 
 
 def salary_slip_earnings(salary_slips):
     # TODO: group by employee conditionally
     ss_earnings = frappe.db.sql(
         """
-        SELECT ss.department, sd.salary_component, SUM(sd.amount) as total
+        SELECT ss.department, sd.salary_component, sd.parentfield, SUM(sd.amount) as total
         FROM `tabSalary Detail` sd, `tabSalary Slip` ss where sd.parent=ss.name 
         AND sd.parent in (%s)
         AND sd.do_not_include_in_total = 0
@@ -219,118 +227,149 @@ def salary_slip_earnings(salary_slips):
     return ss_earnings
 
 
-def get_earnings_data(
-    old_salary_slips,
-    new_salary_slips,
-):
+def salary_slip_deductions(salary_slips):
+    # TODO: group by employee conditionally
+    ss_earnings = frappe.db.sql(
+        """
+        SELECT ss.department, sd.salary_component, sd.parentfield, SUM(sd.amount) as total
+        FROM `tabSalary Detail` sd, `tabSalary Slip` ss where sd.parent=ss.name 
+        AND sd.parent in (%s)
+        AND sd.do_not_include_in_total = 0
+        AND sd.parentfield = 'deductions'
+        GROUP BY ss.department, sd.salary_component 
+        ORDER BY sd.salary_component ASC"""
+        % (", ".join(["%s"] * len(salary_slips))),
+        tuple([d.name for d in salary_slips]),
+        as_dict=1,
+    )
+
+    return ss_earnings
+
+
+def get_salary_slip_data(old_salary_slips, new_salary_slips, component_type="earnings"):
     data = []
-    old_earnings = salary_slip_earnings(old_salary_slips)
-    new_earnings = salary_slip_earnings(new_salary_slips)
+    old_data = []
+    new_data = []
 
-    total_old_earning = sum(flt(d.total) for d in old_earnings)
-    total_new_earning = sum(flt(d.total) for d in new_earnings)
-    unique_old_earnings_salary_components = []
-    unique_new_earnings_salary_components = []
+    if component_type == "earnings":
+        old_data = salary_slip_earnings(old_salary_slips) if old_salary_slips else []
+        new_data = salary_slip_earnings(new_salary_slips) if new_salary_slips else []
 
-    for new_earning_row in new_earnings:
+    if component_type == "deductions":
+        old_data = salary_slip_deductions(old_salary_slips) if old_salary_slips else []
+        new_data = salary_slip_deductions(new_salary_slips) if new_salary_slips else []
 
-        for old_earning_row in old_earnings:
-            if new_earning_row.get("department") == old_earning_row.get(
-                "department"
-            ) and new_earning_row.get("salary_component") == old_earning_row.get(
-                "salary_component"
-            ):
-                earn_amount_diff = flt(
-                    new_earning_row.get("total") - old_earning_row.get("total"),
-                    2,
-                )
-                result = ""
-                if earn_amount_diff > 0:
-                    result = "+" + cstr(earn_amount_diff)
-                elif earn_amount_diff < 0:
-                    result = "-" + cstr(abs(earn_amount_diff))
-                else:
-                    result = "0"
+    unique_old_salary_components = []
+    unique_new_salary_components = []
 
-                new_earning_row.update(
+    if old_data and new_data:
+        for new_data_row in new_data:
+
+            for old_data_row in old_data:
+                if new_data_row.get("department") == old_data_row.get(
+                    "department"
+                ) and new_data_row.get("salary_component") == old_data_row.get(
+                    "salary_component"
+                ):
+                    amount_diff = flt(
+                        new_data_row.get("total") - old_data_row.get("total"),
+                        2,
+                    )
+                    result = ""
+                    if amount_diff > 0:
+                        result = "+" + cstr(amount_diff)
+                    elif amount_diff < 0:
+                        result = "-" + cstr(abs(amount_diff))
+                    else:
+                        result = "0"
+
+                    new_data_row.update(
+                        {
+                            "total_prev_month": old_data_row.get("total"),
+                            "difference_amount": result,
+                        }
+                    )
+                    data.append(new_data_row)
+
+                    unique_new_salary_components.append(
+                        {
+                            "department": new_data_row.get("department"),
+                            "salary_component": new_data_row.get("salary_component"),
+                        }
+                    )
+                    unique_old_salary_components.append(
+                        {
+                            "department": old_data_row.get("department"),
+                            "salary_component": old_data_row.get("salary_component"),
+                        }
+                    )
+
+            cur_row = {
+                "department": new_data_row.get("department"),
+                "salary_component": new_data_row.get("salary_component"),
+            }
+
+            if cur_row not in unique_new_salary_components:
+                unique_old_salary_components.append(
                     {
-                        "total_prev_month": old_earning_row.get("total"),
-                        "difference_amount": result,
+                        "department": new_data_row.get("department"),
+                        "salary_component": new_data_row.get("salary_component"),
                     }
                 )
-                data.append(new_earning_row)
 
-                unique_new_earnings_salary_components.append(
+                data.append(
                     {
-                        "department": new_earning_row.get("department"),
-                        "salary_component": new_earning_row.get("salary_component"),
-                    }
-                )
-                unique_old_earnings_salary_components.append(
-                    {
-                        "department": old_earning_row.get("department"),
-                        "salary_component": old_earning_row.get("salary_component"),
+                        "department": new_data_row.get("department"),
+                        "salary_component": new_data_row.get("salary_component"),
+                        "total_prev_month": 0,
+                        "total_cur_month": new_data_row.get("total"),
+                        "difference_amount": "+" + cstr(new_data_row.get("total")),
                     }
                 )
 
-        cur_row = {
-            "department": new_earning_row.get("department"),
-            "salary_component": new_earning_row.get("salary_component"),
-        }
+        for row in old_data:
+            old_row = {
+                "department": row.get("department"),
+                "salary_component": row.get("salary_component"),
+            }
+            if old_row not in unique_old_salary_components:
+                data.append(
+                    {
+                        "department": row.get("department"),
+                        "salary_component": row.get("salary_component"),
+                        "total_prev_month": row.get("total") or 0,
+                        "total": 0,
+                        "difference_amount": "-" + cstr(row.get("total")),
+                    }
+                )
 
-        if cur_row not in unique_new_earnings_salary_components:
-            unique_old_earnings_salary_components.append(
+    elif old_data and not new_data:
+        for earning in old_data:
+            total = earning.get("total", 0)
+            earning.update(
                 {
-                    "department": new_earning_row.get("department"),
-                    "salary_component": new_earning_row.get("salary_component"),
-                }
-            )
-
-            data.append(
-                {
-                    "department": new_earning_row.get("department"),
-                    "salary_component": new_earning_row.get("salary_component"),
-                    "total_prev_month": 0,
-                    "total_cur_month": new_earning_row.get("total"),
-                    "difference_amount": "+" + cstr(new_earning_row.get("total")),
-                }
-            )
-
-    for row in old_earnings:
-        old_row = {
-            "department": row.get("department"),
-            "salary_component": row.get("salary_component"),
-        }
-        if old_row not in unique_old_earnings_salary_components:
-            data.append(
-                {
-                    "department": row.get("department"),
-                    "salary_component": row.get("salary_component"),
-                    "total_prev_month": row.get("total") or 0,
+                    "total_prev_month": total,
                     "total": 0,
-                    "difference_amount": "-" + cstr(row.get("total")),
+                    "difference_amount": "-" + cstr(earning.get("total")),
                 }
             )
-    # total_earn_amount_diff = flt(total_cur_earning - total_prev_earning, 2)
-    # d = ""
-    # if total_earn_amount_diff > 0:
-    #     d = "+" + cstr(total_earn_amount_diff)
-    # elif total_earn_amount_diff < 0:
-    #     d = "-" + cstr(abs(total_earn_amount_diff))
-    # else:
-    #     d = "0"
 
-    # data.append(
-    #     {
-    #         "department": "",
-    #         "salary_component": "TOTAL ALLOWANCES",
-    #         "total_prev_month": total_prev_earning,
-    #         "total_cur_month": total_cur_earning,
-    #         "difference_amount": d,
-    #     }
-    # )
+            data.append(earning)
 
-    return data  # total_prev_earning, total_cur_earning
+    elif new_data and not old_data:
+        for earning in new_data:
+            total = earning.get("total", 0)
+            earning.update(
+                {
+                    "total_prev_month": 0,
+                    "total": total,
+                    "difference_amount": "+" + cstr(earning.get("total")),
+                }
+            )
+
+            data.append(earning)
+
+    return data
 
 
 def group_per_employee():
