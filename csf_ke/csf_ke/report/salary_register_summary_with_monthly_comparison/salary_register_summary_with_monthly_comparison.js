@@ -68,6 +68,12 @@ frappe.query_reports["Salary Register Summary With Monthly Comparison"] = {
       default: "Submitted",
       width: "100px",
     },
+    {
+      fieldname: "department_breakdown",
+      label: __("Department Breakdown"),
+      fieldtype: "Check",
+      default: 1,
+    },
   ],
 
   formatter: function (value, row, column, data, default_formatter) {

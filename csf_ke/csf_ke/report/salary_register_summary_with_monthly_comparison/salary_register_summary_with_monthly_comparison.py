@@ -52,9 +52,7 @@ def consecutive_months(date_1, date_2):
             next_month = 1
             next_yeart += 1
 
-        days_in_the_next_month = monthrange(next_year, next_month)[
-            1
-        ]  # pick the second index (contains days)
+        days_in_the_next_month = monthrange(next_year, next_month)[1]
         expected_end = datetime(next_year, next_month, days_in_the_next_month)
 
     return end == expected_end
@@ -68,18 +66,6 @@ def get_columns(filters):
     new_month_name = calendar.month_name[new_date.month]
 
     columns = [
-        {
-            "fieldname": "department",
-            "label": _("Department"),
-            "fieldtype": "Data",
-            "width": 200,
-        },
-        {
-            "fieldname": "salary_component",
-            "label": _("Salary Component"),
-            "fieldtype": "Data",
-            "width": 200,
-        },
         {
             "fieldname": "total_prev_month",
             "label": _("{0} {1}".format(old_month_name, old_date.year)),
@@ -99,8 +85,40 @@ def get_columns(filters):
             "label": _("Difference Amount"),
             "fieldtype": "Float",
             "width": 200,
+            "precision": 2,
         },
     ]
+
+    if filters.get("department_breakdown"):
+        new_columns = [
+            {
+                "fieldname": "salary_component",
+                "label": _("Salary Component"),
+                "fieldtype": "Data",
+                "width": 200,
+            },
+            {
+                "fieldname": "department",
+                "label": _("Department"),
+                "fieldtype": "Data",
+                "width": 200,
+            },
+        ]
+
+        for column in new_columns:
+            columns.insert(0, column)
+
+    else:
+        columns.insert(
+            0,
+            {
+                "fieldname": "component_group",
+                "label": _("Component Group"),
+                "fieldtype": "Data",
+                "width": 200,
+            },
+        )
+
     return columns
 
 
@@ -320,15 +338,63 @@ def group_per_department(filters, company_currency):
     )
 
     grouped_data = []
-    if earnings_data and deductions_data:
-        grouped_data = group_data_per_department(
+    department_breakdown = filters.get("department_breakdown")
+    if earnings_data and deductions_data and department_breakdown:
+        grouped_data = get_department_breakdown(
             earnings_data, deductions_data, old_ss_count, new_ss_count
         )
+
+    elif earnings_data and deductions_data and not department_breakdown:
+        grouped_data = get_comparison_per_component(earnings_data, deductions_data)
 
     return grouped_data
 
 
-def group_data_per_department(
+def get_comparison_per_component(earnings_data, deductions_data):
+    total_prev_month_earnings = sum(
+        row["total_prev_month"]
+        for row in earnings_data
+        if row.parentfield == "earnings"
+    )
+    total_cur_month_earnings = sum(
+        row["total"] for row in earnings_data if row.parentfield == "earnings"
+    )
+    earnings_diff = total_cur_month_earnings - total_prev_month_earnings
+
+    total_prev_month_deductions = sum(
+        row["total_prev_month"]
+        for row in deductions_data
+        if row.parentfield == "deductions"
+    )
+    total_cur_month_deductions = sum(
+        row["total"] for row in deductions_data if row.parentfield == "deductions"
+    )
+    deductions_diff = total_cur_month_deductions - total_prev_month_deductions
+
+    final_output = []
+
+    earnings_dict = {
+        "component_group": "EARNINGS TOTAL",
+        "total_prev_month": total_prev_month_earnings,
+        "total": total_cur_month_earnings,
+        "difference_amount": earnings_diff,
+    }
+
+    final_output.append(earnings_dict)
+
+    deductions_dict = {
+        "component_group": "DEDUCTIONS TOTAL",
+        "total_prev_month": total_prev_month_deductions,
+        "total": total_cur_month_deductions,
+        "difference_amount": deductions_diff,
+    }
+
+    final_output.append(deductions_dict)
+
+    return final_output
+
+
+def get_department_breakdown(
     earnings_data, deductions_data, old_ss_count, new_ss_count
 ):
 
@@ -407,7 +473,6 @@ def group_data_per_department(
 
 
 def salary_slip_earnings(salary_slips):
-    # TODO: group by employee conditionally
     ss_earnings = frappe.db.sql(
         """
         SELECT ss.department, sd.salary_component, sd.parentfield, SUM(sd.amount) as total
@@ -426,7 +491,6 @@ def salary_slip_earnings(salary_slips):
 
 
 def salary_slip_deductions(salary_slips):
-    # TODO: group by employee conditionally
     ss_earnings = frappe.db.sql(
         """
         SELECT ss.department, sd.salary_component, sd.parentfield, SUM(sd.amount) as total
@@ -442,7 +506,3 @@ def salary_slip_deductions(salary_slips):
     )
 
     return ss_earnings
-
-
-def group_per_employee():
-    pass
