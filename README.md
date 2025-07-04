@@ -30,14 +30,16 @@ Designed to ensure compliance with Kenyan payroll regulations, these reports gen
   Monthly tax return report submitted by employers to KRA.
 - **NSSF Report**  
   Tracks contributions to the National Social Security Fund (NSSF) for employee social security.
-- **NHIF Report**  
-  Details contributions to the National Hospital Insurance Fund (NHIF) for health insurance.
+- **SHIF Report**  
+  Provides a clear overview of employee Social Health Insurance Fund (SHIF) contributions.
 - **HELB Report**  
   Summarizes deductions for Higher Education Loans Board (HELB) repayments.
 - **Bank Payroll Advice Report**  
   Generates bank-ready instructions for salary disbursements.
 - **Payroll Register Report**  
   Provides a detailed breakdown of payroll transactions for record-keeping and auditing.
+- **Housing Levy Report**  
+  Provides a clear and concise overview of essential employee information alongside their gross salary contributions within a specified period.
 
 ### 2. Tax Reports
 Streamlined reporting for sales and purchase taxes to ensure compliance with Kenyan tax laws.
