@@ -7,7 +7,7 @@ frappe.query_reports["Salary Register Summary With Monthly Comparison"] = {
       fieldname: "from_date",
       label: __("From"),
       fieldtype: "Date",
-      default: frappe.datetime.add_months(frappe.datetime.get_today(), -1),
+      default: frappe.datetime.add_months(frappe.datetime.get_today(), -2),
       reqd: 1,
       width: "100px",
     },
@@ -15,7 +15,7 @@ frappe.query_reports["Salary Register Summary With Monthly Comparison"] = {
       fieldname: "to_date",
       label: __("To"),
       fieldtype: "Date",
-      default: frappe.datetime.get_today(),
+      default: frappe.datetime.add_months(frappe.datetime.get_today(), -1),
       reqd: 1,
       width: "100px",
     },
@@ -68,5 +68,34 @@ frappe.query_reports["Salary Register Summary With Monthly Comparison"] = {
       default: "Submitted",
       width: "100px",
     },
+    {
+      fieldname: "department_breakdown",
+      label: __("Department Breakdown"),
+      fieldtype: "Check",
+      default: 1,
+    },
   ],
+
+  formatter: function (value, row, column, data, default_formatter) {
+    value = default_formatter(value, row, column, data);
+
+    if (
+      column.fieldname === "difference_amount" &&
+      data &&
+      data.difference_amount > 0
+    ) {
+      value = `<b style="color:green;">${value}</b>`;
+    } else if (
+      column.fieldname === "difference_amount" &&
+      data &&
+      data.difference_amount < 0
+    ) {
+      value = `<b style="color:red;">${value}</b>`;
+    }
+
+    if (data && data.is_title) {
+      value = `<b>${value}</b>`;
+    }
+    return value;
+  },
 };
