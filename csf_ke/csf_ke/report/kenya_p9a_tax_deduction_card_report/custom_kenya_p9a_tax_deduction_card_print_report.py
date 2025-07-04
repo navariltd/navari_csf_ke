@@ -10,6 +10,11 @@ def print_report(report_name, filters=None):
 
         report = frappe.get_doc("Report", report_name)
         columns, data = report.get_data(filters=filters, as_dict=True)
+        data.remove(data[-1])
+
+        totals = calculate_totals(data)
+
+        data.append(totals)
 
         html = frappe.render_template(
             "csf_ke/report/kenya_p9a_tax_deduction_card_report/kenya_p9a_tax_deduction_card_report.html",
@@ -40,3 +45,19 @@ def print_report(report_name, filters=None):
 
     except Exception as e:
         frappe.throw(f"Error generating PDF: {str(e)}")
+
+def calculate_totals(data):
+    if not data:
+        return {}
+
+    totals = {}
+    totals["month"] = "Total"
+
+    fields = [key for key in data[0].keys() if key != "month"]
+
+    for key in fields:
+        totals[key] = sum(
+            float(row.get(key) or 0) for row in data if isinstance(row.get(key), (int, float, str))
+        )
+
+    return totals
