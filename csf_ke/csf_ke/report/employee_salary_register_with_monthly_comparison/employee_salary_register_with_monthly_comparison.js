@@ -7,7 +7,7 @@ frappe.query_reports["Employee Salary Register With Monthly Comparison"] = {
       fieldname: "from_date",
       label: __("From"),
       fieldtype: "Date",
-      default: frappe.datetime.add_months(frappe.datetime.get_today(), -1),
+      default: get_first_month_date(frappe.datetime.get_today()),
       reqd: 1,
       width: "100px",
     },
@@ -15,7 +15,7 @@ frappe.query_reports["Employee Salary Register With Monthly Comparison"] = {
       fieldname: "to_date",
       label: __("To"),
       fieldtype: "Date",
-      default: frappe.datetime.get_today(),
+      default: get_last_month_date(frappe.datetime.get_today()),
       reqd: 1,
       width: "100px",
     },
@@ -70,3 +70,27 @@ frappe.query_reports["Employee Salary Register With Monthly Comparison"] = {
     },
   ],
 };
+
+function get_last_month_date(inputDate) {
+  const date = new Date(inputDate);
+
+  if (date.getMonth() === 11) {
+    date.setFullYear(date.getFullYear() + 1);
+    date.setMonth(0);
+  } else {
+    date.setMonth(date.getMonth() + 1);
+  }
+  date.setDate(1);
+
+  date.setDate(date.getDate() - 1);
+
+  return date;
+}
+
+function get_first_month_date(inputDate) {
+  const date = new Date(inputDate);
+
+  date.setDate(1);
+
+  return date;
+}
