@@ -1,3 +1,5 @@
+// TODO: Find a way to reuse the functions in other files without duplicating code
+
 /**
  * Returns the last date of the month for the given input date.
  *
@@ -23,8 +25,6 @@ function get_last_month_date(inputDate) {
   // subtract one day to get the last day of the current month
   date.setDate(date.getDate() - 1);
 
-  console.log("Last month date:", date);
-
   return date;
 }
 
@@ -39,6 +39,5 @@ function get_first_month_date(inputDate) {
   // set the date to the first day of the month
   date.setDate(1);
 
-  console.log("First month date:", date);
   return date;
 }
