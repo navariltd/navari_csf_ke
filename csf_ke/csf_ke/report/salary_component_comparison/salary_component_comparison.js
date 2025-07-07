@@ -79,6 +79,18 @@ frappe.query_reports["Salary Component Comparison"] = {
       default: "Submitted",
       width: "100px",
     },
+    {
+      fieldname: "component_type",
+      label: __("Component Type"),
+      fieldtype: "Select",
+      options: [
+        { value: "", label: __("") },
+        { value: "Earnings", label: __("Earnings") },
+        { value: "Deductions", label: __("Deductions") },
+      ],
+      width: "100px",
+      default: "",
+    },
   ],
 
   formatter: function (value, row, column, data, default_formatter) {

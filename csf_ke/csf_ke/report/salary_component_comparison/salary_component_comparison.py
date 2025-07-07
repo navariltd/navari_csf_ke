@@ -65,13 +65,17 @@ def get_data(filters, company_currency):
 
         if filters.get("based_on") == "Department":
             grouped_data = get_department_breakdown(
-                earnings_data, deductions_data, old_ss_count, new_ss_count
+                filters, earnings_data, deductions_data, old_ss_count, new_ss_count
             )
 
         elif filters.get("based_on") == "Employee":
-            grouped_data = get_comparison_per_employee(earnings_data, deductions_data)
+            grouped_data = get_comparison_per_employee(
+                filters, earnings_data, deductions_data
+            )
         else:
-            grouped_data = get_comparison_per_company(earnings_data, deductions_data)
+            grouped_data = get_comparison_per_company(
+                filters, earnings_data, deductions_data
+            )
 
     return grouped_data
 
@@ -252,7 +256,6 @@ def salary_slip_earnings(salary_slips):
         tuple([d.name for d in salary_slips]),
         as_dict=1,
     )
-
     return ss_earnings
 
 
@@ -276,124 +279,113 @@ def salary_slip_deductions(salary_slips):
 
 def get_salary_slip_data(old_salary_slips, new_salary_slips, component_type="earnings"):
     data = []
-    old_data = []
-    new_data = []
 
     if component_type == "earnings":
         old_data = salary_slip_earnings(old_salary_slips) if old_salary_slips else []
         new_data = salary_slip_earnings(new_salary_slips) if new_salary_slips else []
-
-    if component_type == "deductions":
+    elif component_type == "deductions":
         old_data = salary_slip_deductions(old_salary_slips) if old_salary_slips else []
         new_data = salary_slip_deductions(new_salary_slips) if new_salary_slips else []
-
-    unique_old_salary_components = []
-    unique_new_salary_components = []
+    else:
+        frappe.throw("Invalid component_type. Use 'earnings' or 'deductions'.")
 
     if old_data and new_data:
-        for new_data_row in new_data:
+        seen_components = set()
 
-            for old_data_row in old_data:
-                if new_data_row.get("department") == old_data_row.get(
-                    "department"
-                ) and new_data_row.get("salary_component") == old_data_row.get(
-                    "salary_component"
+        for new_row in new_data:
+            new_key = (
+                new_row["employee"],
+                new_row["department"],
+                new_row["salary_component"],
+            )
+            seen_components.add(new_key)
+
+            matched = False
+            for old_row in old_data:
+                if (
+                    new_row["employee"] == old_row["employee"]
+                    and new_row["department"] == old_row["department"]
+                    and new_row["salary_component"] == old_row["salary_component"]
                 ):
-                    amount_diff = flt(
-                        new_data_row.get("total") - old_data_row.get("total"),
-                        2,
-                    )
 
-                    new_data_row.update(
+                    data.append(
                         {
-                            "total_prev_month": old_data_row.get("total"),
-                            "difference_amount": amount_diff,
+                            "company": new_row["company"],
+                            "employee": new_row["employee"],
+                            "department": new_row["department"],
+                            "salary_component": new_row["salary_component"],
+                            "total_prev_month": old_row["total"],
+                            "total": new_row["total"],
+                            "parentfield": new_row["parentfield"],
                         }
                     )
-                    data.append(new_data_row)
+                    matched = True
+                    break
 
-                    unique_new_salary_components.append(
-                        {
-                            "department": new_data_row.get("department"),
-                            "salary_component": new_data_row.get("salary_component"),
-                        }
-                    )
-                    unique_old_salary_components.append(
-                        {
-                            "department": old_data_row.get("department"),
-                            "salary_component": old_data_row.get("salary_component"),
-                        }
-                    )
-
-            cur_row = {
-                "department": new_data_row.get("department"),
-                "salary_component": new_data_row.get("salary_component"),
-            }
-
-            if cur_row not in unique_new_salary_components:
-                unique_old_salary_components.append(
-                    {
-                        "department": new_data_row.get("department"),
-                        "salary_component": new_data_row.get("salary_component"),
-                    }
-                )
-
+            if not matched:
                 data.append(
                     {
-                        "department": new_data_row.get("department"),
-                        "salary_component": new_data_row.get("salary_component"),
+                        "company": new_row["company"],
+                        "employee": new_row["employee"],
+                        "department": new_row["department"],
+                        "salary_component": new_row["salary_component"],
                         "total_prev_month": 0,
-                        "total_cur_month": new_data_row.get("total"),
-                        "difference_amount": new_data_row.get("total"),
+                        "total": new_row["total"],
+                        "parentfield": new_row["parentfield"],
                     }
                 )
 
-        for row in old_data:
-            old_row = {
-                "department": row.get("department"),
-                "salary_component": row.get("salary_component"),
-            }
-            if old_row not in unique_old_salary_components:
+        for old_row in old_data:
+            old_key = (
+                old_row["employee"],
+                old_row["department"],
+                old_row["salary_component"],
+            )
+            if old_key not in seen_components:
                 data.append(
                     {
-                        "department": row.get("department"),
-                        "salary_component": row.get("salary_component"),
-                        "total_prev_month": row.get("total") or 0,
+                        "company": old_row["company"],
+                        "employee": old_row["employee"],
+                        "department": old_row["department"],
+                        "salary_component": old_row["salary_component"],
+                        "total_prev_month": old_row["total"],
                         "total": 0,
-                        "difference_amount": row.get("total"),
+                        "parentfield": old_row["parentfield"],
                     }
                 )
 
     elif old_data and not new_data:
-        for earning in old_data:
-            total = earning.get("total", 0)
-            earning.update(
+        for row in old_data:
+            data.append(
                 {
-                    "total_prev_month": total,
+                    "company": row["company"],
+                    "employee": row["employee"],
+                    "department": row["department"],
+                    "salary_component": row["salary_component"],
+                    "total_prev_month": row["total"],
                     "total": 0,
-                    "difference_amount": earning.get("total"),
+                    "parentfield": row["parentfield"],
                 }
             )
-
-            data.append(earning)
 
     elif new_data and not old_data:
-        for earning in new_data:
-            total = earning.get("total", 0)
-            earning.update(
+        for row in new_data:
+            data.append(
                 {
+                    "company": row["company"],
+                    "employee": row["employee"],
+                    "department": row["department"],
+                    "salary_component": row["salary_component"],
                     "total_prev_month": 0,
-                    "total": total,
-                    "difference_amount": earning.get("total"),
+                    "total": row["total"],
+                    "parentfield": row["parentfield"],
                 }
             )
-
-            data.append(earning)
 
     return data
 
 
-def get_comparison_per_company(earnings_data, deductions_data):
+def get_comparison_per_company(filters, earnings_data, deductions_data):
     all_data = earnings_data + deductions_data
     grouped = defaultdict(lambda: {"earnings": [], "deductions": []})
 
@@ -408,7 +400,7 @@ def get_comparison_per_company(earnings_data, deductions_data):
         earnings = grouped[company]["earnings"]
         deductions = grouped[company]["deductions"]
 
-        if earnings:
+        if earnings and not filters.get("component_type") == "Deductions":
             total_prev_month = sum(row["total_prev_month"] for row in earnings) or 0
             total = sum(row["total"] for row in earnings) or 0
             total_difference = total - total_prev_month
@@ -423,7 +415,7 @@ def get_comparison_per_company(earnings_data, deductions_data):
                 }
             )
 
-        if deductions:
+        if deductions and not filters.get("component_type") == "Earnings":
             total_prev_month = sum(row["total_prev_month"] for row in deductions) or 0
             total = sum(row["total"] for row in deductions) or 0
             total_difference = total - total_prev_month
@@ -442,7 +434,7 @@ def get_comparison_per_company(earnings_data, deductions_data):
 
 
 def get_department_breakdown(
-    earnings_data, deductions_data, old_ss_count, new_ss_count
+    filters, earnings_data, deductions_data, old_ss_count, new_ss_count
 ):
 
     all_data = earnings_data + deductions_data
@@ -471,7 +463,7 @@ def get_department_breakdown(
         earnings = grouped[department]["earnings"]
         deductions = grouped[department]["deductions"]
 
-        if earnings:
+        if earnings and not filters.get("component_type") == "Deductions":
             total_prev_month = sum(row["total_prev_month"] for row in earnings) or 0
             total = sum(row["total"] for row in earnings) or 0
             total_difference = total - total_prev_month
@@ -489,13 +481,17 @@ def get_department_breakdown(
             combined_totals = get_components_total(earnings)
             final_output.extend(combined_totals)
 
-        if deductions:
+        if deductions and not filters.get("component_type") == "Earnings":
             total_prev_month = sum(row["total_prev_month"] for row in deductions) or 0
             total = sum(row["total"] for row in deductions) or 0
             total_difference = total - total_prev_month
             final_output.append(
                 {
-                    "department": None,
+                    "department": (
+                        department
+                        if filters.get("component_type") == "Deductions"
+                        else None
+                    ),
                     "salary_component": "DEDUCTIONS TOTAL",
                     "total_prev_month": total_prev_month,
                     "total": total,
@@ -534,7 +530,7 @@ def get_components_total(data):
     return final_output
 
 
-def get_comparison_per_employee(earnings_data, deductions_data):
+def get_comparison_per_employee(filters, earnings_data, deductions_data):
     all_data = earnings_data + deductions_data
 
     grouped = defaultdict(lambda: {"earnings": [], "deductions": []})
@@ -550,7 +546,7 @@ def get_comparison_per_employee(earnings_data, deductions_data):
         earnings = grouped[emp]["earnings"]
         deductions = grouped[emp]["deductions"]
 
-        if earnings:
+        if earnings and not filters.get("component_type") == "Deductions":
             total_prev_month = sum(row["total_prev_month"] for row in earnings) or 0
             total = sum(row["total"] for row in earnings) or 0
             total_difference = total - total_prev_month
@@ -575,14 +571,22 @@ def get_comparison_per_employee(earnings_data, deductions_data):
                 ) - new_earning.get("total_prev_month", 0)
                 final_output.append(new_earning)
 
-        if deductions:
+        if deductions and not filters.get("component_type") == "Earnings":
             total_prev_month = sum(row["total_prev_month"] for row in deductions) or 0
             total = sum(row["total"] for row in deductions) or 0
             total_difference = total - total_prev_month
             final_output.append(
                 {
-                    "department": None,
-                    "employee": None,
+                    "department": (
+                        emp[0]
+                        if filters.get("component_type") == "Deductions"
+                        else None
+                    ),
+                    "employee": (
+                        emp[1]
+                        if filters.get("component_type") == "Deductions"
+                        else None
+                    ),
                     "salary_component": "DEDUCTIONS TOTAL",
                     "total_prev_month": total_prev_month,
                     "total": total,
