@@ -54,4 +54,11 @@ repos:
         language: system
         stages: [commit-msg]
         always_run: true
+        
+      - id: cspell-modified-files
+        name: check spelling of files
+        entry: sh -c "npx cspell --no-must-find-files --config .cspell.json `git diff --cached -p --name-status | cut -c3- | tr '\n' ' '`"
+        language: system
+        stages: [pre-commit]
+
 
