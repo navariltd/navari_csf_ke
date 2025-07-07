@@ -54,27 +54,3 @@ frappe.query_reports["Kenya Payroll Register Report"] = {
     },
   ],
 };
-
-function get_last_month_date(inputDate) {
-  const date = new Date(inputDate);
-
-  if (date.getMonth() === 11) {
-    date.setFullYear(date.getFullYear() + 1);
-    date.setMonth(0);
-  } else {
-    date.setMonth(date.getMonth() + 1);
-  }
-  date.setDate(1);
-
-  date.setDate(date.getDate() - 1);
-
-  return date;
-}
-
-function get_first_month_date(inputDate) {
-  const date = new Date(inputDate);
-
-  date.setDate(1);
-
-  return date;
-}

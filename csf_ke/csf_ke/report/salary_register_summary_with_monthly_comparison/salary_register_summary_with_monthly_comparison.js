@@ -99,17 +99,3 @@ frappe.query_reports["Salary Register Summary With Monthly Comparison"] = {
     return value;
   },
 };
-
-function get_last_date_of_next_month(inputDate) {
-  const date = new Date(inputDate);
-  date.setMonth(date.getMonth() + 2, 0); // Move to next month + 1, day 0 gives last day of previous month
-  return date;
-}
-
-function get_first_month_date(inputDate) {
-  const date = new Date(inputDate);
-
-  date.setDate(1);
-
-  return date;
-}
