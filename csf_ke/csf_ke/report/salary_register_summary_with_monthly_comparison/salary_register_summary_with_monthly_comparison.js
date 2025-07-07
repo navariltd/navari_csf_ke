@@ -7,7 +7,7 @@ frappe.query_reports["Salary Register Summary With Monthly Comparison"] = {
       fieldname: "from_date",
       label: __("From"),
       fieldtype: "Date",
-      default: get_first_month_date(frappe.datetime.get_today()),
+      default: frappe.datetime.add_months(frappe.datetime.month_start(), -2),
       reqd: 1,
       width: "100px",
     },
