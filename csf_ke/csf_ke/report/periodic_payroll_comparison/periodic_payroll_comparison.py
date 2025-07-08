@@ -1,14 +1,12 @@
 # Copyright (c) 2025, Navari Ltd and contributors
 # For license information, please see license.txt
-from datetime import datetime, timedelta
-from calendar import monthrange
 from collections import defaultdict
 import copy
 import calendar
 
 import frappe
 import erpnext
-from frappe.utils import flt, getdate, get_first_day, get_last_day
+from frappe.utils import getdate, get_first_day, get_last_day
 from frappe import _
 
 
@@ -59,25 +57,52 @@ def get_data(filters, company_currency):
         old_salary_slips, new_salary_slips, "deductions"
     )
 
+    loans = salary_slip_loans_data(old_salary_slips, new_salary_slips)
+
     grouped_data = []
 
     if earnings_data and deductions_data:
-
         if filters.get("based_on") == "Department":
             grouped_data = get_department_breakdown(
-                filters, earnings_data, deductions_data, old_ss_count, new_ss_count
+                filters,
+                earnings_data,
+                deductions_data,
+                old_ss_count,
+                new_ss_count,
+                loans,
             )
 
         elif filters.get("based_on") == "Employee":
             grouped_data = get_comparison_per_employee(
-                filters, earnings_data, deductions_data
+                filters, earnings_data, deductions_data, loans
             )
         else:
             grouped_data = get_comparison_per_company(
-                filters, earnings_data, deductions_data
+                filters, earnings_data, deductions_data, loans
             )
 
     return grouped_data
+
+
+def salary_slip_loans_data(old_salary_slips, new_salary_slips):
+    old_ss_data = get_salary_slip_loans(old_salary_slips)
+    new_ss_data = get_salary_slip_loans(new_salary_slips)
+
+    if old_ss_data:
+        old_ss_data = [
+            {**record, "parentfield": "previous_loans"}
+            for record in old_ss_data
+            if record["parentfield"] == "loans"
+        ]
+
+    if new_ss_data:
+        new_ss_data = [
+            {**record, "parentfield": "current_loans"}
+            for record in new_ss_data
+            if record["parentfield"] == "loans"
+        ]
+
+    return old_ss_data + new_ss_data
 
 
 def get_columns(filters):
@@ -142,8 +167,7 @@ def get_columns(filters):
             {
                 "fieldname": "employee",
                 "label": _("Employee"),
-                "fieldtype": "Link",
-                "options": "Employee",
+                "fieldtype": "Data",
                 "width": 200,
             },
             {
@@ -185,12 +209,7 @@ def get_conditions(filters, company_currency):
     conditions = []
     params = {}
 
-    doc_status_map = {"Draft": 0, "Submitted": 1, "Cancelled": 2}
-    if filters.get("docstatus"):
-        conditions.append("docstatus = %(docstatus)s")
-        params["docstatus"] = doc_status_map[filters["docstatus"]]
-    else:
-        conditions.append("docstatus = 1")
+    conditions.append("docstatus = 1")
 
     if filters.get("start_date"):
         conditions.append("start_date >= %(start_date)s")
@@ -224,13 +243,11 @@ def get_salary_slips(filters, company_currency):
 
     salary_slips = frappe.db.sql(
         """
-        SELECT name, employee, start_date, end_date 
-        FROM `tabSalary Slip` 
+        SELECT name, employee, start_date, end_date
+        FROM `tabSalary Slip`
         WHERE {conditions}
         ORDER BY employee
-        """.format(
-            conditions=conditions
-        ),
+        """.format(conditions=conditions),
         values=params,
         as_dict=1,
     )
@@ -243,38 +260,58 @@ def get_number_of_employees(salary_slips):
 
 
 def salary_slip_earnings(salary_slips):
-    ss_earnings = frappe.db.sql(
-        """
-        SELECT ss.employee, ss.department, ss.company, sd.salary_component, sd.parentfield, SUM(sd.amount) as total
-        FROM `tabSalary Detail` sd, `tabSalary Slip` ss where sd.parent=ss.name 
-        AND sd.parent in (%s)
+    slip_names = [d.name for d in salary_slips]
+    placeholders = ", ".join(["%s"] * len(slip_names))
+
+    query = f"""
+        SELECT ss.employee_name As employee, ss.department, ss.company, sd.salary_component, sd.parentfield, SUM(sd.amount) AS total
+        FROM `tabSalary Slip` ss
+        JOIN `tabSalary Detail` sd
+        ON sd.parent=ss.name
+        WHERE sd.parent in ({placeholders})
         AND sd.do_not_include_in_total = 0
         AND sd.parentfield = 'earnings'
         GROUP BY ss.employee, ss.department, ss.company, sd.salary_component
         ORDER BY sd.salary_component ASC"""
-        % (", ".join(["%s"] * len(salary_slips))),
-        tuple([d.name for d in salary_slips]),
-        as_dict=1,
-    )
-    return ss_earnings
+
+    return frappe.db.sql(query, tuple(slip_names), as_dict=1)
 
 
 def salary_slip_deductions(salary_slips):
-    ss_earnings = frappe.db.sql(
-        """
-        SELECT ss.employee, ss.department, ss.company, sd.salary_component, sd.parentfield, SUM(sd.amount) as total
-        FROM `tabSalary Detail` sd, `tabSalary Slip` ss where sd.parent=ss.name 
-        AND sd.parent in (%s)
+    slip_names = [d.name for d in salary_slips]
+    placeholders = ", ".join(["%s"] * len(slip_names))
+
+    query = f"""
+        SELECT ss.employee_name AS employee, ss.department, ss.company, sd.salary_component, sd.parentfield, SUM(sd.amount) AS total
+        FROM `tabSalary Slip` ss
+        JOIN `tabSalary Detail` sd
+        ON sd.parent=ss.name
+        WHERE sd.parent in ({placeholders})
         AND sd.do_not_include_in_total = 0
         AND sd.parentfield = 'deductions'
         GROUP BY ss.employee, ss.department, ss.company, sd.salary_component
         ORDER BY sd.salary_component ASC"""
-        % (", ".join(["%s"] * len(salary_slips))),
-        tuple([d.name for d in salary_slips]),
-        as_dict=1,
-    )
 
-    return ss_earnings
+    return frappe.db.sql(query, tuple(slip_names), as_dict=1)
+
+
+def get_salary_slip_loans(salary_slips):
+    if not salary_slips:
+        return []
+    slip_names = [d.name for d in salary_slips]
+    placeholders = ", ".join(["%s"] * len(slip_names))
+
+    query = f"""
+        SELECT ss.employee_name as employee, ss.department, ss.company, ssd.parentfield, SUM(ssd.total_payment) AS total_payment
+        FROM `tabSalary Slip` ss
+        JOIN `tabSalary Slip Loan` ssd
+        ON ssd.parent = ss.name
+        WHERE ssd.parent in ({placeholders})
+        AND ssd.parentfield = 'loans'
+        GROUP BY ss.employee, ss.department, ss.company
+        ORDER BY ss.employee ASC"""
+
+    return frappe.db.sql(query, tuple(slip_names), as_dict=1)
 
 
 def get_salary_slip_data(old_salary_slips, new_salary_slips, component_type="earnings"):
@@ -307,7 +344,6 @@ def get_salary_slip_data(old_salary_slips, new_salary_slips, component_type="ear
                     and new_row["department"] == old_row["department"]
                     and new_row["salary_component"] == old_row["salary_component"]
                 ):
-
                     data.append(
                         {
                             "company": new_row["company"],
@@ -385,9 +421,12 @@ def get_salary_slip_data(old_salary_slips, new_salary_slips, component_type="ear
     return data
 
 
-def get_comparison_per_company(filters, earnings_data, deductions_data):
-    all_data = earnings_data + deductions_data
-    grouped = defaultdict(lambda: {"earnings": [], "deductions": []})
+def get_comparison_per_company(filters, earnings_data, deductions_data, loans):
+    if loans:
+        loans = get_company_wise_loan_totals(loans)
+
+    all_data = earnings_data + deductions_data + (loans if loans else [])
+    grouped = defaultdict(lambda: {"earnings": [], "deductions": [], "loans": []})
 
     for row in all_data:
         comp = row["company"]
@@ -399,6 +438,7 @@ def get_comparison_per_company(filters, earnings_data, deductions_data):
     for company in sorted(grouped.keys()):
         earnings = grouped[company]["earnings"]
         deductions = grouped[company]["deductions"]
+        loans = grouped[company]["loans"]
 
         if earnings and not filters.get("component_type") == "Deductions":
             total_prev_month = sum(row["total_prev_month"] for row in earnings) or 0
@@ -430,16 +470,32 @@ def get_comparison_per_company(filters, earnings_data, deductions_data):
                 }
             )
 
+        if loans:
+            loan = loans[0]
+            print("LOAN", loan)
+            final_output.append(
+                {
+                    "company": company,
+                    "component_group": "LOANS",
+                    "total_prev_month": loan.get("total_prev_month", 0),
+                    "total": loan.get("total", 0),
+                    "is_title": True,
+                    "difference_amount": loan.get("total", 0)
+                    - loan.get("total_prev_month", 0),
+                }
+            )
+
     return final_output
 
 
 def get_department_breakdown(
-    filters, earnings_data, deductions_data, old_ss_count, new_ss_count
+    filters, earnings_data, deductions_data, old_ss_count, new_ss_count, loans
 ):
+    if loans:
+        loans = get_department_wise_loan_totals(loans)
+    all_data = earnings_data + deductions_data + (loans if loans else [])
 
-    all_data = earnings_data + deductions_data
-
-    grouped = defaultdict(lambda: {"earnings": [], "deductions": []})
+    grouped = defaultdict(lambda: {"earnings": [], "deductions": [], "loans": []})
 
     for row in all_data:
         dept = row["department"]
@@ -462,6 +518,7 @@ def get_department_breakdown(
     for department in sorted(grouped.keys()):
         earnings = grouped[department]["earnings"]
         deductions = grouped[department]["deductions"]
+        loans = grouped[department]["loans"]
 
         if earnings and not filters.get("component_type") == "Deductions":
             total_prev_month = sum(row["total_prev_month"] for row in earnings) or 0
@@ -503,11 +560,24 @@ def get_department_breakdown(
             combined_totals = get_components_total(deductions)
             final_output.extend(combined_totals)
 
+        if loans:
+            loan = loans[0]
+            final_output.append(
+                {
+                    "department": None,
+                    "salary_component": "LOANS TOTAL",
+                    "total_prev_month": loan.get("total_prev_month", 0),
+                    "total": loan.get("total", 0),
+                    "is_title": True,
+                    "difference_amount": loan.get("total", 0)
+                    - loan.get("total_prev_month", 0),
+                }
+            )
+
     return final_output
 
 
 def get_components_total(data):
-
     grouped_earnings = defaultdict(lambda: {"total": 0, "total_prev_month": 0})
 
     for d in data:
@@ -530,10 +600,12 @@ def get_components_total(data):
     return final_output
 
 
-def get_comparison_per_employee(filters, earnings_data, deductions_data):
-    all_data = earnings_data + deductions_data
+def get_comparison_per_employee(filters, earnings_data, deductions_data, loans):
+    if loans:
+        loans = get_employee_wise_loan_totals(loans)
+    all_data = earnings_data + deductions_data + (loans if loans else [])
 
-    grouped = defaultdict(lambda: {"earnings": [], "deductions": []})
+    grouped = defaultdict(lambda: {"earnings": [], "deductions": [], "loans": []})
 
     for row in all_data:
         key = (row["department"], row["employee"])
@@ -545,6 +617,8 @@ def get_comparison_per_employee(filters, earnings_data, deductions_data):
     for emp in sorted(grouped.keys()):
         earnings = grouped[emp]["earnings"]
         deductions = grouped[emp]["deductions"]
+        loans = grouped[emp]["loans"]
+        print("LOANS", loans)
 
         if earnings and not filters.get("component_type") == "Deductions":
             total_prev_month = sum(row["total_prev_month"] for row in earnings) or 0
@@ -604,4 +678,110 @@ def get_comparison_per_employee(filters, earnings_data, deductions_data):
                 ) - new_deduction.get("total_prev_month", 0)
                 final_output.append(new_deduction)
 
+        if loans:
+            loan = loans[0]
+            final_output.append(
+                {
+                    "department": None,
+                    "employee": None,
+                    "salary_component": "LOANS TOTAL",
+                    "total_prev_month": loan.get("total_prev_month", 0),
+                    "total": loan.get("total", 0),
+                    "is_title": True,
+                    "difference_amount": loan.get("total", 0)
+                    - loan.get("total_prev_month", 0),
+                }
+            )
+
     return final_output
+
+
+def get_department_wise_loan_totals(loans):
+    if not loans:
+        return []
+
+    department_totals = defaultdict(
+        lambda: {
+            "department": "",
+            "company": "",
+            "total_prev_month": 0.0,
+            "total": 0.0,
+            "parentfield": "loans",
+        }
+    )
+
+    for record in loans:
+        dept = record["department"]
+
+        if not department_totals[dept]["department"]:
+            department_totals[dept]["department"] = dept
+            department_totals[dept]["company"] = record["company"]
+
+        if record["parentfield"] == "previous_loans":
+            department_totals[dept]["total_prev_month"] += record["total_payment"]
+        elif record["parentfield"] == "current_loans":
+            department_totals[dept]["total"] += record["total_payment"]
+
+    result = list(department_totals.values())
+
+    return result
+
+
+def get_company_wise_loan_totals(loans):
+    if not loans:
+        return []
+
+    company_totals = defaultdict(
+        lambda: {
+            "company": "",
+            "total_prev_month": 0.0,
+            "total": 0.0,
+            "parentfield": "loans",
+        }
+    )
+
+    for record in loans:
+        comp = record["company"]
+
+        if not company_totals[comp]["company"]:
+            company_totals[comp]["company"] = comp
+
+        if record["parentfield"] == "previous_loans":
+            company_totals[comp]["total_prev_month"] += record["total_payment"]
+        elif record["parentfield"] == "current_loans":
+            company_totals[comp]["total"] += record["total_payment"]
+
+    result = list(company_totals.values())
+
+    return result
+
+
+def get_employee_wise_loan_totals(loans):
+    if not loans:
+        return []
+
+    employee_totals = defaultdict(
+        lambda: {
+            "department": "",
+            "employee": "",
+            "total_prev_month": 0.0,
+            "total": 0.0,
+            "parentfield": "loans",
+        }
+    )
+
+    for record in loans:
+        emp = record["employee"]
+
+        if not employee_totals[emp]["employee"]:
+            employee_totals[emp]["employee"] = emp
+            employee_totals[emp]["department"] = record["department"]
+
+        if record["parentfield"] == "previous_loans":
+            employee_totals[emp]["total_prev_month"] += record["total_payment"]
+        elif record["parentfield"] == "current_loans":
+            employee_totals[emp]["total"] += record["total_payment"]
+
+    result = list(employee_totals.values())
+
+    return result

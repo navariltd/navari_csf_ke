@@ -1,4 +1,5 @@
 {
+ "app": "csf_ke",
  "charts": [],
  "content": "[{\"id\":\"lFoD5lNDQb\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"Xb7n0Do4eW\",\"type\":\"card\",\"data\":{\"card_name\":\"TIMs HSCodes\",\"col\":4}},{\"id\":\"arLUtR6bvV\",\"type\":\"card\",\"data\":{\"card_name\":\"Pricing Margins\",\"col\":4}},{\"id\":\"fu_Qea0T9L\",\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px;\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"ez66GJZq3i\",\"type\":\"card\",\"data\":{\"card_name\":\"Accounting Reports\",\"col\":4}},{\"id\":\"JdLAESQzix\",\"type\":\"card\",\"data\":{\"card_name\":\"Statutory Reports\",\"col\":4}},{\"id\":\"7bKksk7AZV\",\"type\":\"card\",\"data\":{\"card_name\":\"Payroll Reports\",\"col\":4}}]",
  "creation": "2022-11-03 16:41:03.405594",
@@ -212,9 +213,9 @@
   {
    "hidden": 0,
    "is_query_report": 1,
-   "label": "Bank Payroll Advice Report",
+   "label": "Periodic Payroll Comparison",
    "link_count": 0,
-   "link_to": "Kenya Bank Payroll Advice Report",
+   "link_to": "Periodic Payroll Comparison",
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
@@ -222,9 +223,9 @@
   {
    "hidden": 0,
    "is_query_report": 1,
-   "label": "Employee Salary Register",
+   "label": "Bank Payroll Advice Report",
    "link_count": 0,
-   "link_to": "Employee Salary Register With Monthly Comparison",
+   "link_to": "Kenya Bank Payroll Advice Report",
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
@@ -240,7 +241,7 @@
    "type": "Link"
   }
  ],
- "modified": "2025-07-02 23:32:35.907809",
+ "modified": "2025-07-08 19:03:49.146902",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya",
@@ -252,5 +253,6 @@
  "roles": [],
  "sequence_id": 37.0,
  "shortcuts": [],
- "title": "Kenya"
+ "title": "Kenya",
+ "type": "Workspace"
 }

@@ -1,4 +1,7 @@
-frappe.query_reports["Salary Component Comparison"] = {
+// Copyright (c) 2025, Navari Ltd and contributors
+// For license information, please see license.txt
+
+frappe.query_reports["Periodic Payroll Comparison"] = {
   filters: [
     {
       fieldname: "company",
@@ -71,14 +74,7 @@ frappe.query_reports["Salary Component Comparison"] = {
         };
       },
     },
-    {
-      fieldname: "docstatus",
-      label: __("Document Status"),
-      fieldtype: "Select",
-      options: ["Draft", "Submitted", "Cancelled"],
-      default: "Submitted",
-      width: "100px",
-    },
+
     {
       fieldname: "component_type",
       label: __("Component Type"),
