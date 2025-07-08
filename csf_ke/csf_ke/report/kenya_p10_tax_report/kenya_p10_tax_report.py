@@ -3,10 +3,8 @@
 
 import frappe
 from frappe import _
-from frappe.utils import getdate
 from pypika import Case
 from functools import reduce
-from collections import defaultdict
 
 
 def execute(filters=None):
@@ -171,8 +169,14 @@ def get_columns():
             "width": 150,
         },
         {
-            "fieldname": "affordable_housing_relief",
-            "label": _("Affordable Housing Relief"),
+            "fieldname": "affordable_housing_levy",
+            "label": _("Affordable Housing Levy"),
+            "fieldtype": "Currency",
+            "width": 150,
+        },
+        {
+            "fieldname": "shif",
+            "label": _("SHIF"),
             "fieldtype": "Currency",
             "width": 150,
         },
@@ -265,7 +269,8 @@ def get_p10_report_data(filters):
         "Actual Contribution",
         "Permissible Limit",
         "Mortgage Interest",
-        "Affordable Housing Relief",
+        "Affordable Housing Levy",
+        "SHIF",
         "Amount of Benefit",
         "Taxable Pay",
         "Tax Payable",
