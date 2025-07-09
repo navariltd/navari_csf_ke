@@ -1,47 +1,118 @@
-{%
-	var report_columns = report.get_columns_for_print();
-%}
-<h2 class="text-left">{%= __(report.report_name) %} {{ __("Year") }} {%= filters.fiscal_year %}</h2>
-<hr>
-<table class="table table-bordered">
-<tr>
-    <td class="text-left">{{ __("Employer's Name:") }} {%= filters.company %}</td>    
-    <td class="text-left">{{ __("Employer's PIN:") }} {%= filters.company_tax_id %}</td>
-</tr>
-<tr>
-    <td class="text-left">{{ __("Employee's Name:") }} {%= filters.employee_name %}</td>
-    <td class="text-left">{{ __("Employee's PIN:") }} {%= filters.employee_tax_id %}</td>
-</tr>
+<style>
+  @page {
+    size: A3 landscape;
+    margin: 10mm;
+  }
+
+  body {
+    font-family: "Helvetica", sans-serif;
+    font-size: 9pt;
+    color: #333;
+  }
+
+  h2 {
+    font-size: 14pt;
+    text-align: left;
+    margin-bottom: 5px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 8pt;
+    table-layout: auto;
+  }
+
+  th,
+  td {
+    border: 1px solid #ccc;
+    padding: 4px;
+    word-wrap: break-word;
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  th {
+    max-width: 80px;
+    padding: 2px;
+    text-align: center;
+    vertical-align: bottom;
+  }
+  .meta-table td {
+    border: none;
+    text-align: left;
+    font-size: 9pt;
+  }
+
+  .footer {
+    margin-top: 12px;
+    text-align: right;
+    font-size: 8pt;
+    color: #888;
+  }
+</style>
+
+<h2>{{ title }} {{ _("Year") }} {{ filters.fiscal_year }}</h2>
+<hr />
+
+<table class="meta-table">
+  <tr>
+    <td>
+      <strong>{{ _("Employer's Name:") }}</strong> {{ filters.get("company", "")
+      }}
+    </td>
+    <td>
+      <strong>{{ _("Employer's PIN:") }}</strong> {{
+      filters.get("company_tax_id", "") }}
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <strong>{{ _("Employee's Name:") }}</strong> {{
+      filters.get("employee_name", "") }}
+    </td>
+    <td>
+      <strong>{{ _("Employee's PIN:") }}</strong> {{
+      filters.get("employee_tax_id", "") }}
+    </td>
+  </tr>
 </table>
-<hr>
-<table class="table table-bordered">
-	<thead>
-		<tr>
-			{% for(var i=0, l=report_columns.length; i<l; i++) { %}
-				<th class="text-right">{%= report_columns[i].label %}</th>
-			{% } %}
-		</tr>
-	</thead>
-	<tbody>
-		{% for(var j=0, k=data.length; j<k; j++) { %}
-			{%
-				var row = data[j];
-			%}
-			<tr>
-				{% for(var i=0, l=report_columns.length; i<l; i++) { %}
-					<td class="text-right">
-						{% var fieldname = report_columns[i].fieldname; %}
-						{% if (report_columns[i].fieldtype=='Currency' && !isNaN(row[fieldname])) { %}
-							{%= format_currency(row[fieldname]) %}
-						{% } else { %}
-							{% if (!is_null(row[fieldname])) { %}
-								{%= row[fieldname] %}
-							{% } %}
-						{% } %}
-					</td>
-				{% } %}
-			</tr>
-		{% } %}
-	</tbody>
+
+<hr />
+
+<table>
+  <thead>
+    <tr>
+      {% for col in columns if col.fieldname %}
+      <th>
+        {# Split label by space #} {% set parts = col.label.split(' ') %} {#
+        Detect if last part is like "| E1" or "|A" etc. #} {% if '|' in
+        col.label %} {# Find position of the last pipe symbol #} {% set
+        pipe_index = parts.index('|') %} {% set first_part = parts[:pipe_index]
+        %} {% set last_part = ' '.join(parts[pipe_index:]) %} {{ first_part |
+        join('<br />') | safe }}<br /><strong>{{ last_part }}</strong> {% else
+        %} {{ parts | join('<br />') | safe }} {% endif %}
+      </th>
+      {% endfor %}
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for row in data %}
+    <tr>
+      {% for col in columns if col.fieldname %}
+      <td>
+        {% set value = row.get(col.fieldname) %} {% if col.fieldtype ==
+        "Currency" and value is number %} {{ "{:,.2f}".format(value) }} {% else
+        %} {{ value if value else "" }} {% endif %}
+      </td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
 </table>
-<p class="text-right text-muted">{{ __("Printed On") }} {%= frappe.datetime.str_to_user(frappe.datetime.get_datetime_as_string()) %}</p>
+
+<div class="footer">
+  {{ _("Printed On") }} {{ frappe.utils.format_datetime(frappe.utils.now(),
+  "MMMM d, yyyy, h:mm a") }}
+</div>

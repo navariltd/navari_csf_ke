@@ -1,13 +1,22 @@
 // Copyright (c) 2025, Navari Ltd and contributors
 // For license information, please see license.txt
 
-frappe.query_reports["Salary Register Summary With Monthly Comparison"] = {
+frappe.query_reports["Periodic Payroll Comparison"] = {
   filters: [
+    {
+      fieldname: "company",
+      label: __("Company"),
+      fieldtype: "Link",
+      options: "Company",
+      default: frappe.defaults.get_user_default("Company"),
+      width: "100px",
+      reqd: 1,
+    },
     {
       fieldname: "from_date",
       label: __("From"),
       fieldtype: "Date",
-      default: frappe.datetime.add_months(frappe.datetime.get_today(), -2),
+      default: frappe.datetime.add_months(frappe.datetime.month_start(), -2),
       reqd: 1,
       width: "100px",
     },
@@ -15,7 +24,7 @@ frappe.query_reports["Salary Register Summary With Monthly Comparison"] = {
       fieldname: "to_date",
       label: __("To"),
       fieldtype: "Date",
-      default: frappe.datetime.add_months(frappe.datetime.get_today(), -1),
+      default: frappe.datetime.add_months(frappe.datetime.month_end(), -1),
       reqd: 1,
       width: "100px",
     },
@@ -28,20 +37,25 @@ frappe.query_reports["Salary Register Summary With Monthly Comparison"] = {
       width: "50px",
     },
     {
+      fieldname: "based_on",
+      label: __("Based On"),
+      fieldtype: "Select",
+      options: [
+        { value: "Department", label: __("Department") },
+        { value: "Employee", label: __("Employee") },
+        { value: "Company", label: __("Company") },
+      ],
+      default: "Department",
+      width: "100px",
+      reqd: 1,
+    },
+    {
       fieldname: "employee",
       label: __("Employee"),
       fieldtype: "Link",
       options: "Employee",
       width: "100px",
-    },
-    {
-      fieldname: "company",
-      label: __("Company"),
-      fieldtype: "Link",
-      options: "Company",
-      default: frappe.defaults.get_user_default("Company"),
-      width: "100px",
-      reqd: 1,
+      depends_on: "eval:doc.based_on==='Employee'",
     },
     {
       fieldname: "department",
@@ -60,19 +74,18 @@ frappe.query_reports["Salary Register Summary With Monthly Comparison"] = {
         };
       },
     },
+
     {
-      fieldname: "docstatus",
-      label: __("Document Status"),
+      fieldname: "component_type",
+      label: __("Component Type"),
       fieldtype: "Select",
-      options: ["Draft", "Submitted", "Cancelled"],
-      default: "Submitted",
+      options: [
+        { value: "", label: __("") },
+        { value: "Earnings", label: __("Earnings") },
+        { value: "Deductions", label: __("Deductions") },
+      ],
       width: "100px",
-    },
-    {
-      fieldname: "department_breakdown",
-      label: __("Department Breakdown"),
-      fieldtype: "Check",
-      default: 1,
+      default: "",
     },
   ],
 
