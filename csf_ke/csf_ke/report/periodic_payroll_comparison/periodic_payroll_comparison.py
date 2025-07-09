@@ -472,7 +472,6 @@ def get_comparison_per_company(filters, earnings_data, deductions_data, loans):
 
         if loans:
             loan = loans[0]
-            print("LOAN", loan)
             final_output.append(
                 {
                     "company": company,
@@ -498,9 +497,13 @@ def get_department_breakdown(
     grouped = defaultdict(lambda: {"earnings": [], "deductions": [], "loans": []})
 
     for row in all_data:
-        dept = row["department"]
+        dept = row.get("department")
         pf = row["parentfield"]
-        grouped[dept][pf].append(row)
+
+        if dept is None:
+            grouped["Others"][pf].append(row)
+        else:
+            grouped[dept][pf].append(row)
 
     final_output = []
 
@@ -515,7 +518,7 @@ def get_department_breakdown(
         }
     )
 
-    for department in sorted(grouped.keys()):
+    for department in grouped.keys():
         earnings = grouped[department]["earnings"]
         deductions = grouped[department]["deductions"]
         loans = grouped[department]["loans"]
@@ -608,9 +611,15 @@ def get_comparison_per_employee(filters, earnings_data, deductions_data, loans):
     grouped = defaultdict(lambda: {"earnings": [], "deductions": [], "loans": []})
 
     for row in all_data:
-        key = (row["department"], row["employee"])
+        dept = row.get("department")
         pf = row["parentfield"]
-        grouped[key][pf].append(row)
+
+        if dept is None:
+            key = ("Others", row["employee"])
+            grouped[key][pf].append(row)
+        else:
+            key = (dept, row["employee"])
+            grouped[key][pf].append(row)
 
     final_output = []
 
@@ -618,7 +627,6 @@ def get_comparison_per_employee(filters, earnings_data, deductions_data, loans):
         earnings = grouped[emp]["earnings"]
         deductions = grouped[emp]["deductions"]
         loans = grouped[emp]["loans"]
-        print("LOANS", loans)
 
         if earnings and not filters.get("component_type") == "Deductions":
             total_prev_month = sum(row["total_prev_month"] for row in earnings) or 0
