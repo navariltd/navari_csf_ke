@@ -67,8 +67,6 @@ def get_data(filters, company_currency):
                 filters,
                 earnings_data,
                 deductions_data,
-                old_ss_count,
-                new_ss_count,
                 loans,
             )
 
@@ -78,7 +76,12 @@ def get_data(filters, company_currency):
             )
         else:
             grouped_data = get_comparison_per_company(
-                filters, earnings_data, deductions_data, loans
+                filters,
+                earnings_data,
+                deductions_data,
+                old_ss_count,
+                new_ss_count,
+                loans,
             )
 
     return grouped_data
@@ -185,8 +188,8 @@ def get_columns(filters):
     if filters.get("based_on") == "Company":
         new_columns = [
             {
-                "fieldname": "component_group",
-                "label": _("Component Group"),
+                "fieldname": "salary_component",
+                "label": _("Salary Component"),
                 "fieldtype": "Data",
                 "width": 200,
             },
@@ -421,7 +424,9 @@ def get_salary_slip_data(old_salary_slips, new_salary_slips, component_type="ear
     return data
 
 
-def get_comparison_per_company(filters, earnings_data, deductions_data, loans):
+def get_comparison_per_company(
+    filters, earnings_data, deductions_data, old_ss_count, new_ss_count, loans
+):
     if loans:
         loans = get_company_wise_loan_totals(loans)
 
@@ -435,6 +440,17 @@ def get_comparison_per_company(filters, earnings_data, deductions_data, loans):
 
     final_output = []
 
+    final_output.append(
+        {
+            "department": None,
+            "salary_component": "TOTAL EMPLOYEES",
+            "total_prev_month": old_ss_count,
+            "total": new_ss_count,
+            "is_title": True,
+            "difference_amount": None,
+        }
+    )
+
     for company in sorted(grouped.keys()):
         earnings = grouped[company]["earnings"]
         deductions = grouped[company]["deductions"]
@@ -447,49 +463,78 @@ def get_comparison_per_company(filters, earnings_data, deductions_data, loans):
             final_output.append(
                 {
                     "company": company,
-                    "component_group": "EARNINGS",
+                    "salary_component": "EARNINGS",
                     "total_prev_month": total_prev_month,
                     "total": total,
                     "is_title": True,
                     "difference_amount": total_difference,
                 }
             )
+
+            combined_totals = get_components_total(earnings)
+            final_output.extend(combined_totals)
 
         if deductions and not filters.get("component_type") == "Earnings":
             total_prev_month = sum(row["total_prev_month"] for row in deductions) or 0
             total = sum(row["total"] for row in deductions) or 0
             total_difference = total - total_prev_month
-            final_output.append(
-                {
-                    "company": company,
-                    "component_group": "DEDUCTIONS",
-                    "total_prev_month": total_prev_month,
-                    "total": total,
-                    "is_title": True,
-                    "difference_amount": total_difference,
-                }
-            )
 
-        if loans:
-            loan = loans[0]
-            final_output.append(
-                {
-                    "company": company,
-                    "component_group": "LOANS",
-                    "total_prev_month": loan.get("total_prev_month", 0),
-                    "total": loan.get("total", 0),
-                    "is_title": True,
-                    "difference_amount": loan.get("total", 0)
-                    - loan.get("total_prev_month", 0),
-                }
-            )
+            combined_totals = get_components_total(deductions)
+
+            if loans:
+                loan = loans[0]
+                loan_difference = loan.get("total", 0) - loan.get("total_prev_month", 0)
+                total = total + loan.get("total", 0)
+                total_prev_month = total_prev_month + loan.get("total_prev_month", 0)
+
+                final_output.append(
+                    {
+                        "company": (
+                            company
+                            if filters.get("component_type") == "Deductions"
+                            else None
+                        ),
+                        "salary_component": "DEDUCTIONS",
+                        "total_prev_month": total_prev_month,
+                        "total": total,
+                        "is_title": True,
+                        "difference_amount": total_difference,
+                    }
+                )
+
+                final_output.extend(combined_totals)
+
+                final_output.append(
+                    {
+                        "company": None,
+                        "salary_component": "Loans",
+                        "total_prev_month": loan.get("total_prev_month", 0),
+                        "total": loan.get("total", 0),
+                        "difference_amount": loan_difference,
+                    }
+                )
+            else:
+                final_output.append(
+                    {
+                        "company": (
+                            company
+                            if filters.get("component_type") == "Deductions"
+                            else None
+                        ),
+                        "salary_component": "DEDUCTIONS",
+                        "total_prev_month": total_prev_month,
+                        "total": total,
+                        "is_title": True,
+                        "difference_amount": total_difference,
+                    }
+                )
+
+                final_output.extend(combined_totals)
 
     return final_output
 
 
-def get_department_breakdown(
-    filters, earnings_data, deductions_data, old_ss_count, new_ss_count, loans
-):
+def get_department_breakdown(filters, earnings_data, deductions_data, loans):
     if loans:
         loans = get_department_wise_loan_totals(loans)
     all_data = earnings_data + deductions_data + (loans if loans else [])
@@ -507,34 +552,20 @@ def get_department_breakdown(
 
     final_output = []
 
-    final_output.append(
-        {
-            "department": None,
-            "salary_component": "TOTAL EMPLOYEES",
-            "total_prev_month": old_ss_count,
-            "total": new_ss_count,
-            "is_title": True,
-            "difference_amount": None,
-        }
-    )
-
     for department in grouped.keys():
         earnings = grouped[department]["earnings"]
         deductions = grouped[department]["deductions"]
         loans = grouped[department]["loans"]
 
         if earnings and not filters.get("component_type") == "Deductions":
-            total_prev_month = sum(row["total_prev_month"] for row in earnings) or 0
-            total = sum(row["total"] for row in earnings) or 0
-            total_difference = total - total_prev_month
             final_output.append(
                 {
                     "department": department,
-                    "salary_component": "EARNINGS TOTAL",
-                    "total_prev_month": total_prev_month,
-                    "total": total,
+                    "salary_component": "SALARY COMPONENT",
+                    "total_prev_month": None,
+                    "total": None,
                     "is_title": True,
-                    "difference_amount": total_difference,
+                    "difference_amount": None,
                 }
             )
 
@@ -542,40 +573,33 @@ def get_department_breakdown(
             final_output.extend(combined_totals)
 
         if deductions and not filters.get("component_type") == "Earnings":
-            total_prev_month = sum(row["total_prev_month"] for row in deductions) or 0
-            total = sum(row["total"] for row in deductions) or 0
-            total_difference = total - total_prev_month
-            final_output.append(
-                {
-                    "department": (
-                        department
-                        if filters.get("component_type") == "Deductions"
-                        else None
-                    ),
-                    "salary_component": "DEDUCTIONS TOTAL",
-                    "total_prev_month": total_prev_month,
-                    "total": total,
-                    "is_title": True,
-                    "difference_amount": total_difference,
-                }
-            )
+            if filters.get("component_type") == "Deductions":
+                final_output.append(
+                    {
+                        "department": department,
+                        "salary_component": "SALARY COMPONENT",
+                        "total_prev_month": None,
+                        "total": None,
+                        "is_title": True,
+                        "difference_amount": None,
+                    }
+                )
 
             combined_totals = get_components_total(deductions)
             final_output.extend(combined_totals)
 
-        if loans:
-            loan = loans[0]
-            final_output.append(
-                {
-                    "department": None,
-                    "salary_component": "LOANS TOTAL",
-                    "total_prev_month": loan.get("total_prev_month", 0),
-                    "total": loan.get("total", 0),
-                    "is_title": True,
-                    "difference_amount": loan.get("total", 0)
-                    - loan.get("total_prev_month", 0),
-                }
-            )
+            if loans:
+                loan = loans[0]
+                final_output.append(
+                    {
+                        "department": None,
+                        "salary_component": "Loans",
+                        "total_prev_month": loan.get("total_prev_month", 0),
+                        "total": loan.get("total", 0),
+                        "difference_amount": loan.get("total", 0)
+                        - loan.get("total_prev_month", 0),
+                    }
+                )
 
     return final_output
 
@@ -629,18 +653,15 @@ def get_comparison_per_employee(filters, earnings_data, deductions_data, loans):
         loans = grouped[emp]["loans"]
 
         if earnings and not filters.get("component_type") == "Deductions":
-            total_prev_month = sum(row["total_prev_month"] for row in earnings) or 0
-            total = sum(row["total"] for row in earnings) or 0
-            total_difference = total - total_prev_month
             final_output.append(
                 {
                     "department": emp[0],
                     "employee": emp[1],
-                    "salary_component": "EARNINGS TOTAL",
-                    "total_prev_month": total_prev_month,
-                    "total": total,
+                    "salary_component": "SALARY COMPONENT",
+                    "total_prev_month": None,
+                    "total": None,
                     "is_title": True,
-                    "difference_amount": total_difference,
+                    "difference_amount": None,
                 }
             )
 
@@ -654,28 +675,18 @@ def get_comparison_per_employee(filters, earnings_data, deductions_data, loans):
                 final_output.append(new_earning)
 
         if deductions and not filters.get("component_type") == "Earnings":
-            total_prev_month = sum(row["total_prev_month"] for row in deductions) or 0
-            total = sum(row["total"] for row in deductions) or 0
-            total_difference = total - total_prev_month
-            final_output.append(
-                {
-                    "department": (
-                        emp[0]
-                        if filters.get("component_type") == "Deductions"
-                        else None
-                    ),
-                    "employee": (
-                        emp[1]
-                        if filters.get("component_type") == "Deductions"
-                        else None
-                    ),
-                    "salary_component": "DEDUCTIONS TOTAL",
-                    "total_prev_month": total_prev_month,
-                    "total": total,
-                    "is_title": True,
-                    "difference_amount": total_difference,
-                }
-            )
+            if filters.get("component_type") == "Deductions":
+                final_output.append(
+                    {
+                        "department": emp[0],
+                        "employee": emp[1],
+                        "salary_component": "SALARY COMPONENT",
+                        "total_prev_month": None,
+                        "is_title": True,
+                        "total": None,
+                        "difference_amount": None,
+                    }
+                )
 
             for deduction in deductions:
                 new_deduction = copy.deepcopy(deduction)
@@ -686,20 +697,19 @@ def get_comparison_per_employee(filters, earnings_data, deductions_data, loans):
                 ) - new_deduction.get("total_prev_month", 0)
                 final_output.append(new_deduction)
 
-        if loans:
-            loan = loans[0]
-            final_output.append(
-                {
-                    "department": None,
-                    "employee": None,
-                    "salary_component": "LOANS TOTAL",
-                    "total_prev_month": loan.get("total_prev_month", 0),
-                    "total": loan.get("total", 0),
-                    "is_title": True,
-                    "difference_amount": loan.get("total", 0)
-                    - loan.get("total_prev_month", 0),
-                }
-            )
+            if loans:
+                loan = loans[0]
+                final_output.append(
+                    {
+                        "department": None,
+                        "employee": None,
+                        "salary_component": "Loan",
+                        "total_prev_month": loan.get("total_prev_month", 0),
+                        "total": loan.get("total", 0),
+                        "difference_amount": loan.get("total", 0)
+                        - loan.get("total_prev_month", 0),
+                    }
+                )
 
     return final_output
 
