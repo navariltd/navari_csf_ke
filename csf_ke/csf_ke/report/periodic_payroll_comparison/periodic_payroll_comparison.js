@@ -4,14 +4,50 @@
 frappe.query_reports["Periodic Payroll Comparison"] = {
   filters: [
     {
-      fieldname: "company",
-      label: __("Company"),
-      fieldtype: "Link",
-      options: "Company",
-      default: frappe.defaults.get_user_default("Company"),
+      fieldname: "based_on",
+      label: __("Based On"),
+      fieldtype: "Select",
+      options: [
+        { value: "Department", label: __("Department") },
+        { value: "Employee", label: __("Employee") },
+        { value: "Company", label: __("Company") },
+      ],
+      default: "Company",
       width: "100px",
       reqd: 1,
     },
+    {
+      fieldname: "department",
+      label: __("Department"),
+      fieldtype: "Link",
+      options: "Department",
+      default: "",
+      width: "100px",
+      depends_on:
+        "eval:doc.based_on==='Employee' || doc.based_on==='Department'",
+      get_query: function () {
+        var company = frappe.query_report.get_filter_value("company");
+        return {
+          doctype: "Department",
+          filters: {
+            company: company,
+          },
+        };
+      },
+    },
+    {
+      fieldname: "component_type",
+      label: __("Type"),
+      fieldtype: "Select",
+      options: [
+        { value: "", label: __("") },
+        { value: "Earnings", label: __("Earnings") },
+        { value: "Deductions", label: __("Deductions") },
+      ],
+      width: "100px",
+      default: "",
+    },
+
     {
       fieldname: "from_date",
       label: __("From"),
@@ -29,23 +65,11 @@ frappe.query_reports["Periodic Payroll Comparison"] = {
       width: "100px",
     },
     {
-      fieldname: "currency",
+      fieldname: "company",
+      label: __("Company"),
       fieldtype: "Link",
-      options: "Currency",
-      label: __("Currency"),
-      default: erpnext.get_currency(frappe.defaults.get_default("Company")),
-      width: "50px",
-    },
-    {
-      fieldname: "based_on",
-      label: __("Based On"),
-      fieldtype: "Select",
-      options: [
-        { value: "Department", label: __("Department") },
-        { value: "Employee", label: __("Employee") },
-        { value: "Company", label: __("Company") },
-      ],
-      default: "Department",
+      options: "Company",
+      default: frappe.defaults.get_user_default("Company"),
       width: "100px",
       reqd: 1,
     },
@@ -57,35 +81,14 @@ frappe.query_reports["Periodic Payroll Comparison"] = {
       width: "100px",
       depends_on: "eval:doc.based_on==='Employee'",
     },
-    {
-      fieldname: "department",
-      label: __("Department"),
-      fieldtype: "Link",
-      options: "Department",
-      default: "",
-      width: "100px",
-      get_query: function () {
-        var company = frappe.query_report.get_filter_value("company");
-        return {
-          doctype: "Department",
-          filters: {
-            company: company,
-          },
-        };
-      },
-    },
 
     {
-      fieldname: "component_type",
-      label: __("Component Type"),
-      fieldtype: "Select",
-      options: [
-        { value: "", label: __("") },
-        { value: "Earnings", label: __("Earnings") },
-        { value: "Deductions", label: __("Deductions") },
-      ],
-      width: "100px",
-      default: "",
+      fieldname: "currency",
+      fieldtype: "Link",
+      options: "Currency",
+      label: __("Currency"),
+      default: erpnext.get_currency(frappe.defaults.get_default("Company")),
+      width: "50px",
     },
   ],
 
