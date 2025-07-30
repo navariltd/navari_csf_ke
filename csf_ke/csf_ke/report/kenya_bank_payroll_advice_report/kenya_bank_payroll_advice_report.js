@@ -22,6 +22,7 @@ frappe.query_reports["Kenya Bank Payroll Advice Report"] = {
       width: "100px",
     },
     {
+      fieldname: "to_date",
       label: __("End Date"),
       fieldtype: "Date",
       default: frappe.datetime.add_months(frappe.datetime.month_end()),
