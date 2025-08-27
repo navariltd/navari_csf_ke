@@ -115,10 +115,8 @@ class KenyaPurchaseTaxReport(object):
             .inner_join(supplier_)
             .on(purchase_invoice_.supplier == supplier_.name)
             .select(
-                (
-                    supplier_.tax_id.as_("pin_of_supplier")
-                    if supplier_.tax_id
-                    else " ".as_("pin_of_supplier")
+                frappe.qb.functions.Coalesce(supplier_.tax_id, "").as_(
+                    "pin_of_supplier"
                 ),
                 purchase_invoice_.supplier_name.as_("name_of_supplier"),
                 purchase_invoice_.etr_invoice_number.as_("etr_invoice_number"),
@@ -134,15 +132,8 @@ class KenyaPurchaseTaxReport(object):
             purchase_invoices_query = purchase_invoices_query.where(
                 purchase_invoice_.company == company
             )
-        if is_return == "Is Return":
-            purchase_invoices_query = purchase_invoices_query.where(
-                purchase_invoice_.is_return == 1
-            )
-        if is_return == "Normal Purchase Invoice":
-            purchase_invoices_query = purchase_invoices_query.where(
-                purchase_invoice_.is_return == 0
-            )
-        if from_date is not None:
+
+        if from_date:
             purchase_invoices_query = purchase_invoices_query.where(
                 purchase_invoice_.posting_date >= from_date
             )
@@ -151,19 +142,50 @@ class KenyaPurchaseTaxReport(object):
                 purchase_invoice_.posting_date <= to_date
             )
 
+        if is_return == "Is Return":
+            purchase_invoices_query = purchase_invoices_query.where(
+                purchase_invoice_.is_return == 1
+            )
+        elif is_return == "Normal Purchase Invoice":
+            purchase_invoices_query = purchase_invoices_query.where(
+                purchase_invoice_.is_return == 0
+            )
+
+        purchase_invoices_query = purchase_invoices_query.orderby(
+            purchase_invoice_.posting_date, purchase_invoice_.name
+        )
+
         purchase_invoices = purchase_invoices_query.run(as_dict=True)
 
-        for invoice in purchase_invoices:
-            if invoice.get('return_against'):
-                return_invoice_details = frappe.db.get_value(
-                    'Purchase Invoice',
-                    invoice['return_against'],
-                    ['etr_invoice_number', 'bill_date'],
-                    as_dict=True
-                )
-                if return_invoice_details:
-                    invoice['return_cu_invoice_number'] = return_invoice_details.get('etr_invoice_number')
-                    invoice['return_cu_invoice_date'] = return_invoice_details.get('bill_date')
+        # Batch fetch return invoice details
+        return_against_invoices = [
+            inv["return_against"]
+            for inv in purchase_invoices
+            if inv.get("return_against")
+        ]
+
+        if return_against_invoices:
+            return_invoice_details = frappe.db.get_all(
+                "Purchase Invoice",
+                filters={"name": ["in", return_against_invoices]},
+                fields=["name", "etr_invoice_number", "bill_date"],
+            )
+
+            return_details_map = {
+                detail["name"]: detail for detail in return_invoice_details
+            }
+
+            # Update invoices with return details
+            for invoice in purchase_invoices:
+                if (
+                    invoice.get("return_against")
+                    and invoice["return_against"] in return_details_map
+                ):
+                    details = return_details_map[invoice["return_against"]]
+                    invoice["return_cu_invoice_number"] = details.get(
+                        "etr_invoice_number"
+                    )
+                    invoice["return_cu_invoice_date"] = details.get("bill_date")
 
         return purchase_invoices
 
