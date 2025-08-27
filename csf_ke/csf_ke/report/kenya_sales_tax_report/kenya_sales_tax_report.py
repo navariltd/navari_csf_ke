@@ -132,7 +132,7 @@ class KenyaSalesTaxReport(object):
             .inner_join(customer_doc)
             .on(sale_invoice_doc.customer == customer_doc.name)
             .select(
-                Coalesce(customer_doc.tax_id, "").as_('pin_of_purchaser'),
+                Coalesce(sale_invoice_doc.tax_id, "").as_('pin_of_purchaser'),
                 sale_invoice_doc.customer_name.as_('name_of_purchaser'),
                 sale_invoice_doc.etr_serial_number.as_('etr_serial_number'),
                 sale_invoice_doc.etr_invoice_number.as_('etr_invoice_number'),
