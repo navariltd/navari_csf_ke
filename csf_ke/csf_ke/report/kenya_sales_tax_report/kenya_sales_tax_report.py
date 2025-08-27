@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import _
 import os
+from pypika.functions import Coalesce
 import csv
 import re
 from datetime import datetime
@@ -126,46 +127,67 @@ class KenyaSalesTaxReport(object):
         sale_invoice_doc = frappe.qb.DocType('Sales Invoice')
         customer_doc = frappe.qb.DocType('Customer')
 
-        sales_invoice_query = frappe.qb.from_(sale_invoice_doc) \
-            .inner_join(customer_doc) \
-            .on(sale_invoice_doc.customer == customer_doc.name) \
+        sales_invoice_query = (
+            frappe.qb.from_(sale_invoice_doc)
+            .inner_join(customer_doc)
+            .on(sale_invoice_doc.customer == customer_doc.name)
             .select(
-                sale_invoice_doc.tax_id.as_('pin_of_purchaser') if sale_invoice_doc.tax_id else "".as_('pin_of_purchaser'),
+                Coalesce(customer_doc.tax_id, "").as_('pin_of_purchaser'),
                 sale_invoice_doc.customer_name.as_('name_of_purchaser'),
-                    sale_invoice_doc.etr_serial_number.as_('etr_serial_number'),
-                    sale_invoice_doc.etr_invoice_number.as_('etr_invoice_number'),
-                    sale_invoice_doc.cu_link.as_('cu_link'),
-                    sale_invoice_doc.cu_invoice_date.as_('cu_invoice_date'),
-                    sale_invoice_doc.posting_date.as_('invoice_date'),
-                    sale_invoice_doc.name.as_('invoice_name'),
-                    sale_invoice_doc.base_grand_total.as_('invoice_total_sales'),
-                    sale_invoice_doc.return_against.as_('return_against')) \
+                sale_invoice_doc.etr_serial_number.as_('etr_serial_number'),
+                sale_invoice_doc.etr_invoice_number.as_('etr_invoice_number'),
+                sale_invoice_doc.cu_link.as_('cu_link'),
+                sale_invoice_doc.cu_invoice_date.as_('cu_invoice_date'),
+                sale_invoice_doc.posting_date.as_('invoice_date'),
+                sale_invoice_doc.name.as_('invoice_name'),
+                sale_invoice_doc.base_grand_total.as_('invoice_total_sales'),
+                sale_invoice_doc.return_against.as_('return_against')
+            )
             .where(sale_invoice_doc.docstatus == 1)
+        )
 
         if company:
             sales_invoice_query = sales_invoice_query.where(sale_invoice_doc.company == company)
-        if is_return == "Is Return":
-            sales_invoice_query = sales_invoice_query.where(sale_invoice_doc.is_return == 1)
-        if is_return == "Normal Sales Invoice":
-            sales_invoice_query = sales_invoice_query.where(sale_invoice_doc.is_return == 0)
         if from_date:
             sales_invoice_query = sales_invoice_query.where(sale_invoice_doc.posting_date >= from_date)
         if to_date:
-            sales_invoice_query = sales_invoice_query.where(sale_invoice_doc.posting_date <= to_date)
+            sales_invoice_query = sales_invoice_query.where(sale_invoice_doc.posting_date <= to_date)        
+        if is_return == "Is Return":
+            sales_invoice_query = sales_invoice_query.where(sale_invoice_doc.is_return == 1)
+        elif is_return == "Normal Sales Invoice":
+            sales_invoice_query = sales_invoice_query.where(sale_invoice_doc.is_return == 0)
+
+        # Add ORDER BY for consistent results and index usage
+        sales_invoice_query = sales_invoice_query.orderby(
+            sale_invoice_doc.posting_date, sale_invoice_doc.name
+        )
 
         sales_invoices = sales_invoice_query.run(as_dict=True)
         
-        for invoice in sales_invoices:
-            if invoice.get('return_against'):
-                return_invoice_details = frappe.db.get_value(
-                    'Sales Invoice',
-                    invoice['return_against'],
-                    ['etr_invoice_number', 'cu_invoice_date'],
-                    as_dict=True
-                )
-                if return_invoice_details:
-                    invoice['return_cu_invoice_number'] = return_invoice_details.get('etr_invoice_number')
-                    invoice['return_cu_invoice_date'] = return_invoice_details.get('cu_invoice_date')
+        # Batch fetch return invoice details
+        return_against_invoices = [
+            inv['return_against'] for inv in sales_invoices 
+            if inv.get('return_against')
+        ]
+        
+        if return_against_invoices:
+            return_invoice_details = frappe.db.get_all(
+                'Sales Invoice',
+                filters={'name': ['in', return_against_invoices]},
+                fields=['name', 'etr_invoice_number', 'cu_invoice_date']
+            )
+            
+            return_details_map = {
+                detail['name']: detail for detail in return_invoice_details
+            }
+            
+            # Update invoices with return details
+            for invoice in sales_invoices:
+                if (invoice.get('return_against') and 
+                    invoice['return_against'] in return_details_map):
+                    details = return_details_map[invoice['return_against']]
+                    invoice['return_cu_invoice_number'] = details.get('etr_invoice_number')
+                    invoice['return_cu_invoice_date'] = details.get('cu_invoice_date')
 
         return sales_invoices
 
