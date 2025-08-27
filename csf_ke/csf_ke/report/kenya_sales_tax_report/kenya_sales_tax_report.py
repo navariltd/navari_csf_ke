@@ -210,23 +210,51 @@ class KenyaSalesTaxReport(object):
     def get_data(self):
         if self.filters.from_date > self.filters.to_date:
             frappe.throw(_("To Date cannot be before From Date. {}").format(self.filters.to_date))
+        
         report_details = []
-
         sales_invoices = self.get_sales_invoices()
 
+        # Batch fetch all tax rates
+        all_tax_templates = set()
+        invoice_items_map = {}
+        
+        # First pass: collect all invoice items and tax templates
+        for sales_invoice in sales_invoices:
+            items_or_services = self.get_sales_invoice_items(
+                sales_invoice.invoice_name, self.filters.tax_template
+            )
+            invoice_items_map[sales_invoice.invoice_name] = items_or_services
+            
+            # Collect all unique tax templates
+            for item in items_or_services:
+                if item.get('item_tax_template'):
+                    all_tax_templates.add(item['item_tax_template'])
+
+        # Batch fetch all tax rates
+        tax_rates_map = {}
+        if all_tax_templates:
+            tax_details = frappe.db.get_all(
+                'Item Tax Template Detail',
+                filters={'parent': ['in', list(all_tax_templates)]},
+                fields=['parent', 'tax_rate']
+            )
+            tax_rates_map = {detail['parent']: detail['tax_rate'] for detail in tax_details}
+
+        # Second pass: process invoices with cached data
         for sales_invoice in sales_invoices:
             report_details.append(sales_invoice)
 
-            items_or_services = self.get_sales_invoice_items(sales_invoice.invoice_name, self.filters.tax_template)
-
+            items_or_services = invoice_items_map[sales_invoice.invoice_name]
             total_taxable_value = 0
             total_vat = 0
 
             for item_or_service in items_or_services:
-                tax_rate = frappe.db.get_value('Item Tax Template Detail',
-                                            {'parent': item_or_service['item_tax_template']},
-                                            ['tax_rate'])
-                item_or_service['amount_of_vat'] = 0 if not tax_rate else item_or_service['taxable_value'] * (tax_rate / 100)
+                # Get tax rate from cache
+                tax_rate = tax_rates_map.get(item_or_service.get('item_tax_template'), 0)
+                
+                item_or_service['amount_of_vat'] = (
+                    item_or_service['taxable_value'] * (tax_rate / 100) if tax_rate else 0
+                )
 
                 total_taxable_value += item_or_service['taxable_value']
                 total_vat += item_or_service['amount_of_vat']
@@ -235,8 +263,10 @@ class KenyaSalesTaxReport(object):
             sales_invoice['taxable_value'] = total_taxable_value
             sales_invoice['amount_of_vat'] = total_vat
 
-        report_details = list(filter(lambda report_entry: report_entry['taxable_value'], report_details))
+        # Filter out entries with zero taxable value
+        report_details = [entry for entry in report_details if entry['taxable_value']]
 
+        # Calculate totals for registered vs unregistered customers
         for report_entry in report_details:
             if report_entry['pin_of_purchaser']:
                 self.registered_customers_total_sales += report_entry['invoice_total_sales']
