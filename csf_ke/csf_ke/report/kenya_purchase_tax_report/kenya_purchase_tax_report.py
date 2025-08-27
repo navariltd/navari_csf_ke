@@ -216,55 +216,67 @@ class KenyaPurchaseTaxReport(object):
             )
 
         report_details = []
-
         purchase_invoices = self.get_purchase_invoices()
 
+        # Batch fetch all tax rates to avoid repeated queries
+        all_tax_templates = set()
+        invoice_items_map = {}
+        
         for purchase_invoice in purchase_invoices:
-            report_details.append(purchase_invoice)
-
             items_or_services = self.get_purchase_invoice_items(
                 purchase_invoice.invoice_name, self.filters.tax_template
             )
+            invoice_items_map[purchase_invoice.invoice_name] = items_or_services
+            
+            # Collect all tax templates
+            for item in items_or_services:
+                if item.get("item_tax_template"):
+                    all_tax_templates.add(item["item_tax_template"])
 
+        # Batch fetch all tax rates
+        tax_rates_map = {}
+        if all_tax_templates:
+            tax_details = frappe.db.get_all(
+                "Item Tax Template Detail",
+                filters={"parent": ["in", list(all_tax_templates)]},
+                fields=["parent", "tax_rate"]
+            )
+            tax_rates_map = {detail["parent"]: detail["tax_rate"] for detail in tax_details}
+
+        # Process invoices with cached tax rates
+        for purchase_invoice in purchase_invoices:
+            report_details.append(purchase_invoice)
+            
+            items_or_services = invoice_items_map[purchase_invoice.invoice_name]
             total_taxable_value = 0
             total_vat = 0
 
             for item_or_service in items_or_services:
-                tax_rate = frappe.db.get_value(
-                    "Item Tax Template Detail",
-                    {"parent": item_or_service["item_tax_template"]},
-                    ["tax_rate"],
-                )
+                tax_rate = tax_rates_map.get(item_or_service.get("item_tax_template"), 0)
+                
                 item_or_service["amount_of_vat"] = (
-                    0
-                    if not tax_rate
-                    else item_or_service["taxable_value"] * (tax_rate / 100)
+                    item_or_service["taxable_value"] * (tax_rate / 100) if tax_rate else 0
                 )
 
                 total_taxable_value += item_or_service["taxable_value"]
                 total_vat += item_or_service["amount_of_vat"]
-                item_or_service["indent"] = 1
 
             purchase_invoice["taxable_value"] = total_taxable_value
             purchase_invoice["amount_of_vat"] = total_vat
 
-        report_details = list(
-            filter(lambda report_entry: report_entry["taxable_value"], report_details)
-        )
+        # Filter and calculate totals
+        report_details = [entry for entry in report_details if entry["taxable_value"]]
 
         for report_entry in report_details:
             if report_entry["pin_of_supplier"]:
-                self.registered_suppliers_total_purchases += report_entry[
-                    "invoice_total_purchases"
-                ]
+                self.registered_suppliers_total_purchases += report_entry["invoice_total_purchases"]
                 self.registered_suppliers_total_vat += report_entry["amount_of_vat"]
             else:
-                self.unregistered_suppliers_total_purchases += report_entry[
-                    "invoice_total_purchases"
-                ]
+                self.unregistered_suppliers_total_purchases += report_entry["invoice_total_purchases"]
                 self.unregistered_suppliers_total_vat += report_entry["amount_of_vat"]
 
         return report_details
+
 
     def get_report_summary(self):
         return [
