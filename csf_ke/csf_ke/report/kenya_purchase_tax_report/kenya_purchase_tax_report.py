@@ -7,6 +7,7 @@ import frappe
 from frappe import _
 import csv
 import os
+from pypika.functions import Coalesce
 import re
 from datetime import datetime
 
@@ -115,7 +116,7 @@ class KenyaPurchaseTaxReport(object):
             .inner_join(supplier_)
             .on(purchase_invoice_.supplier == supplier_.name)
             .select(
-                frappe.qb.functions.Coalesce(supplier_.tax_id, "").as_(
+                Coalesce(supplier_.tax_id, "").as_(
                     "pin_of_supplier"
                 ),
                 purchase_invoice_.supplier_name.as_("name_of_supplier"),
