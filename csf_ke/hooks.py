@@ -1,5 +1,3 @@
-from . import __version__ as app_version
-
 app_name = "csf_ke"
 app_title = "Kenya ERPNext Customization"
 app_publisher = "Navari Ltd"
@@ -19,7 +17,7 @@ required_apps = ["erpnext", "hrms"]
 fixtures = [
     {
         "doctype": "Custom Field",
-        "filters": [               
+        "filters": [
             ["is_system_generated", "=", 0],
             ["module", "=", "CSF KE"],
         ],
@@ -34,7 +32,15 @@ fixtures = [
             ]
         ],
     },
+    {
+        "doctype": "PSOA Template",
+    },
 ]
+
+process_soa_html = {
+    "General Ledger": ["csf_ke/templates/dynamic_psoa_gl.html"],
+    "Accounts Receivable": ["csf_ke/templates/dynamic_psoa_ar.html"],
+}
 
 # Includes in <head>
 # ------------------
