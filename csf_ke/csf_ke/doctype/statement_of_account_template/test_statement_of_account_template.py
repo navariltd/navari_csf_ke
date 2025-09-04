@@ -5,5 +5,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestPSOASettings(FrappeTestCase):
+class TestStatementofAccountTemplate(FrappeTestCase):
     pass

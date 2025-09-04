@@ -17,7 +17,7 @@
    "fieldtype": "Link",
    "label": "Default Process Statement of Account (GL) Template",
    "link_filters": "[[\"PSOA Template\",\"report\",\"=\",\"General Ledger\"]]",
-   "options": "PSOA Template"
+   "options": "Statement of Account Template"
   },
   {
    "fieldname": "column_break_ucnt",
@@ -28,7 +28,7 @@
    "fieldtype": "Link",
    "label": "Default Process Statement of Account (AR) Template",
    "link_filters": "[[\"PSOA Template\",\"report\",\"=\",\"Accounts Receivable\"]]",
-   "options": "PSOA Template"
+   "options": "Statement of Account Template"
   },
   {
    "fetch_from": "default_gl_template.template_path",
@@ -49,10 +49,10 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-09-03 19:42:50.873589",
+ "modified": "2025-09-04 15:36:46.313738",
  "modified_by": "Administrator",
  "module": "CSF KE",
- "name": "PSOA Settings",
+ "name": "Statement of Account Template Settings",
  "owner": "Administrator",
  "permissions": [
   {

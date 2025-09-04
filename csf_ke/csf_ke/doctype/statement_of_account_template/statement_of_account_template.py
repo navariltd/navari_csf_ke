@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class PSOASettings(Document):
+class StatementofAccountTemplate(Document):
     pass
