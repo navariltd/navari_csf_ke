@@ -61,6 +61,7 @@ def execute(filters=None):
                 data_row.insert(1, "")
                 data_row.insert(2, "")
 
+    data = calculate_totals(data, filters)
     return columns, data, None, chart
 
 
@@ -462,3 +463,46 @@ def get_chart_data(filters, columns, data):
         },
         "type": "bar",
     }
+
+
+# def calculate_totals(data, filters):
+#     if not data:
+#         return []
+
+#     final_data = []
+#     total_row = ["Total", "", "", ""] if filters.get("budget_against") == "Vehicle" else ["Total", ""]
+#     totals = []
+
+#     for row in data:
+#         row = row[4:] if filters.get("budget_against") == "Vehicle" else row[2:]
+
+
+def calculate_totals(data, filters):
+    if not data:
+        return data
+
+    # Determine label columns based on filter
+    if filters.get("budget_against") == "Vehicle":
+        label_columns = 4
+    else:
+        label_columns = 2
+
+    # Initialize totals with zeros for all numeric columns
+    num_numeric_columns = len(data[0]) - label_columns
+    totals = [0] * num_numeric_columns
+
+    # Calculate totals from all rows
+    for row in data:
+        numeric_values = row[label_columns:]
+        for i, value in enumerate(numeric_values):
+            if i < len(totals) and isinstance(value, (int, float)):
+                totals[i] += value
+
+    # Create total row (don't modify original data, return new list)
+    if filters.get("budget_against") == "Vehicle":
+        total_row = ["Total", "", "", ""] + totals
+    else:
+        total_row = ["Total", ""] + totals
+
+    # Return original data with total row appended
+    return data + [total_row]
