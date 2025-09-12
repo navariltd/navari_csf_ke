@@ -10,8 +10,15 @@ class VATWithholding(Document):
         self.set_missing_values()
 
     def set_missing_values(self):
+        empty_withholder_pin_text = "N/A"
         self.currency = "KES"
         self.company = frappe.defaults.get_user_default("Company")
+
+        if (
+            str(self.withholder_pin).upper() == empty_withholder_pin_text
+            and self.voucher_no
+        ):
+            self.withholder_pin = self.get_invoice_tax_id()
 
         if not self.customer and self.withholder_pin:
             self.customer = frappe.db.get_value(
@@ -115,3 +122,11 @@ class VATWithholding(Document):
             je.submit()
 
         return je.name
+
+    def get_invoice_tax_id(self):
+        tax_id = frappe.db.get_value("Sales Invoice", self.voucher_no, "tax_id")
+
+        if not tax_id:
+            frappe.throw(f"Could not find Tax ID for Sales Invoice {self.voucher_no}")
+
+        return tax_id

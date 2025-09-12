@@ -51,9 +51,11 @@
    "search_index": 1
   },
   {
+   "description": "Use N/A if withholder pin is not available.",
    "fieldname": "withholder_pin",
    "fieldtype": "Data",
    "label": "Withholder PIN",
+   "placeholder": "N/A",
    "reqd": 1
   },
   {
@@ -208,7 +210,7 @@
    "link_fieldname": "cheque_no"
   }
  ],
- "modified": "2025-03-12 13:18:12.388717",
+ "modified": "2025-09-12 12:13:35.965722",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "VAT Withholding",
@@ -231,6 +233,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
