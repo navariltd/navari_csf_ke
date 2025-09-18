@@ -6,7 +6,7 @@ import datetime
 
 import frappe
 from frappe import _
-from frappe.utils import flt, formatdate
+from frappe.utils import flt, formatdate, getdate, get_first_day, get_last_day
 
 from erpnext.controllers.trends import get_period_date_ranges, get_period_month_ranges
 
@@ -61,8 +61,65 @@ def execute(filters=None):
                 data_row.insert(1, "")
                 data_row.insert(2, "")
 
+    if filters.period == "Monthly":
+        if filters.get("start_date") and filters.get("end_date"):
+            fiscal_year = get_fiscal_years(filters)
+            year_start_date, year_end_date = frappe.get_cached_value(
+                "Fiscal Year", fiscal_year[0], ["year_start_date", "year_end_date"]
+            )
+
+            if (
+                getdate(filters.get("start_date")) < year_start_date
+                or getdate(filters.get("end_date")) > year_end_date
+            ):
+                frappe.throw(
+                    _("Start Date and End Date must be within the Fiscal Year selected")
+                )
+
+        month1 = get_first_day(getdate(filters.get("start_date"))).month
+        month2 = get_last_day(getdate(filters.get("end_date"))).month
+
+        data = filter_months(data, month1, month2)
+        columns = filters_columns(columns, month1, month2)
+
     data = calculate_totals(data, filters)
+
     return columns, data, None, chart
+
+
+def get_refined_data(data):
+    refined_data = []
+    for row in data:
+        refined_data.append(row[3:-3])
+
+    return refined_data
+
+
+def filter_months(data, month1, month2):
+    result = []
+
+    for row in data:
+        new_row = []
+        new_row = row[0:4]
+        data_to_filter = row[4:-3]
+        for month_num in range(month1, month2 + 1):
+            if 1 <= month_num <= 12:
+                start_index = (month_num - 1) * 3
+                new_row.extend(data_to_filter[start_index : start_index + 3])
+        result.append(new_row)
+
+    return result
+
+
+def filters_columns(columns, month1, month2):
+    result = columns[0:4]
+    columns_to_check = columns[4:-3]
+    for month_num in range(month1, month2 + 1):
+        if 1 <= month_num <= 12:
+            start_index = (month_num - 1) * 3
+            result.extend(columns_to_check[start_index : start_index + 3])
+
+    return result
 
 
 def get_final_data(

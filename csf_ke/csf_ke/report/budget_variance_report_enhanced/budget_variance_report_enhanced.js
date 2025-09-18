@@ -69,6 +69,20 @@ function get_filters() {
       reqd: 1,
     },
     {
+      fieldname: "start_date",
+      label: __("Start Date"),
+      fieldtype: "Date",
+      default: frappe.datetime.month_start(),
+      depends_on: "eval:doc.period=='Monthly'",
+    },
+    {
+      fieldname: "end_date",
+      label: __("End Date"),
+      fieldtype: "Date",
+      default: frappe.datetime.add_months(frappe.datetime.month_end(), 1),
+      depends_on: "eval:doc.period=='Monthly'",
+    },
+    {
       fieldname: "company",
       label: __("Company"),
       fieldtype: "Link",
