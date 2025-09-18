@@ -79,20 +79,15 @@ def execute(filters=None):
         month1 = get_first_day(getdate(filters.get("start_date"))).month
         month2 = get_last_day(getdate(filters.get("end_date"))).month
 
+        chart = get_chart_data(
+            filters, columns, data, monthly=True, month1=month1, month2=month2
+        )
         data = filter_months(data, month1, month2)
         columns = filters_columns(columns, month1, month2)
 
     data = calculate_totals(data, filters)
 
     return columns, data, None, chart
-
-
-def get_refined_data(data):
-    refined_data = []
-    for row in data:
-        refined_data.append(row[3:-3])
-
-    return refined_data
 
 
 def filter_months(data, month1, month2):
@@ -469,7 +464,7 @@ def get_fiscal_years(filters):
     return fiscal_year
 
 
-def get_chart_data(filters, columns, data):
+def get_chart_data(filters, columns, data, monthly=False, month1=1, month2=1):
     if not data:
         return None
 
@@ -498,13 +493,33 @@ def get_chart_data(filters, columns, data):
 
     budget_values, actual_values = [0] * no_of_columns, [0] * no_of_columns
     for d in data:
-        values = d[2:]
+        values = d[4:] if monthly else d[2:]
         index = 0
 
         for i in range(no_of_columns):
             budget_values[i] += values[index]
             actual_values[i] += values[index + 1]
             index += 3
+
+    if monthly:
+        return {
+            "data": {
+                "labels": labels[month1:month2],
+                "datasets": [
+                    {
+                        "name": _("Budget"),
+                        "chartType": "bar",
+                        "values": budget_values[month1:month2],
+                    },
+                    {
+                        "name": _("Actual Expense"),
+                        "chartType": "bar",
+                        "values": actual_values[month1:month2],
+                    },
+                ],
+            },
+            "type": "bar",
+        }
 
     return {
         "data": {
@@ -520,18 +535,6 @@ def get_chart_data(filters, columns, data):
         },
         "type": "bar",
     }
-
-
-# def calculate_totals(data, filters):
-#     if not data:
-#         return []
-
-#     final_data = []
-#     total_row = ["Total", "", "", ""] if filters.get("budget_against") == "Vehicle" else ["Total", ""]
-#     totals = []
-
-#     for row in data:
-#         row = row[4:] if filters.get("budget_against") == "Vehicle" else row[2:]
 
 
 def calculate_totals(data, filters):
