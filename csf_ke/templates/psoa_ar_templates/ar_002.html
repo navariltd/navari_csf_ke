@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Customer Statement</title>
+    <style>
+      /* ... Your CSS styles remain the same ... */
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 12pt;
+        margin: 0;
+        padding: 15px;
+        color: #000;
+      }
+
+      .print-format {
+        font-size: 12pt !important;
+
+      }
+
+      .company-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .company-logo {
+        max-height: 60px;
+      }
+      .company-name {
+        margin: 0;
+        font-size: 20px;
+      }
+      .statement-title {
+        text-align: center;
+        margin: 10px 0;
+        background-color: #e0e0e0;
+        padding: 8px 0;
+        border-radius: 4px;
+        font-size: 18px;
+        font-weight: bold;
+      }
+      .date-range {
+        text-align: center;
+        margin: 5px 0 15px 0;
+        font-size: 14px;
+      }
+      .customer-details {
+        margin-top: 15px;
+        font-size: 13px;
+        line-height: 1.6;
+      }
+      .statement-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        font-size: 12px;
+      }
+      .statement-table th,
+      .statement-table td {
+        border: 1px solid #000;
+        padding: 6px;
+      }
+      .statement-table th {
+        background-color: #f0f0f0;
+        text-align: center;
+      }
+      .currency {
+        text-align: right;
+      }
+      .row-even { background-color: #ffffff; }
+      .row-odd  { background-color: #fafafa; }
+      .closing-balance {
+        background-color: #f0f0f0;
+        font-weight: bold;
+      }
+      @page {
+        size: A4;
+        margin: 20mm 15mm 20mm 15mm; 
+      }
+    </style>
+  </head>
+  <body>
+    {% set opening_balance = data[0].opening_balance if data and data[0] and data[0].opening_balance else 0 %}
+
+    <div class="print-format">
+
+      <div class="header-section">
+        {% if letter_head.content %}
+          {{ letter_head.content }}
+        {% else %}
+          <div class="company-header">
+            <div>
+              {% if frappe.db.get_single_value('Website Settings', 'app_logo') %}
+                <img src="{{ frappe.db.get_single_value('Website Settings', 'app_logo') }}"
+                     alt="Company Logo" class="company-logo"/>
+              {% endif %}
+            </div>
+            <div>
+              <h1 class="company-name">{{ filters.company }}</h1>
+            </div>
+          </div>
+        {% endif %}
+
+        <hr>
+        <h2 class="statement-title">
+          <span> Customer Transaction Statement </span>
+        </h2>
+      </div>
+
+      <div class="date-range">
+        <strong>Report Date:</strong> {{ frappe.format(filters.report_date, "Date") }}
+      </div>
+
+      <div class="customer-details">
+        {% set cus = frappe.get_doc("Customer", filters.party[0]) %}
+        {% if cus %}
+          <strong>Customer Name:</strong> {{ cus.customer_name }} <br>
+          <strong>Contact Name:</strong> {{ data[0].customer_primary_contact if data and data[0].customer_primary_contact else '' }} <br>
+
+   
+
+          {% set address_name = frappe.db.get_value("Dynamic Link", {
+            "link_doctype": "Customer", "link_name": cus.name
+          }, "parent") %}
+          
+          {% if address_name %}
+            {% set cus_add = frappe.get_doc("Address", address_name) %}
+            {% if cus_add %}
+              {% if cus_add.phone %}
+                <strong>Phone:</strong> {{ cus_add.phone }} <br>
+              {% endif %}
+              {% if cus_add.email_id %}
+                <strong>Email:</strong> {{ cus_add.email_id }} <br>
+              {% endif %}
+            {% endif %}
+          {% endif %}
+
+          <strong>Opening Balance:</strong> {{ "{:,.0f}".format(opening_balance) }} {{ data[0].currency if data and data[0] else '' }} <br>
+        {% endif %}
+      </div>
+
+      <table class="statement-table">
+        <thead>
+          <tr>
+            <th style="width: 12%">Date</th>
+            <th style="width: 18%">Description</th>
+            <th style="width: 15%">Document</th>
+            <th style="width: 10%">Currency</th>
+            <th style="width: 10%">Debit</th>
+            <th style="width: 10%">Credit</th>
+            <th style="width: 15%">Balance</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set running_balance = 0 %} 
+          {% if data and data[0] %} 
+            <tr>
+              <td class="text-center">
+                {{ frappe.format(filters.report_date, 'Date') }}
+              </td>
+              <td class="text-left">Opening Balance</td>
+              <td class="text-left">-</td>
+              <td class="text-left">{{ data[0].currency if data[0].currency else '' }}</td>
+              <td class="currency">-</td>
+              <td class="currency">-</td>
+              <td class="currency">{{ "{:,.0f}".format(opening_balance) }}</td>
+            </tr>
+            {% set running_balance = opening_balance %}
+          {% endif %} 
+
+          {% for row in data %} 
+            {% if row.party and not loop.last %} 
+              {% if row.invoiced and row.invoiced != 0 %} 
+                {% set running_balance = running_balance + row.invoiced %}
+                <tr>
+                  <td class="text-center">
+                    {{ frappe.format(row.posting_date, 'Date') if row.posting_date else '' }}
+                  </td>
+                  <td class="text-left">Invoice</td>
+                  <td class="text-left">{{ row.voucher_no if row.voucher_no else '' }}</td>
+                  <td class="text-left">{{ row.currency }}</td>
+                  <td class="currency">{{ "{:,.0f}".format(row.invoiced) if row.invoiced else '-' }}</td>
+                  <td class="currency">-</td>
+                  <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
+                </tr>
+              {% endif %} 
+
+              {% if row.paid and row.paid != 0 %} 
+                {% set running_balance = running_balance - row.paid %}
+                <tr>
+                  <td class="text-center">
+                    {{ frappe.format(row.posting_date, 'Date') if row.posting_date else '' }}
+                  </td>
+                  <td class="text-left">Payment</td>
+                  <td class="text-left">{{ row.voucher_no if row.voucher_no else '' }}</td>
+                  <td class="text-left">{{ row.currency }}</td>
+                  <td class="currency">-</td>
+                  <td class="currency">{{ "{:,.0f}".format(row.paid) }}</td>
+                  <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
+                </tr>
+              {% endif %} 
+
+              {% if row.credit_note and row.credit_note != 0 %} 
+                {% set running_balance = running_balance - row.credit_note %}
+                <tr>
+                  <td class="text-center">
+                    {{ frappe.format(row.posting_date, 'Date') if row.posting_date else '' }}
+                  </td>
+                  <td class="text-left">Credit Note</td>
+                  <td class="text-left">{{ row.voucher_no if row.voucher_no else '' }}</td>
+                  <td class="text-left">{{ row.currency }}</td>
+                  <td class="currency">-</td>
+                  <td class="currency">{{ "{:,.0f}".format(row.credit_note) }}</td>
+                  <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
+                </tr>
+              {% endif %} 
+            {% endif %} 
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if letter_head.footer %}
+        <div style="margin-top: 40px">{{ letter_head.footer }}</div>
+      {% endif %}
+    </div>
+  </body>
+</html>

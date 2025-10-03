@@ -1,0 +1,7 @@
+{% set template_path = frappe.db.get_single_value("Statement of Account Template Settings", "gl_template_path") %}
+
+{% if not template_path %}
+    {% set template_path = "erpnext/accounts/doctype/process_statement_of_accounts/process_statement_of_accounts.html" %}
+{% endif %}
+
+{% include template_path %}
