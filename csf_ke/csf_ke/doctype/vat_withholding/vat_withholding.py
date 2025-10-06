@@ -28,12 +28,16 @@ class VATWithholding(Document):
                 invoice_data = frappe.db.get_value(
                     "Sales Invoice",
                     invoice_filter,
-                    ["name", "outstanding_amount"],
+                    ["name", "outstanding_amount", "customer", "tax_id"],
                     as_dict=True,
                 )
                 if invoice_data:
                     self.voucher_no = invoice_data.name
                     self.outstanding_amount = invoice_data.outstanding_amount
+                    if not self.customer:
+                        self.customer = invoice_data.customer
+                    if not self.withholder_pin:
+                        self.withholder_pin = invoice_data.tax_id
                     break
 
         if self.company and not self.withholding_account:
