@@ -9,6 +9,7 @@ class VATWithholding(Document):
     def before_validate(self):
         self.set_missing_values()
 
+    @frappe.whitelist()
     def set_missing_values(self):
         self.currency = "KES"
         self.company = frappe.defaults.get_user_default("Company")
@@ -53,6 +54,8 @@ class VATWithholding(Document):
             if self.outstanding_amount == self.vat_withholding_amount:
                 self.allocate_payment = True
                 self.submit_journal_entry = True
+
+        return self.as_dict()
 
     def on_submit(self):
         if not self.withholding_account:
