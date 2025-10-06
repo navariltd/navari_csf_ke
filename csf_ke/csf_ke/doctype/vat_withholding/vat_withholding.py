@@ -78,9 +78,9 @@ class VATWithholding(Document):
         reference_doctype = "Sales Invoice" if kwargs.get("allocate_payment") else ""
         reference_name = doc.voucher_no if kwargs.get("allocate_payment") else ""
         remark = (
-            f"Payment for Sales Invoice {doc.voucher_no} via VAT Withholding {doc.wht_certificate_no}"
+            f"Reference #{doc.wht_certificate_no} dated {doc.certificate_date} for {doc.invoice_no} Voucher {doc.voucher_no}"
             if kwargs.get("allocate_payment")
-            else f"VAT Withholding Acknowledgment - Cert No: {doc.wht_certificate_no}"
+            else f"Reference #{doc.wht_certificate_no}"
         )
 
         je = frappe.get_doc(
@@ -91,7 +91,7 @@ class VATWithholding(Document):
                 "voucher_type": "Journal Entry",
                 "cheque_no": doc.wht_certificate_no,
                 "cheque_date": doc.certificate_date,
-                "remark": remark,
+                "user_remark": remark,
                 "accounts": [
                     {
                         "account": doc.withholding_account,
