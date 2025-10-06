@@ -9,6 +9,7 @@ class VATWithholding(Document):
     def before_validate(self):
         self.set_missing_values()
 
+    @frappe.whitelist()
     def set_missing_values(self):
         self.currency = "KES"
         self.company = frappe.defaults.get_user_default("Company")
@@ -28,12 +29,16 @@ class VATWithholding(Document):
                 invoice_data = frappe.db.get_value(
                     "Sales Invoice",
                     invoice_filter,
-                    ["name", "outstanding_amount"],
+                    ["name", "outstanding_amount", "customer", "tax_id"],
                     as_dict=True,
                 )
                 if invoice_data:
                     self.voucher_no = invoice_data.name
                     self.outstanding_amount = invoice_data.outstanding_amount
+                    if not self.customer:
+                        self.customer = invoice_data.customer
+                    if not self.withholder_pin:
+                        self.withholder_pin = invoice_data.tax_id
                     break
 
         if self.company and not self.withholding_account:
@@ -49,6 +54,8 @@ class VATWithholding(Document):
             if self.outstanding_amount == self.vat_withholding_amount:
                 self.allocate_payment = True
                 self.submit_journal_entry = True
+
+        return self.as_dict()
 
     def on_submit(self):
         if not self.withholding_account:
@@ -74,9 +81,9 @@ class VATWithholding(Document):
         reference_doctype = "Sales Invoice" if kwargs.get("allocate_payment") else ""
         reference_name = doc.voucher_no if kwargs.get("allocate_payment") else ""
         remark = (
-            f"Payment for Sales Invoice {doc.voucher_no} via VAT Withholding {doc.wht_certificate_no}"
+            f"Reference #{doc.wht_certificate_no} dated {doc.certificate_date} for {doc.invoice_no} Voucher {doc.voucher_no}"
             if kwargs.get("allocate_payment")
-            else f"VAT Withholding Acknowledgment - Cert No: {doc.wht_certificate_no}"
+            else f"Reference #{doc.wht_certificate_no}"
         )
 
         je = frappe.get_doc(
@@ -87,7 +94,7 @@ class VATWithholding(Document):
                 "voucher_type": "Journal Entry",
                 "cheque_no": doc.wht_certificate_no,
                 "cheque_date": doc.certificate_date,
-                "remark": remark,
+                "user_remark": remark,
                 "accounts": [
                     {
                         "account": doc.withholding_account,
