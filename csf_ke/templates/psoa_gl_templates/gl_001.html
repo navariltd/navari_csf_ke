@@ -188,8 +188,8 @@
       <h2 class="statement-title"><span> Customer Statement </span></h2>
 
       <div class="details-and-date">
-        {% set cus = frappe.get_doc("Customer", filters.party[0]) %} {% if cus
-        %}
+        {% if filters.party %} {% set cus = frappe.get_doc("Customer",
+        filters.party[0]) %} {% if cus %}
         <div class="customer-details">
           <div class="customer-details-title">Customer Details:</div>
           <div class="customer-name">{{ cus.customer_name }}</div>
@@ -198,21 +198,21 @@
           "link_doctype": "Customer", "link_name": cus.name }, "parent") %} {%
           if address_name %} {% set cus_add = frappe.get_doc("Address",
           address_name) %} {% if cus_add %}
-          <div class="customer-contact">{{ cus_add.city }}</div>
+          <div class="customer-contact">{{ cus_add.city or '' }}</div>
           {% if cus_add.phone %}
           <div class="customer-contact">{{ cus_add.phone }}</div>
           {% endif %} {% if cus_add.email_id %}
-          <div class="customer-contact">
-            {{ _("Email") }}: {{ cus_add.email_id }}
-          </div>
+          <div class="customer-contact">Email: {{ cus_add.email_id }}</div>
           {% endif %} {% endif %} {% endif %}
         </div>
-        {% endif %}
+        {% endif %} {% endif %}
 
         <div class="statement-date-container">
           <div class="statement-date">
             Statement Date:
-            <span>{{ frappe.format(filters.report_date, 'Date') }}</span>
+            <span
+              >{{ frappe.format(filters.to_date or nowdate(), 'Date') }}</span
+            >
           </div>
         </div>
       </div>
@@ -222,73 +222,43 @@
       <thead>
         <tr>
           <th style="width: 12%">Posting Date</th>
-          <th style="width: 15%">Details</th>
+          <th style="width: 25%">Details</th>
           <th style="width: 15%">Debit (KES)</th>
           <th style="width: 15%">Credit (KES)</th>
           <th style="width: 15%">Balance (KES)</th>
         </tr>
       </thead>
       <tbody>
-        {% set running_balance = 0 %} {% if data and data[0] %} {% set
-        opening_balance = 5000 %}
-        <tr>
-          <td class="text-center">
-            {{ frappe.format(filters.report_date, 'Date') }}
-          </td>
-          <td class="text-left">Opening Balance</td>
-          <td class="currency">-</td>
-          <td class="currency">-</td>
-          <td class="currency">{{ "{:,.0f}".format(opening_balance) }}</td>
-        </tr>
-        {% set running_balance = opening_balance %} {% endif %} {% for row in
-        data %} {% if row.party and not loop.last %} {% if row.invoiced and
-        row.invoiced != 0 %} {% set running_balance = running_balance +
-        row.invoiced %}
+        {% set running_balance = 0 %} {% for row in data %} {% if row.debit or
+        row.credit %} {% set running_balance = running_balance + (row.debit or
+        0) - (row.credit or 0) %}
         <tr>
           <td class="text-center">
             {{ frappe.format(row.posting_date, 'Date') if row.posting_date else
             '' }}
           </td>
           <td class="text-left">
-            {{ row.voucher_no if row.voucher_no else '' }}
+            {{ row.voucher_type or '' }} - {{ row.voucher_no or '' }}<br />
+            <small>{{ row.against_account or '' }}</small>
           </td>
           <td class="currency">
-            {{ "{:,.0f}".format(row.invoiced) if row.invoiced else '-' }}
+            {{ "{:,.2f}".format(row.debit) if row.debit else '-' }}
           </td>
-          <td class="currency">-</td>
-          <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
+          <td class="currency">
+            {{ "{:,.2f}".format(row.credit) if row.credit else '-' }}
+          </td>
+          <td class="currency">{{ "{:,.2f}".format(running_balance) }}</td>
         </tr>
-        {% endif %} {% if row.paid and row.paid != 0 %} {% set running_balance =
-        running_balance - row.paid %}
+        {% endif %} {% endfor %} {% if not data %}
         <tr>
-          <td class="text-center">
-            {{ frappe.format(row.posting_date, 'Date') if row.posting_date else
-            '' }}
+          <td colspan="5" class="text-center">
+            No transactions found for this period.
           </td>
-          <td class="text-left">
-            Payment - {{ row.voucher_no if row.voucher_no else '' }}
-          </td>
-          <td class="currency">-</td>
-          <td class="currency">{{ "{:,.0f}".format(row.paid) }}</td>
-          <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
         </tr>
-        {% endif %} {% if row.credit_note and row.credit_note != 0 %} {% set
-        running_balance = running_balance - row.credit_note %}
-        <tr>
-          <td class="text-center">
-            {{ frappe.format(row.posting_date, 'Date') if row.posting_date else
-            '' }}
-          </td>
-          <td class="text-left">
-            Credit Note - {{ row.voucher_no if row.voucher_no else '' }}
-          </td>
-          <td class="currency">-</td>
-          <td class="currency">{{ "{:,.0f}".format(row.credit_note) }}</td>
-          <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
-        </tr>
-        {% endif %} {% endif %} {% endfor %}
+        {% endif %}
       </tbody>
     </table>
+
     {% if letter_head.footer %}
     <div style="margin-top: 40px">{{ letter_head.footer }}</div>
     {% endif %}
