@@ -36,7 +36,6 @@ def update_item_price(doc, method=None):
 
 
 def update_or_create_item_price(item_code, price_list_name, currency, price, customer):
-    frappe.log_error("Triggered")
     existing_item_price = frappe.db.exists(
         "Item Price",
         {"item_code": item_code, "price_list": price_list_name, "customer": customer},
@@ -56,10 +55,6 @@ def update_or_create_item_price(item_code, price_list_name, currency, price, cus
         item_price_doc.save(ignore_permissions=True)
         frappe.db.commit()
 
-        frappe.log_error(
-            message=f"Created Item Price for Item: {item_code}, Price List: {price_list_name}, Customer: {customer}, Rate: {price}",
-            title="Item Price Created",
-        )
     else:
         item_price_doc = frappe.get_doc("Item Price", existing_item_price)
         if item_price_doc.price_list_rate != price:
