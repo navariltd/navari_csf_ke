@@ -156,10 +156,15 @@ doc_events = {
         "before_save": "csf_ke.csf_ke.overrides.customer.validate_customer_kra"
     },
     "Sales Order": {
-        "before_submit": "csf_ke.csf_ke.overrides.sales_doc.validate_customer_kra"
+        "before_submit": "csf_ke.csf_ke.overrides.sales_doc.validate_customer_kra",
+        "on_submit": "csf_ke.csf_ke.utils.item_price.update_item_price",
     },
     "Sales Invoice": {
-        "before_submit": "csf_ke.csf_ke.overrides.sales_doc.validate_customer_kra"
+        "before_submit": "csf_ke.csf_ke.overrides.sales_doc.validate_customer_kra",
+        "on_submit": "csf_ke.csf_ke.utils.item_price.update_item_price",
+    },
+    "Delivery Note": {
+        "on_submit": "csf_ke.csf_ke.utils.item_price.update_item_price",
     },
     "Job Card": {"before_submit": "csf_ke.csf_ke.overrides.job_card.before_submit"},
 }
