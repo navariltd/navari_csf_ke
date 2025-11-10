@@ -97,10 +97,11 @@
 
       .statement-date {
         border: 1px solid #000;
-        padding: 4px 8px;
+        padding: 6px 14px;
         background-color: #fff;
         font-weight: bold;
         font-size: 12pt;
+        white-space: nowrap;
         display: inline-block;
       }
 
@@ -127,25 +128,10 @@
         vertical-align: middle;
       }
 
-      .statement-table .text-center {
-        text-align: center;
-      }
-
-      .statement-table .text-left {
-        text-align: left;
-      }
-
       .currency {
         font-family: "Times New Roman", serif;
         text-align: right;
         padding-right: 2px;
-      }
-
-      .clearfix::after {
-        content: "";
-        clear: both;
-        display: table;
-        font-size: 12pt;
       }
 
       @media print {
@@ -153,11 +139,6 @@
           margin: 0;
           padding: 10mm;
         }
-
-        .statement-table {
-          font-size: 12pt;
-        }
-
         .statement-table th,
         .statement-table td {
           font-size: 12pt;
@@ -166,6 +147,7 @@
       }
     </style>
   </head>
+
   <body class="print-format">
     <div class="header-section">
       {% if letter_head.content %} {{ letter_head.content }} {% else %}
@@ -193,7 +175,6 @@
         <div class="customer-details">
           <div class="customer-details-title">Customer Details:</div>
           <div class="customer-name">{{ cus.customer_name }}</div>
-
           {% set address_name = frappe.db.get_value("Dynamic Link", {
           "link_doctype": "Customer", "link_name": cus.name }, "parent") %} {%
           if address_name %} {% set cus_add = frappe.get_doc("Address",
@@ -202,9 +183,7 @@
           {% if cus_add.phone %}
           <div class="customer-contact">{{ cus_add.phone }}</div>
           {% endif %} {% if cus_add.email_id %}
-          <div class="customer-contact">
-            {{ _("Email") }}: {{ cus_add.email_id }}
-          </div>
+          <div class="customer-contact">Email: {{ cus_add.email_id }}</div>
           {% endif %} {% endif %} {% endif %}
         </div>
         {% endif %}
@@ -222,12 +201,13 @@
       <thead>
         <tr>
           <th style="width: 12%">Posting Date</th>
-          <th style="width: 15%">Details</th>
-          <th style="width: 15%">Debit (KES)</th>
-          <th style="width: 15%">Credit (KES)</th>
-          <th style="width: 15%">Balance (KES)</th>
+          <th style="width: 25%">Details</th>
+          <th style="width: 18%">Debit (KES)</th>
+          <th style="width: 18%">Credit (KES)</th>
+          <th style="width: 18%">Balance (KES)</th>
         </tr>
       </thead>
+
       <tbody>
         {% set running_balance = 0 %} {% if data and data[0] %} {% set
         opening_balance = 5000 %}
@@ -246,15 +226,10 @@
         row.invoiced %}
         <tr>
           <td class="text-center">
-            {{ frappe.format(row.posting_date, 'Date') if row.posting_date else
-            '' }}
+            {{ frappe.format(row.posting_date, 'Date') }}
           </td>
-          <td class="text-left">
-            {{ row.voucher_no if row.voucher_no else '' }}
-          </td>
-          <td class="currency">
-            {{ "{:,.0f}".format(row.invoiced) if row.invoiced else '-' }}
-          </td>
+          <td class="text-left">{{ row.voucher_no }}</td>
+          <td class="currency">{{ "{:,.0f}".format(row.invoiced) }}</td>
           <td class="currency">-</td>
           <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
         </tr>
@@ -262,12 +237,9 @@
         running_balance - row.paid %}
         <tr>
           <td class="text-center">
-            {{ frappe.format(row.posting_date, 'Date') if row.posting_date else
-            '' }}
+            {{ frappe.format(row.posting_date, 'Date') }}
           </td>
-          <td class="text-left">
-            Payment - {{ row.voucher_no if row.voucher_no else '' }}
-          </td>
+          <td class="text-left">Payment - {{ row.voucher_no }}</td>
           <td class="currency">-</td>
           <td class="currency">{{ "{:,.0f}".format(row.paid) }}</td>
           <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
@@ -276,19 +248,31 @@
         running_balance = running_balance - row.credit_note %}
         <tr>
           <td class="text-center">
-            {{ frappe.format(row.posting_date, 'Date') if row.posting_date else
-            '' }}
+            {{ frappe.format(row.posting_date, 'Date') }}
           </td>
-          <td class="text-left">
-            Credit Note - {{ row.voucher_no if row.voucher_no else '' }}
-          </td>
+          <td class="text-left">Credit Note - {{ row.voucher_no }}</td>
           <td class="currency">-</td>
           <td class="currency">{{ "{:,.0f}".format(row.credit_note) }}</td>
           <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
         </tr>
         {% endif %} {% endif %} {% endfor %}
       </tbody>
+
+      <tfoot>
+        <tr>
+          <td
+            colspan="4"
+            style="text-align: right; font-weight: bold; padding-right: 10px"
+          >
+            Total Outstanding Balance:
+          </td>
+          <td class="currency" style="font-weight: bold">
+            {{ "{:,.0f}".format(running_balance) }}
+          </td>
+        </tr>
+      </tfoot>
     </table>
+
     {% if letter_head.footer %}
     <div style="margin-top: 40px">{{ letter_head.footer }}</div>
     {% endif %}
