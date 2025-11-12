@@ -1,5 +1,5 @@
 exclude: "node_modules|.git"
-default_stages: [pre-commit]
+default_stages: [commit]
 fail_fast: false
 
 repos:
@@ -13,14 +13,13 @@ repos:
           (?x)^(
               csf_ke/public/dist/.*|
               .*node_modules.*|
-              .*boilerplate.*|
               csf_ke/www/website_script.js|
               csf_ke/templates/includes/.*|
               csf_ke/public/js/.*min.js
           )$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v4.6.0
     hooks:
       - id: debug-statements
       - id: trailing-whitespace
@@ -54,11 +53,9 @@ repos:
         language: system
         stages: [commit-msg]
         always_run: true
-        
+
       - id: cspell-modified-files
         name: check spelling of files
         entry: sh -c "npx cspell --no-must-find-files --config .cspell.json `git diff --cached -p --name-status | cut -c3- | tr '\n' ' '`"
         language: system
-        stages: [pre-commit]
-
-
+        

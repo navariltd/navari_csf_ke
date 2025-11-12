@@ -1,0 +1,74 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-09-03 09:03:00.396883",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "default_gl_template",
+  "gl_template_path",
+  "column_break_ucnt",
+  "default_ar_template",
+  "ar_template_path"
+ ],
+ "fields": [
+  {
+   "fieldname": "default_gl_template",
+   "fieldtype": "Link",
+   "label": "Default Process Statement of Account (GL) Template",
+   "link_filters": "[[\"PSOA Template\",\"report\",\"=\",\"General Ledger\"]]",
+   "options": "Statement of Account Template"
+  },
+  {
+   "fieldname": "column_break_ucnt",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "default_ar_template",
+   "fieldtype": "Link",
+   "label": "Default Process Statement of Account (AR) Template",
+   "link_filters": "[[\"PSOA Template\",\"report\",\"=\",\"Accounts Receivable\"]]",
+   "options": "Statement of Account Template"
+  },
+  {
+   "fetch_from": "default_gl_template.template_path",
+   "fieldname": "gl_template_path",
+   "fieldtype": "Data",
+   "label": "GL Template Path",
+   "read_only": 1
+  },
+  {
+   "fetch_from": "default_ar_template.template_path",
+   "fieldname": "ar_template_path",
+   "fieldtype": "Data",
+   "label": "AR Template Path",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-09-04 15:36:46.313738",
+ "modified_by": "Administrator",
+ "module": "CSF KE",
+ "name": "Statement of Account Template Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

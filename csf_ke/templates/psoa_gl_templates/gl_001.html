@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Customer Statement</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 12pt;
+        margin: 0;
+        padding: 15px;
+        color: #000;
+      }
+
+      .print-format {
+        font-size: 12pt !important;
+        margin-top: 6mm !important;
+        margin-left: 8mm !important;
+        margin-right: 6mm !important;
+        margin-bottom: 6mm !important;
+      }
+
+      .header-section {
+        width: 100%;
+        margin-bottom: 20px;
+      }
+
+      .company-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .company-logo {
+        max-height: 80px;
+        max-width: 200px;
+      }
+
+      .company-name {
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+        margin: 0;
+        text-align: right;
+      }
+
+      .statement-title {
+        text-align: center;
+        font-size: 12pt;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin: 15px 0 10px;
+      }
+
+      .statement-title span {
+        display: inline-block;
+        border-bottom: 2px solid black;
+        padding-bottom: 4px;
+      }
+
+      .details-and-date {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin: 15px 0;
+      }
+
+      .customer-details {
+        border: 2px solid #000;
+        padding: 8px 12px;
+        background-color: #fff;
+        font-size: 12pt;
+        min-width: 180px;
+      }
+
+      .statement-date {
+        border: 1px solid #000;
+        padding: 6px 14px;
+        background-color: #fff;
+        font-weight: bold;
+        font-size: 12pt;
+        white-space: nowrap;
+        display: inline-block;
+      }
+
+      .statement-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-size: 12pt;
+      }
+
+      .statement-table th {
+        border: 1px solid #000;
+        padding: 6px 8px;
+        text-align: center;
+        font-weight: bold;
+        background-color: #f0f0f0;
+        font-size: 12pt;
+      }
+
+      .statement-table td {
+        border: 1px solid #000;
+        padding: 4px 6px;
+        font-size: 12pt;
+        vertical-align: middle;
+      }
+
+      .currency {
+        font-family: "Times New Roman", serif;
+        text-align: right;
+        padding-right: 2px;
+      }
+
+      @media print {
+        body {
+          margin: 0;
+          padding: 10mm;
+        }
+      }
+    </style>
+  </head>
+
+  <body class="print-format">
+    <div class="header-section">
+      {% if letter_head.content %}
+      {{ letter_head.content }}
+      {% endif %}
+
+      <h2 class="statement-title"><span> Customer Statement </span></h2>
+
+      <div class="details-and-date">
+        {% if filters.party %}
+        {% set cus = frappe.get_doc("Customer", filters.party[0]) %}
+        <div class="customer-details">
+          <strong>Customer Details:</strong><br>
+          {{ cus.customer_name }}
+        </div>
+        {% endif %}
+
+        <div class="statement-date">
+          Statement Date:
+          <span>{{ frappe.format(filters.to_date or nowdate(), 'Date') }}</span>
+        </div>
+      </div>
+    </div>
+
+    <table class="statement-table">
+      <thead>
+        <tr>
+          <th style="width: 12%">Posting Date</th>
+          <th style="width: 28%">Details</th>
+          <th style="width: 18%">Debit (KES)</th>
+          <th style="width: 18%">Credit (KES)</th>
+          <th style="width: 18%">Balance (KES)</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% set running_balance = 0 %}
+        {% for row in data %}
+        {% set running_balance = running_balance + (row.debit or 0) - (row.credit or 0) %}
+        <tr>
+          <td class="text-center">{{ frappe.format(row.posting_date, 'Date') }}</td>
+          <td class="text-left">{{ row.voucher_type }} - {{ row.voucher_no }}</td>
+          <td class="currency">{{ "{:,.2f}".format(row.debit) if row.debit else '-' }}</td>
+          <td class="currency">{{ "{:,.2f}".format(row.credit) if row.credit else '-' }}</td>
+          <td class="currency">{{ "{:,.2f}".format(running_balance) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+
+      <tfoot>
+        <tr>
+          <td colspan="4" style="text-align:right; font-weight:bold; padding-right:10px;">
+            Total Outstanding Balance:
+          </td>
+          <td class="currency" style="font-weight:bold;">
+            {{ "{:,.2f}".format(running_balance) }}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+
+    {% if letter_head.footer %}
+    <div style="margin-top: 40px">{{ letter_head.footer }}</div>
+    {% endif %}
+  </body>
+</html>

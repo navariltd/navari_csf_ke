@@ -578,6 +578,10 @@
     "paye",
     "PAYE",
     "HELB",
-    "Cecypo"
+    "Cecypo",
+    "PSOA",
+    "tims",
+    "hscode",
+    "Statementof"
   ]
 }

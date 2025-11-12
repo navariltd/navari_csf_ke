@@ -1,0 +1,47 @@
+{
+ "add_total_row": 0,
+ "add_translate_data": 0,
+ "columns": [],
+ "creation": "2025-09-08 17:15:57.464690",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "Equipment & Logistics Suppliers Limited",
+ "letterhead": null,
+ "modified": "2025-09-08 18:19:18.473454",
+ "modified_by": "Administrator",
+ "module": "CSF KE",
+ "name": "Budget Variance Report Enhanced",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Cost Center",
+ "report_name": "Budget Variance Report Enhanced",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "Purchase User"
+  },
+  {
+   "role": "Accounts User"
+  },
+  {
+   "role": "Auditor"
+  },
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Employee"
+  },
+  {
+   "role": "Accounts Manager"
+  },
+  {
+   "role": "Employee Self Service"
+  }
+ ],
+ "timeout": 0
+}
