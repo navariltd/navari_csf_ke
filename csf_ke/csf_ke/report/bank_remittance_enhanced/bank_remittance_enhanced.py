@@ -129,9 +129,10 @@ def get_payroll_entries(accounts, filters):
         .run(as_dict=True)
     )
 
-    payment_accounts = [d.payment_account for d in entries]
+    payment_accounts = [d.payment_account for d in entries if d.payment_account]
 
     entries = set_company_account(payment_accounts, entries)
+
     return entries
 
 
@@ -159,9 +160,9 @@ def get_salary_slips(payroll_entries):
     # appending company debit accounts
     for slip in salary_slips:
         if slip.payroll_entry:
-            slip["debit_acc_no"] = payroll_entry_map[slip.payroll_entry][
-                "company_account"
-            ]
+            slip["debit_acc_no"] = payroll_entry_map[slip.payroll_entry].get(
+                "company_account", None
+            )
         else:
             slip["debit_acc_no"] = None
 
@@ -181,6 +182,9 @@ def get_emp_bank_ifsc_code(salary_slips):
 
 
 def set_company_account(payment_accounts, payroll_entries):
+    if not payment_accounts:
+        return payroll_entries
+
     company_accounts = get_all(
         "Bank Account",
         [("account", "in", payment_accounts)],
