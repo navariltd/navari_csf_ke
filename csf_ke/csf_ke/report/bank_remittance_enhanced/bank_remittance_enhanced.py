@@ -1,8 +1,11 @@
 # Copyright (c) 2025, Navari Ltd and contributors
 # For license information, please see license.txt
 
+from functools import reduce
+
 import frappe
 from frappe import _, get_all
+from frappe.utils import getdate
 
 
 def execute(filters=None):
@@ -64,6 +67,9 @@ def execute(filters=None):
 
     accounts = get_bank_accounts()
     payroll_entries = get_payroll_entries(accounts, filters)
+    if not payroll_entries:
+        return columns, data
+
     salary_slips = get_salary_slips(payroll_entries)
 
     if frappe.db.has_column("Employee", "ifsc_code"):
@@ -98,23 +104,33 @@ def get_bank_accounts():
 
 
 def get_payroll_entries(accounts, filters):
-    payroll_filter = [
-        ("payment_account", "IN", accounts),
-        ("number_of_employees", ">", 0),
-        ("Company", "=", filters.company),
-    ]
-    if filters.to_date:
-        payroll_filter.append(("posting_date", "<", filters.to_date))
+    pe = frappe.qb.DocType("Payroll Entry")
 
-    if filters.from_date:
-        payroll_filter.append(("posting_date", ">", filters.from_date))
+    payroll_filter = [
+        pe.number_of_employees > 0,
+    ]
+
+    if filters.get("company"):
+        payroll_filter.append(pe.company == filters.get("company"))
+
+    if filters.get("from_date"):
+        payroll_filter.append(pe.posting_date >= getdate(filters.get("from_date")))
+
+    if filters.get("to_date"):
+        payroll_filter.append(pe.posting_date <= getdate(filters.get("to_date")))
 
     if filters.get("payroll_entry"):
-        payroll_filter.append(("name", "=", filters.get("payroll_entry")))
+        payroll_filter.append(pe.name == filters.get("payroll_entry"))
 
-    entries = get_all("Payroll Entry", payroll_filter, ["name", "payment_account"])
+    entries = (
+        frappe.qb.from_(pe)
+        .select(pe.name, pe.payment_account)
+        .where(reduce(lambda x, y: x & y, payroll_filter))
+        .run(as_dict=True)
+    )
 
     payment_accounts = [d.payment_account for d in entries]
+
     entries = set_company_account(payment_accounts, entries)
     return entries
 
