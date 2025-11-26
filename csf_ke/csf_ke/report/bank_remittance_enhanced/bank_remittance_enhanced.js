@@ -26,6 +26,18 @@ frappe.query_reports["Bank Remittance Enhanced"] = {
       reqd: 1,
     },
     {
+      fieldname: "payroll_entry",
+      label: __("Payroll Entry"),
+      fieldtype: "Link",
+      options: "Payroll Entry",
+      get_query: function () {
+        var company = frappe.query_report.get_filter_value("company");
+        return {
+          filters: { company: company },
+        };
+      },
+    },
+    {
       fieldname: "salary_slip_status",
       label: __("Salary Slip Status"),
       fieldtype: "Select",
