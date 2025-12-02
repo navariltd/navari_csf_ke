@@ -29,10 +29,23 @@ def execute(filters=None):
             "width": 200,
         },
         {
-            "label": _("Beneficiary Name"),
+            "label": _("Salary Slip"),
             "fieldtype": "Link",
-            "fieldname": "beneficiary_name",
+            "fieldname": "salary_slip",
+            "options": "Salary Slip",
+            "hidden": 1,
+        },
+        {
+            "label": _("Employee"),
+            "fieldtype": "Link",
+            "fieldname": "employee",
             "options": "Employee",
+            "width": 200,
+        },
+        {
+            "label": _("Employee Name"),
+            "fieldtype": "Data",
+            "fieldname": "employee_name",
             "width": 200,
         },
     ]
@@ -78,6 +91,7 @@ def execute(filters=None):
     for salary in salary_slips:
         if salary.status == filters.get("salary_slip_status"):
             row = {
+                "salary_slip": salary.name,
                 "payroll_no": salary.payroll_entry,
                 "debit_account": salary.debit_acc_no,
                 "payment_date": frappe.utils.formatdate(
@@ -86,7 +100,8 @@ def execute(filters=None):
                 "bank_name": salary.bank_name,
                 "beneficiary_account_no": salary.bank_account_no,
                 "bank_code": salary.ifsc_code,
-                "beneficiary_name": salary.employee_name,
+                "employee": salary.employee,
+                "employee_name": salary.employee_name,
                 "currency": salary.currency
                 or frappe.get_cached_value(
                     "Company", filters.company, "default_currency"
@@ -142,6 +157,7 @@ def get_salary_slips(payroll_entries):
         "Salary Slip",
         filters=[("payroll_entry", "IN", payroll)],
         fields=[
+            "name",
             "modified",
             "net_pay",
             "bank_name",
