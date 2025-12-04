@@ -1,12 +1,7 @@
 app_name = "csf_ke"
 app_title = "Kenya ERPNext Customization"
 app_publisher = "Navari Ltd"
-app_description = (
-    "ERPNext and FrappeHR Country Specific Customizations for Kenya by Navari Ltd"
-)
-app_description = (
-    "ERPNext and FrappeHR Country Specific Customizations for Kenya by Navari Ltd"
-)
+app_description = "ERPNext and FrappeHR Country Specific Customizations for Kenya by Navari Ltd"
 app_icon = "drag"
 app_color = "grey"
 app_email = "support@navari.co.ke"
@@ -15,31 +10,31 @@ required_apps = ["erpnext", "hrms"]
 
 
 fixtures = [
-    {
-        "doctype": "Custom Field",
-        "filters": [
-            ["is_system_generated", "=", 0],
-            ["module", "=", "CSF KE"],
-        ],
-    },
-    {
-        "doctype": "DocType Link",
-        "filters": [
-            [
-                "link_doctype",
-                "in",
-                ("Employee Dependent and Beneficiary",),
-            ]
-        ],
-    },
-    {
-        "doctype": "PSOA Template",
-    },
+	{
+		"doctype": "Custom Field",
+		"filters": [
+			["is_system_generated", "=", 0],
+			["module", "=", "CSF KE"],
+		],
+	},
+	{
+		"doctype": "DocType Link",
+		"filters": [
+			[
+				"link_doctype",
+				"in",
+				("Employee Dependent and Beneficiary",),
+			]
+		],
+	},
+	{
+		"doctype": "PSOA Template",
+	},
 ]
 
 process_soa_html = {
-    "General Ledger": ["csf_ke/templates/dynamic_psoa_gl.html"],
-    "Accounts Receivable": ["csf_ke/templates/dynamic_psoa_ar.html"],
+	"General Ledger": ["csf_ke/templates/dynamic_psoa_gl.html"],
+	"Accounts Receivable": ["csf_ke/templates/dynamic_psoa_ar.html"],
 }
 
 # Includes in <head>
@@ -140,33 +135,23 @@ after_migrate = "csf_ke.csf_ke.doctype.tims_hscode.tims_hscode.insert_new_record
 # }
 
 doc_events = {
-    "Purchase Receipt": {
-        "on_submit": "csf_ke.csf_ke.doctype.api.update_item_price_list.update_item_prices"
-    },
-    "Purchase Invoice": {
-        "on_submit": "csf_ke.csf_ke.doctype.api.update_item_price_list.update_item_prices"
-    },
-    "Item": {
-        "before_save": "csf_ke.csf_ke.utils.get_tims_hscode.validate_mandatory_hscode"
-    },
-    "Item Group": {
-        "before_save": "csf_ke.csf_ke.utils.get_tims_hscode.validate_mandatory_hscode"
-    },
-    "Customer": {
-        "before_save": "csf_ke.csf_ke.overrides.customer.validate_customer_kra"
-    },
-    "Sales Order": {
-        "before_submit": "csf_ke.csf_ke.overrides.sales_doc.validate_customer_kra",
-        "on_submit": "csf_ke.csf_ke.utils.item_price.update_item_price",
-    },
-    "Sales Invoice": {
-        "before_submit": "csf_ke.csf_ke.overrides.sales_doc.validate_customer_kra",
-        "on_submit": "csf_ke.csf_ke.utils.item_price.update_item_price",
-    },
-    "Delivery Note": {
-        "on_submit": "csf_ke.csf_ke.utils.item_price.update_item_price",
-    },
-    "Job Card": {"before_submit": "csf_ke.csf_ke.overrides.job_card.before_submit"},
+	"Purchase Receipt": {"on_submit": "csf_ke.csf_ke.doctype.api.update_item_price_list.update_item_prices"},
+	"Purchase Invoice": {"on_submit": "csf_ke.csf_ke.doctype.api.update_item_price_list.update_item_prices"},
+	"Item": {"before_save": "csf_ke.csf_ke.utils.get_tims_hscode.validate_mandatory_hscode"},
+	"Item Group": {"before_save": "csf_ke.csf_ke.utils.get_tims_hscode.validate_mandatory_hscode"},
+	"Customer": {"before_save": "csf_ke.csf_ke.overrides.customer.validate_customer_kra"},
+	"Sales Order": {
+		"before_submit": "csf_ke.csf_ke.overrides.sales_doc.validate_customer_kra",
+		"on_submit": "csf_ke.csf_ke.utils.item_price.update_item_price",
+	},
+	"Sales Invoice": {
+		"before_submit": "csf_ke.csf_ke.overrides.sales_doc.validate_customer_kra",
+		"on_submit": "csf_ke.csf_ke.utils.item_price.update_item_price",
+	},
+	"Delivery Note": {
+		"on_submit": "csf_ke.csf_ke.utils.item_price.update_item_price",
+	},
+	"Job Card": {"before_submit": "csf_ke.csf_ke.overrides.job_card.before_submit"},
 }
 # Scheduled Tasks
 # ---------------
@@ -218,22 +203,22 @@ doc_events = {
 # --------------------
 
 user_data_fields = [
-    {
-        "doctype": "{doctype_1}",
-        "filter_by": "{filter_by}",
-        "redact_fields": ["{field_1}", "{field_2}"],
-        "partial": 1,
-    },
-    {
-        "doctype": "{doctype_2}",
-        "filter_by": "{filter_by}",
-        "partial": 1,
-    },
-    {
-        "doctype": "{doctype_3}",
-        "strict": False,
-    },
-    {"doctype": "{doctype_4}"},
+	{
+		"doctype": "{doctype_1}",
+		"filter_by": "{filter_by}",
+		"redact_fields": ["{field_1}", "{field_2}"],
+		"partial": 1,
+	},
+	{
+		"doctype": "{doctype_2}",
+		"filter_by": "{filter_by}",
+		"partial": 1,
+	},
+	{
+		"doctype": "{doctype_3}",
+		"strict": False,
+	},
+	{"doctype": "{doctype_4}"},
 ]
 
 # Authentication and authorization

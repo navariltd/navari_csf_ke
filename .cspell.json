@@ -582,6 +582,8 @@
     "PSOA",
     "tims",
     "hscode",
-    "Statementof"
+    "Statementof",
+    "ifsc",
+    "IFSC"
   ]
 }
