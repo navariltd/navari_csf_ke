@@ -82,8 +82,6 @@ class VATWithholding(Document):
         reference_name = doc.voucher_no if kwargs.get("allocate_payment") else ""
         remark = (
             f"Reference #{doc.wht_certificate_no} dated {doc.certificate_date} for {doc.invoice_no} Voucher {doc.voucher_no}"
-            if kwargs.get("allocate_payment")
-            else f"Reference #{doc.wht_certificate_no}"
         )
 
         je = frappe.get_doc(
