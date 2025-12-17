@@ -54,8 +54,9 @@ repos:
         stages: [commit-msg]
         always_run: true
 
-      - id: cspell-modified-files
+  - repo: https://github.com/streetsidesoftware/cspell-cli
+    rev: v8.17.1
+    hooks:
+      - id: cspell
         name: check spelling of files
-        entry: sh -c "npx cspell --no-must-find-files --config .cspell.json `git diff --cached -p --name-status | cut -c3- | tr '\n' ' '`"
-        language: system
-        
+        args: ["--config", ".cspell.json", "--no-must-find-files"]        
