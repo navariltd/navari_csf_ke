@@ -20,7 +20,7 @@ class CSFKESMSCenter(Document):
 
 			if self.customer:
 				where_clause += (
-					f" and dl.link_name = '{self.customer.replace("'", "'")}'"
+					f""" and dl.link_name = '{self.customer.replace("'", "'")}'"""
 					or " and ifnull(dl.link_name, '') != ''"
 				)
 
@@ -43,7 +43,7 @@ class CSFKESMSCenter(Document):
 			where_clause = " and dl.link_doctype = 'Supplier'"
 			if self.supplier:
 				where_clause += (
-					f" and dl.link_name = '{self.supplier.replace("'", "'")}'"
+					f""" and dl.link_name = '{self.supplier.replace("'", "'")}'"""
 					or " and ifnull(dl.link_name, '') != ''"
 				)
 
@@ -51,7 +51,7 @@ class CSFKESMSCenter(Document):
 			where_clause = " and dl.link_doctype = 'Sales Partner'"
 			if self.sales_partner:
 				where_clause += (
-					f"and dl.link_name = '{self.sales_partner.replace("'", "'")}'"
+					f"""and dl.link_name = '{self.sales_partner.replace("'", "'")}'"""
 					or " and ifnull(dl.link_name, '') != ''"
 				)
 
@@ -96,9 +96,9 @@ class CSFKESMSCenter(Document):
 
 		elif self.send_to == "All Employee (Active)":
 			where_clause = (
-				self.department and f" and department = '{self.department.replace("'", "'")}'"
+				self.department and f""" and department = '{self.department.replace("'", "'")}'"""
 			) or ""
-			where_clause += (self.branch and f" and branch = '{self.branch.replace("'", "'")}'") or ""
+			where_clause += (self.branch and f""" and branch = '{self.branch.replace("'", "'")}'""") or ""
 
 			rec = frappe.db.sql(
 				f"""select employee_name, cell_number from
