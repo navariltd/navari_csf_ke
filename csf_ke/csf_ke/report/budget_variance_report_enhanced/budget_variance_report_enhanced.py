@@ -5,264 +5,253 @@
 import datetime
 
 import frappe
-from frappe import _
-from frappe.utils import flt, formatdate, getdate, get_first_day, get_last_day
-
 from erpnext.controllers.trends import get_period_date_ranges, get_period_month_ranges
+from frappe import _
+from frappe.utils import flt, formatdate, get_first_day, get_last_day, getdate
 
 
 def execute(filters=None):
-    if not filters:
-        filters = {}
+	if not filters:
+		filters = {}
 
-    columns = get_columns(filters)
-    if filters.get("budget_against_filter"):
-        dimensions = filters.get("budget_against_filter")
-    else:
-        dimensions = get_cost_centers(filters)
+	columns = get_columns(filters)
+	if filters.get("budget_against_filter"):
+		dimensions = filters.get("budget_against_filter")
+	else:
+		dimensions = get_cost_centers(filters)
 
-    period_month_ranges = get_period_month_ranges(
-        filters["period"], filters["from_fiscal_year"]
-    )
+	period_month_ranges = get_period_month_ranges(filters["period"], filters["from_fiscal_year"])
 
-    cam_map = get_dimension_account_month_map(filters)
+	cam_map = get_dimension_account_month_map(filters)
 
-    data = []
-    for dimension in dimensions:
-        dimension_items = cam_map.get(dimension)
-        if dimension_items:
-            data = get_final_data(
-                dimension, dimension_items, filters, period_month_ranges, data, 0
-            )
+	data = []
+	for dimension in dimensions:
+		dimension_items = cam_map.get(dimension)
+		if dimension_items:
+			data = get_final_data(dimension, dimension_items, filters, period_month_ranges, data, 0)
 
-    chart = get_chart_data(filters, columns, data)
+	chart = get_chart_data(filters, columns, data)
 
-    if data and filters.get("budget_against") == "Vehicle":
-        VEHICLE_DOC = frappe.qb.DocType("Vehicle")
-        EMPLOYEE_DOC = frappe.qb.DocType("Employee")
-        employees = (
-            frappe.qb.from_(VEHICLE_DOC)
-            .join(EMPLOYEE_DOC)
-            .on(VEHICLE_DOC.employee == EMPLOYEE_DOC.name)
-            .select(EMPLOYEE_DOC.employee_name, VEHICLE_DOC.name, VEHICLE_DOC.employee)
-            .where(VEHICLE_DOC.name.isin([d[0] for d in data]))
-            .run(as_dict=True)
-        )
+	if data and filters.get("budget_against") == "Vehicle":
+		VEHICLE_DOC = frappe.qb.DocType("Vehicle")
+		EMPLOYEE_DOC = frappe.qb.DocType("Employee")
+		employees = (
+			frappe.qb.from_(VEHICLE_DOC)
+			.join(EMPLOYEE_DOC)
+			.on(VEHICLE_DOC.employee == EMPLOYEE_DOC.name)
+			.select(EMPLOYEE_DOC.employee_name, VEHICLE_DOC.name, VEHICLE_DOC.employee)
+			.where(VEHICLE_DOC.name.isin([d[0] for d in data]))
+			.run(as_dict=True)
+		)
 
-        for data_row in data:
-            found = False
-            for emp in employees:
-                if emp.name == data_row[0]:
-                    data_row.insert(1, emp.employee)
-                    data_row.insert(2, emp.employee_name)
-                    found = True
-                    break
-            if not found:
-                data_row.insert(1, "")
-                data_row.insert(2, "")
+		for data_row in data:
+			found = False
+			for emp in employees:
+				if emp.name == data_row[0]:
+					data_row.insert(1, emp.employee)
+					data_row.insert(2, emp.employee_name)
+					found = True
+					break
+			if not found:
+				data_row.insert(1, "")
+				data_row.insert(2, "")
 
-    if filters.period == "Monthly":
-        if filters.get("start_date") and filters.get("end_date"):
-            fiscal_year = get_fiscal_years(filters)
-            year_start_date, year_end_date = frappe.get_cached_value(
-                "Fiscal Year", fiscal_year[0], ["year_start_date", "year_end_date"]
-            )
+	if filters.period == "Monthly":
+		if filters.get("start_date") and filters.get("end_date"):
+			fiscal_year = get_fiscal_years(filters)
+			year_start_date, year_end_date = frappe.get_cached_value(
+				"Fiscal Year", fiscal_year[0], ["year_start_date", "year_end_date"]
+			)
 
-            if (
-                getdate(filters.get("start_date")) < year_start_date
-                or getdate(filters.get("end_date")) > year_end_date
-            ):
-                frappe.throw(
-                    _("Start Date and End Date must be within the Fiscal Year selected")
-                )
+			if (
+				getdate(filters.get("start_date")) < year_start_date
+				or getdate(filters.get("end_date")) > year_end_date
+			):
+				frappe.throw(_("Start Date and End Date must be within the Fiscal Year selected"))
 
-        month1 = get_first_day(getdate(filters.get("start_date"))).month
-        month2 = get_last_day(getdate(filters.get("end_date"))).month
+		month1 = get_first_day(getdate(filters.get("start_date"))).month
+		month2 = get_last_day(getdate(filters.get("end_date"))).month
 
-        chart = get_chart_data(
-            filters, columns, data, monthly=True, month1=month1, month2=month2
-        )
-        data = filter_months(data, month1, month2)
-        columns = filters_columns(columns, month1, month2)
+		chart = get_chart_data(filters, columns, data, monthly=True, month1=month1, month2=month2)
+		data = filter_months(data, month1, month2)
+		columns = filters_columns(columns, month1, month2)
 
-    data = calculate_totals(data, filters)
+	data = calculate_totals(data, filters)
 
-    return columns, data, None, chart
+	return columns, data, None, chart
 
 
 def filter_months(data, month1, month2):
-    result = []
+	result = []
 
-    for row in data:
-        new_row = []
-        new_row = row[0:4]
-        data_to_filter = row[4:-3]
-        for month_num in range(month1, month2 + 1):
-            if 1 <= month_num <= 12:
-                start_index = (month_num - 1) * 3
-                new_row.extend(data_to_filter[start_index : start_index + 3])
-        result.append(new_row)
+	for row in data:
+		new_row = []
+		new_row = row[0:4]
+		data_to_filter = row[4:-3]
+		for month_num in range(month1, month2 + 1):
+			if 1 <= month_num <= 12:
+				start_index = (month_num - 1) * 3
+				new_row.extend(data_to_filter[start_index : start_index + 3])
+		result.append(new_row)
 
-    return result
+	return result
 
 
 def filters_columns(columns, month1, month2):
-    result = columns[0:4]
-    columns_to_check = columns[4:-3]
-    for month_num in range(month1, month2 + 1):
-        if 1 <= month_num <= 12:
-            start_index = (month_num - 1) * 3
-            result.extend(columns_to_check[start_index : start_index + 3])
+	result = columns[0:4]
+	columns_to_check = columns[4:-3]
+	for month_num in range(month1, month2 + 1):
+		if 1 <= month_num <= 12:
+			start_index = (month_num - 1) * 3
+			result.extend(columns_to_check[start_index : start_index + 3])
 
-    return result
+	return result
 
 
-def get_final_data(
-    dimension, dimension_items, filters, period_month_ranges, data, DCC_allocation
-):
-    for account, monthwise_data in dimension_items.items():
-        row = [dimension, account]
-        totals = [0, 0, 0]
-        for year in get_fiscal_years(filters):
-            last_total = 0
-            for relevant_months in period_month_ranges:
-                period_data = [0, 0, 0]
-                for month in relevant_months:
-                    if monthwise_data.get(year[0]):
-                        month_data = monthwise_data.get(year[0]).get(month, {})
-                        for i, fieldname in enumerate(["target", "actual", "variance"]):
-                            value = flt(month_data.get(fieldname))
-                            period_data[i] += value
-                            totals[i] += value
+def get_final_data(dimension, dimension_items, filters, period_month_ranges, data, DCC_allocation):
+	for account, monthwise_data in dimension_items.items():
+		row = [dimension, account]
+		totals = [0, 0, 0]
+		for year in get_fiscal_years(filters):
+			last_total = 0
+			for relevant_months in period_month_ranges:
+				period_data = [0, 0, 0]
+				for month in relevant_months:
+					if monthwise_data.get(year[0]):
+						month_data = monthwise_data.get(year[0]).get(month, {})
+						for i, fieldname in enumerate(["target", "actual", "variance"]):
+							value = flt(month_data.get(fieldname))
+							period_data[i] += value
+							totals[i] += value
 
-                period_data[0] += last_total
+				period_data[0] += last_total
 
-                if DCC_allocation:
-                    period_data[0] = period_data[0] * (DCC_allocation / 100)
-                    period_data[1] = period_data[1] * (DCC_allocation / 100)
+				if DCC_allocation:
+					period_data[0] = period_data[0] * (DCC_allocation / 100)
+					period_data[1] = period_data[1] * (DCC_allocation / 100)
 
-                if filters.get("show_cumulative"):
-                    last_total = period_data[0] - period_data[1]
+				if filters.get("show_cumulative"):
+					last_total = period_data[0] - period_data[1]
 
-                period_data[2] = period_data[0] - period_data[1]
-                row += period_data
-        totals[2] = totals[0] - totals[1]
-        if filters["period"] != "Yearly":
-            row += totals
+				period_data[2] = period_data[0] - period_data[1]
+				row += period_data
+		totals[2] = totals[0] - totals[1]
+		if filters["period"] != "Yearly":
+			row += totals
 
-        data.append(row)
+		data.append(row)
 
-    return data
+	return data
 
 
 def get_columns(filters):
-    columns = [
-        {
-            "label": _(filters.get("budget_against")),
-            "fieldtype": "Link",
-            "fieldname": "budget_against",
-            "options": filters.get("budget_against"),
-            "width": 150,
-        },
-        {
-            "label": _("Account"),
-            "fieldname": "Account",
-            "fieldtype": "Link",
-            "options": "Account",
-            "width": 150,
-        },
-    ]
+	columns = [
+		{
+			"label": _(filters.get("budget_against")),
+			"fieldtype": "Link",
+			"fieldname": "budget_against",
+			"options": filters.get("budget_against"),
+			"width": 150,
+		},
+		{
+			"label": _("Account"),
+			"fieldname": "Account",
+			"fieldtype": "Link",
+			"options": "Account",
+			"width": 150,
+		},
+	]
 
-    if filters.get("budget_against") == "Vehicle":
-        columns.insert(
-            1,
-            {
-                "label": _("Employee ID"),
-                "fieldtype": "Link",
-                "fieldname": "employee_id",
-                "options": "Employee",
-                "width": 120,
-            },
-        )
-        columns.insert(
-            2,
-            {
-                "label": _("Employee Name"),
-                "fieldtype": "Data",
-                "fieldname": "employee_name",
-                "width": 150,
-            },
-        )
+	if filters.get("budget_against") == "Vehicle":
+		columns.insert(
+			1,
+			{
+				"label": _("Employee ID"),
+				"fieldtype": "Link",
+				"fieldname": "employee_id",
+				"options": "Employee",
+				"width": 120,
+			},
+		)
+		columns.insert(
+			2,
+			{
+				"label": _("Employee Name"),
+				"fieldtype": "Data",
+				"fieldname": "employee_name",
+				"width": 150,
+			},
+		)
 
-    group_months = False if filters["period"] == "Monthly" else True
+	group_months = False if filters["period"] == "Monthly" else True
 
-    fiscal_year = get_fiscal_years(filters)
+	fiscal_year = get_fiscal_years(filters)
 
-    for year in fiscal_year:
-        for from_date, to_date in get_period_date_ranges(filters["period"], year[0]):
-            if filters["period"] == "Yearly":
-                labels = [
-                    _("Budget") + " " + str(year[0]),
-                    _("Actual") + " " + str(year[0]),
-                    _("Variance") + " " + str(year[0]),
-                ]
-                for label in labels:
-                    columns.append(
-                        {
-                            "label": label,
-                            "fieldtype": "Float",
-                            "fieldname": frappe.scrub(label),
-                            "width": 150,
-                        }
-                    )
-            else:
-                for label in [
-                    _("Budget") + " (%s)" + " " + str(year[0]),
-                    _("Actual") + " (%s)" + " " + str(year[0]),
-                    _("Variance") + " (%s)" + " " + str(year[0]),
-                ]:
-                    if group_months:
-                        label = label % (
-                            formatdate(from_date, format_string="MMM")
-                            + "-"
-                            + formatdate(to_date, format_string="MMM")
-                        )
-                    else:
-                        label = label % formatdate(from_date, format_string="MMM")
+	for year in fiscal_year:
+		for from_date, to_date in get_period_date_ranges(filters["period"], year[0]):
+			if filters["period"] == "Yearly":
+				labels = [
+					_("Budget") + " " + str(year[0]),
+					_("Actual") + " " + str(year[0]),
+					_("Variance") + " " + str(year[0]),
+				]
+				for label in labels:
+					columns.append(
+						{
+							"label": label,
+							"fieldtype": "Float",
+							"fieldname": frappe.scrub(label),
+							"width": 150,
+						}
+					)
+			else:
+				for label in [
+					_("Budget") + " (%s)" + " " + str(year[0]),
+					_("Actual") + " (%s)" + " " + str(year[0]),
+					_("Variance") + " (%s)" + " " + str(year[0]),
+				]:
+					if group_months:
+						label = label % (
+							formatdate(from_date, format_string="MMM")
+							+ "-"
+							+ formatdate(to_date, format_string="MMM")
+						)
+					else:
+						label = label % formatdate(from_date, format_string="MMM")
 
-                    columns.append(
-                        {
-                            "label": label,
-                            "fieldtype": "Float",
-                            "fieldname": frappe.scrub(label),
-                            "width": 150,
-                        }
-                    )
+					columns.append(
+						{
+							"label": label,
+							"fieldtype": "Float",
+							"fieldname": frappe.scrub(label),
+							"width": 150,
+						}
+					)
 
-    if filters["period"] != "Yearly":
-        for label in [_("Total Budget"), _("Total Actual"), _("Total Variance")]:
-            columns.append(
-                {
-                    "label": label,
-                    "fieldtype": "Float",
-                    "fieldname": frappe.scrub(label),
-                    "width": 150,
-                }
-            )
+	if filters["period"] != "Yearly":
+		for label in [_("Total Budget"), _("Total Actual"), _("Total Variance")]:
+			columns.append(
+				{
+					"label": label,
+					"fieldtype": "Float",
+					"fieldname": frappe.scrub(label),
+					"width": 150,
+				}
+			)
 
-        return columns
-    else:
-        return columns
+		return columns
+	else:
+		return columns
 
 
 def get_cost_centers(filters):
-    order_by = ""
-    if filters.get("budget_against") == "Cost Center":
-        order_by = "order by lft"
+	order_by = ""
+	if filters.get("budget_against") == "Cost Center":
+		order_by = "order by lft"
 
-    if filters.get("budget_against") in ["Cost Center", "Project"]:
-        return frappe.db.sql_list(
-            """
+	if filters.get("budget_against") in ["Cost Center", "Project"]:
+		return frappe.db.sql_list(
+			"""
 				select
 					name
 				from
@@ -271,30 +260,30 @@ def get_cost_centers(filters):
 					company = %s
 				{order_by}
 			""".format(tab=filters.get("budget_against"), order_by=order_by),
-            filters.get("company"),
-        )
-    else:
-        return frappe.db.sql_list(
-            """
+			filters.get("company"),
+		)
+	else:
+		return frappe.db.sql_list(
+			"""
 				select
 					name
 				from
 					`tab{tab}`
 			""".format(tab=filters.get("budget_against"))
-        )  # nosec
+		)  # nosec
 
 
 # Get dimension & target details
 def get_dimension_target_details(filters):
-    budget_against = frappe.scrub(filters.get("budget_against"))
-    cond = ""
-    if filters.get("budget_against_filter"):
-        cond += f""" and b.{budget_against} in (%s)""" % ", ".join(
-            ["%s"] * len(filters.get("budget_against_filter"))
-        )
+	budget_against = frappe.scrub(filters.get("budget_against"))
+	cond = ""
+	if filters.get("budget_against_filter"):
+		cond += f""" and b.{budget_against} in (%s)""" % ", ".join(
+			["%s"] * len(filters.get("budget_against_filter"))
+		)
 
-    return frappe.db.sql(
-        f"""
+	return frappe.db.sql(
+		f"""
 			select
 				b.{budget_against} as budget_against,
 				b.monthly_distribution,
@@ -314,24 +303,24 @@ def get_dimension_target_details(filters):
 			order by
 				b.fiscal_year
 		""",
-        tuple(
-            [
-                filters.from_fiscal_year,
-                filters.to_fiscal_year,
-                filters.budget_against,
-                filters.company,
-            ]
-            + (filters.get("budget_against_filter") or [])
-        ),
-        as_dict=True,
-    )
+		tuple(
+			[
+				filters.from_fiscal_year,
+				filters.to_fiscal_year,
+				filters.budget_against,
+				filters.company,
+			]
+			+ (filters.get("budget_against_filter") or [])
+		),
+		as_dict=True,
+	)
 
 
 # Get target distribution details of accounts of cost center
 def get_target_distribution_details(filters):
-    target_details = {}
-    for d in frappe.db.sql(
-        """
+	target_details = {}
+	for d in frappe.db.sql(
+		"""
 			select
 				md.name,
 				mdp.month,
@@ -345,30 +334,28 @@ def get_target_distribution_details(filters):
 			order by
 				md.fiscal_year
 		""",
-        (filters.from_fiscal_year, filters.to_fiscal_year),
-        as_dict=1,
-    ):
-        target_details.setdefault(d.name, {}).setdefault(
-            d.month, flt(d.percentage_allocation)
-        )
+		(filters.from_fiscal_year, filters.to_fiscal_year),
+		as_dict=1,
+	):
+		target_details.setdefault(d.name, {}).setdefault(d.month, flt(d.percentage_allocation))
 
-    return target_details
+	return target_details
 
 
 # Get actual details from gl entry
 def get_actual_details(name, filters):
-    budget_against = frappe.scrub(filters.get("budget_against"))
-    cond = ""
+	budget_against = frappe.scrub(filters.get("budget_against"))
+	cond = ""
 
-    if filters.get("budget_against") == "Cost Center":
-        cc_lft, cc_rgt = frappe.db.get_value("Cost Center", name, ["lft", "rgt"])
-        cond = f"""
+	if filters.get("budget_against") == "Cost Center":
+		cc_lft, cc_rgt = frappe.db.get_value("Cost Center", name, ["lft", "rgt"])
+		cond = f"""
 				and lft >= "{cc_lft}"
 				and rgt <= "{cc_rgt}"
 			"""
 
-    ac_details = frappe.db.sql(
-        f"""
+	ac_details = frappe.db.sql(
+		f"""
 			select
 				gl.account,
 				gl.debit,
@@ -401,53 +388,51 @@ def get_actual_details(name, filters):
 					gl.name
 				order by gl.fiscal_year
 		""",
-        (filters.from_fiscal_year, filters.to_fiscal_year, name),
-        as_dict=1,
-    )
+		(filters.from_fiscal_year, filters.to_fiscal_year, name),
+		as_dict=1,
+	)
 
-    cc_actual_details = {}
-    for d in ac_details:
-        cc_actual_details.setdefault(d.account, []).append(d)
+	cc_actual_details = {}
+	for d in ac_details:
+		cc_actual_details.setdefault(d.account, []).append(d)
 
-    return cc_actual_details
+	return cc_actual_details
 
 
 def get_dimension_account_month_map(filters):
-    dimension_target_details = get_dimension_target_details(filters)
-    tdd = get_target_distribution_details(filters)
+	dimension_target_details = get_dimension_target_details(filters)
+	tdd = get_target_distribution_details(filters)
 
-    cam_map = {}
+	cam_map = {}
 
-    for ccd in dimension_target_details:
-        actual_details = get_actual_details(ccd.budget_against, filters)
+	for ccd in dimension_target_details:
+		actual_details = get_actual_details(ccd.budget_against, filters)
 
-        for month_id in range(1, 13):
-            month = datetime.date(2013, month_id, 1).strftime("%B")
-            cam_map.setdefault(ccd.budget_against, {}).setdefault(
-                ccd.account, {}
-            ).setdefault(ccd.fiscal_year, {}).setdefault(
-                month, frappe._dict({"target": 0.0, "actual": 0.0})
-            )
+		for month_id in range(1, 13):
+			month = datetime.date(2013, month_id, 1).strftime("%B")
+			cam_map.setdefault(ccd.budget_against, {}).setdefault(ccd.account, {}).setdefault(
+				ccd.fiscal_year, {}
+			).setdefault(month, frappe._dict({"target": 0.0, "actual": 0.0}))
 
-            tav_dict = cam_map[ccd.budget_against][ccd.account][ccd.fiscal_year][month]
-            month_percentage = (
-                tdd.get(ccd.monthly_distribution, {}).get(month, 0)
-                if ccd.monthly_distribution
-                else 100.0 / 12
-            )
+			tav_dict = cam_map[ccd.budget_against][ccd.account][ccd.fiscal_year][month]
+			month_percentage = (
+				tdd.get(ccd.monthly_distribution, {}).get(month, 0)
+				if ccd.monthly_distribution
+				else 100.0 / 12
+			)
 
-            tav_dict.target = flt(ccd.budget_amount) * month_percentage / 100
+			tav_dict.target = flt(ccd.budget_amount) * month_percentage / 100
 
-            for ad in actual_details.get(ccd.account, []):
-                if ad.month_name == month and ad.fiscal_year == ccd.fiscal_year:
-                    tav_dict.actual += flt(ad.debit) - flt(ad.credit)
+			for ad in actual_details.get(ccd.account, []):
+				if ad.month_name == month and ad.fiscal_year == ccd.fiscal_year:
+					tav_dict.actual += flt(ad.debit) - flt(ad.credit)
 
-    return cam_map
+	return cam_map
 
 
 def get_fiscal_years(filters):
-    fiscal_year = frappe.db.sql(
-        """
+	fiscal_year = frappe.db.sql(
+		"""
 			select
 				name
 			from
@@ -455,114 +440,114 @@ def get_fiscal_years(filters):
 			where
 				name between %(from_fiscal_year)s and %(to_fiscal_year)s
 		""",
-        {
-            "from_fiscal_year": filters["from_fiscal_year"],
-            "to_fiscal_year": filters["to_fiscal_year"],
-        },
-    )
+		{
+			"from_fiscal_year": filters["from_fiscal_year"],
+			"to_fiscal_year": filters["to_fiscal_year"],
+		},
+	)
 
-    return fiscal_year
+	return fiscal_year
 
 
 def get_chart_data(filters, columns, data, monthly=False, month1=1, month2=1):
-    if not data:
-        return None
+	if not data:
+		return None
 
-    labels = []
+	labels = []
 
-    fiscal_year = get_fiscal_years(filters)
-    group_months = False if filters["period"] == "Monthly" else True
+	fiscal_year = get_fiscal_years(filters)
+	group_months = False if filters["period"] == "Monthly" else True
 
-    for year in fiscal_year:
-        for from_date, to_date in get_period_date_ranges(filters["period"], year[0]):
-            if filters["period"] == "Yearly":
-                labels.append(year[0])
-            else:
-                if group_months:
-                    label = (
-                        formatdate(from_date, format_string="MMM")
-                        + "-"
-                        + formatdate(to_date, format_string="MMM")
-                    )
-                    labels.append(label)
-                else:
-                    label = formatdate(from_date, format_string="MMM")
-                    labels.append(label)
+	for year in fiscal_year:
+		for from_date, to_date in get_period_date_ranges(filters["period"], year[0]):
+			if filters["period"] == "Yearly":
+				labels.append(year[0])
+			else:
+				if group_months:
+					label = (
+						formatdate(from_date, format_string="MMM")
+						+ "-"
+						+ formatdate(to_date, format_string="MMM")
+					)
+					labels.append(label)
+				else:
+					label = formatdate(from_date, format_string="MMM")
+					labels.append(label)
 
-    no_of_columns = len(labels)
+	no_of_columns = len(labels)
 
-    budget_values, actual_values = [0] * no_of_columns, [0] * no_of_columns
-    for d in data:
-        values = d[4:] if monthly else d[2:]
-        index = 0
+	budget_values, actual_values = [0] * no_of_columns, [0] * no_of_columns
+	for d in data:
+		values = d[4:] if monthly else d[2:]
+		index = 0
 
-        for i in range(no_of_columns):
-            budget_values[i] += values[index]
-            actual_values[i] += values[index + 1]
-            index += 3
+		for i in range(no_of_columns):
+			budget_values[i] += values[index]
+			actual_values[i] += values[index + 1]
+			index += 3
 
-    if monthly:
-        return {
-            "data": {
-                "labels": labels[month1:month2],
-                "datasets": [
-                    {
-                        "name": _("Budget"),
-                        "chartType": "bar",
-                        "values": budget_values[month1:month2],
-                    },
-                    {
-                        "name": _("Actual Expense"),
-                        "chartType": "bar",
-                        "values": actual_values[month1:month2],
-                    },
-                ],
-            },
-            "type": "bar",
-        }
+	if monthly:
+		return {
+			"data": {
+				"labels": labels[month1:month2],
+				"datasets": [
+					{
+						"name": _("Budget"),
+						"chartType": "bar",
+						"values": budget_values[month1:month2],
+					},
+					{
+						"name": _("Actual Expense"),
+						"chartType": "bar",
+						"values": actual_values[month1:month2],
+					},
+				],
+			},
+			"type": "bar",
+		}
 
-    return {
-        "data": {
-            "labels": labels,
-            "datasets": [
-                {"name": _("Budget"), "chartType": "bar", "values": budget_values},
-                {
-                    "name": _("Actual Expense"),
-                    "chartType": "bar",
-                    "values": actual_values,
-                },
-            ],
-        },
-        "type": "bar",
-    }
+	return {
+		"data": {
+			"labels": labels,
+			"datasets": [
+				{"name": _("Budget"), "chartType": "bar", "values": budget_values},
+				{
+					"name": _("Actual Expense"),
+					"chartType": "bar",
+					"values": actual_values,
+				},
+			],
+		},
+		"type": "bar",
+	}
 
 
 def calculate_totals(data, filters):
-    if not data:
-        return data
+	if not data:
+		return data
 
-    # Determine label columns based on filter
-    if filters.get("budget_against") == "Vehicle":
-        label_columns = 4
-    else:
-        label_columns = 2
+	# Determine label columns based on filter
+	if filters.get("budget_against") == "Vehicle":
+		label_columns = 4
+	else:
+		label_columns = 2
 
-    # Initialize totals with zeros for all numeric columns
-    num_numeric_columns = len(data[0]) - label_columns
-    totals = [0] * num_numeric_columns
+	# Initialize totals with zeros for all numeric columns
+	num_numeric_columns = len(data[0]) - label_columns
+	totals = [0] * num_numeric_columns
 
-    # Calculate totals from all rows
-    for row in data:
-        numeric_values = row[label_columns:]
-        for i, value in enumerate(numeric_values):
-            if i < len(totals) and isinstance(value, (int, float)):
-                totals[i] += value
+	# Calculate totals from all rows
+	for row in data:
+		numeric_values = row[label_columns:]
+		for i, value in enumerate(numeric_values):
+			if i < len(totals) and isinstance(value, (int | float)):
+				totals[i] += value
 
-    # Create total row (don't modify original data, return new list)
-    if filters.get("budget_against") == "Vehicle":
-        total_row = ["Total", "", "", ""] + totals
-    else:
-        total_row = ["Total", ""] + totals
+	# Create total row (don't modify original data, return new list)
+	if filters.get("budget_against") == "Vehicle":
+		total_row = ["Total", "", "", "", *totals]
+	else:
+		total_row = ["Total", "", *totals]
 
-    # Return original data with total row appended
-    return data + [total_row]
+	# Return original data with total row appended
+	return [*data, total_row]

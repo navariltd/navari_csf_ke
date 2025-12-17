@@ -75,7 +75,7 @@
       }
       @page {
         size: A4;
-        margin: 20mm 15mm 20mm 15mm; 
+        margin: 20mm 15mm 20mm 15mm;
       }
     </style>
   </head>
@@ -117,12 +117,12 @@
           <strong>Customer Name:</strong> {{ cus.customer_name }} <br>
           <strong>Contact Name:</strong> {{ data[0].customer_primary_contact if data and data[0].customer_primary_contact else '' }} <br>
 
-   
+
 
           {% set address_name = frappe.db.get_value("Dynamic Link", {
             "link_doctype": "Customer", "link_name": cus.name
           }, "parent") %}
-          
+
           {% if address_name %}
             {% set cus_add = frappe.get_doc("Address", address_name) %}
             {% if cus_add %}
@@ -152,8 +152,8 @@
           </tr>
         </thead>
         <tbody>
-          {% set running_balance = 0 %} 
-          {% if data and data[0] %} 
+          {% set running_balance = 0 %}
+          {% if data and data[0] %}
             <tr>
               <td class="text-center">
                 {{ frappe.format(filters.report_date, 'Date') }}
@@ -166,11 +166,11 @@
               <td class="currency">{{ "{:,.0f}".format(opening_balance) }}</td>
             </tr>
             {% set running_balance = opening_balance %}
-          {% endif %} 
+          {% endif %}
 
-          {% for row in data %} 
-            {% if row.party and not loop.last %} 
-              {% if row.invoiced and row.invoiced != 0 %} 
+          {% for row in data %}
+            {% if row.party and not loop.last %}
+              {% if row.invoiced and row.invoiced != 0 %}
                 {% set running_balance = running_balance + row.invoiced %}
                 <tr>
                   <td class="text-center">
@@ -183,9 +183,9 @@
                   <td class="currency">-</td>
                   <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
                 </tr>
-              {% endif %} 
+              {% endif %}
 
-              {% if row.paid and row.paid != 0 %} 
+              {% if row.paid and row.paid != 0 %}
                 {% set running_balance = running_balance - row.paid %}
                 <tr>
                   <td class="text-center">
@@ -198,9 +198,9 @@
                   <td class="currency">{{ "{:,.0f}".format(row.paid) }}</td>
                   <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
                 </tr>
-              {% endif %} 
+              {% endif %}
 
-              {% if row.credit_note and row.credit_note != 0 %} 
+              {% if row.credit_note and row.credit_note != 0 %}
                 {% set running_balance = running_balance - row.credit_note %}
                 <tr>
                   <td class="text-center">
@@ -213,8 +213,8 @@
                   <td class="currency">{{ "{:,.0f}".format(row.credit_note) }}</td>
                   <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
                 </tr>
-              {% endif %} 
-            {% endif %} 
+              {% endif %}
+            {% endif %}
           {% endfor %}
         </tbody>
       </table>

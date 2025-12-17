@@ -46,7 +46,7 @@ frappe.query_reports["Sales Analytics Enhanced"] = {
       fieldtype: "Date",
       default: erpnext.utils.get_fiscal_year(
         frappe.datetime.get_today(),
-        true
+        true,
       )[1],
       reqd: 1,
     },
@@ -56,7 +56,7 @@ frappe.query_reports["Sales Analytics Enhanced"] = {
       fieldtype: "Date",
       default: erpnext.utils.get_fiscal_year(
         frappe.datetime.get_today(),
-        true
+        true,
       )[2],
       reqd: 1,
     },
@@ -101,7 +101,7 @@ frappe.query_reports["Sales Analytics Enhanced"] = {
         onCheckRow: function (data) {
           if (!data) return;
           const data_doctype = $(data[2].html)[0].attributes.getNamedItem(
-            "data-doctype"
+            "data-doctype",
           ).value;
           const tree_type = frappe.query_report.filters[0].value;
           if (data_doctype != tree_type) return;
@@ -136,7 +136,7 @@ frappe.query_reports["Sales Analytics Enhanced"] = {
             frappe.query_report.chart_options,
             {
               data: new_data,
-            }
+            },
           );
           frappe.query_report.render_chart(new_options);
 
