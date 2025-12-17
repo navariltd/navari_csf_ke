@@ -107,6 +107,6 @@ jobs:
         working-directory: /home/runner/frappe-bench
         run: |
           bench --site test_site set-config allow_tests true
-          bench --site test_site run-tests --app csf_ke
+          bench --site test_site run-tests --app csf_ke --skip-test-records
         env:
           TYPE: server
