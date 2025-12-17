@@ -13,7 +13,7 @@ def get_qr_code(data: str) -> str:
 
 def add_file_info(data: str) -> str:
 	"""Add info about the file type and encoding.
-	
+
 	This is required so the browser can make sense of the data."""
 	return f"data:image/png;base64, {data}"
 
@@ -31,4 +31,3 @@ def get_qr_code_bytes(data, format: str) -> bytes:
 def bytes_to_base64_string(data: bytes) -> str:
 	"""Convert bytes to a base64 encoded string."""
 	return b64encode(data).decode("utf-8")
-

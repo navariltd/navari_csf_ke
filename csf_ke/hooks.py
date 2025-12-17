@@ -37,6 +37,8 @@ process_soa_html = {
 	"Accounts Receivable": ["csf_ke/templates/dynamic_psoa_ar.html"],
 }
 
+before_tests = "csf_ke.setup.utils.before_tests"
+
 # Includes in <head>
 # ------------------
 

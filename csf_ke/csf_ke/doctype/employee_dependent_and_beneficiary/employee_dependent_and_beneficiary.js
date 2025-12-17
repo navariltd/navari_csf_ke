@@ -61,7 +61,7 @@ function update_full_name(frm) {
       "full_name",
       `${frm.doc.first_name || ""} ${frm.doc.middle_name || ""} ${
         frm.doc.last_name || ""
-      }`.trim()
+      }`.trim(),
     );
   } else {
     frm.set_value("full_name", "");

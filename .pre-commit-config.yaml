@@ -1,5 +1,5 @@
 exclude: "node_modules|.git"
-default_stages: [commit]
+default_stages: [pre-commit]
 fail_fast: false
 
 repos:
@@ -19,7 +19,7 @@ repos:
           )$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: debug-statements
       - id: trailing-whitespace
@@ -32,7 +32,7 @@ repos:
       - id: check-yaml
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.6
+    rev: v0.14.9
     hooks:
       - id: ruff
         args: [--fix]
@@ -54,8 +54,9 @@ repos:
         stages: [commit-msg]
         always_run: true
 
-      - id: cspell-modified-files
+  - repo: https://github.com/streetsidesoftware/cspell-cli
+    rev: v8.17.1
+    hooks:
+      - id: cspell
         name: check spelling of files
-        entry: sh -c "npx cspell --no-must-find-files --config .cspell.json `git diff --cached -p --name-status | cut -c3- | tr '\n' ' '`"
-        language: system
-        
+        args: ["--config", ".cspell.json", "--no-must-find-files"]        
