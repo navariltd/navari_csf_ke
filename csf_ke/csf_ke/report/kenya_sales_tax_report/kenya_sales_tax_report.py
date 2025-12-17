@@ -63,7 +63,7 @@ class KenyaSalesTaxReport:
 				"fieldtype": "Data",
 				"width": 200,
 			},
-			{"fieldname": _("cu_link"), "label": "CU Link", "fieldtype": "Data", "width": 200},
+			{"fieldname": "cu_link", "label": _("CU Link"), "fieldtype": "Data", "width": 200},
 			{
 				"label": _("CU Invoice Date"),
 				"fieldname": "cu_invoice_date",
@@ -218,7 +218,7 @@ class KenyaSalesTaxReport:
 			sales_invoice["taxable_value"] = total_taxable_value
 			sales_invoice["amount_of_vat"] = total_vat
 
-		report_details = list(filter(lambda report_entry: report_entry["taxable_value"], report_details))
+		report_details = [entry for entry in report_details if entry.get("taxable_value")]
 
 		for report_entry in report_details:
 			if report_entry["pin_of_purchaser"]:

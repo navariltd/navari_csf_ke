@@ -77,26 +77,37 @@ def get_result(filters, tds_docs, tds_accounts, tax_category_map, journal_entry_
 
 					# Define amount index based on party type
 					amount_index = 5 if filters.get("party_type") == "Customer" else 4
-					# Use lambda to find matching bill_no where debit_amount == tax_amount
-					matching_entry = next(
-						filter(
-							lambda x: abs(round(x[amount_index])) == (abs(tax_amount)),
-							[
-								journal_entry_party_map.get(name)[i : i + 6]
-								for i in range(0, len(journal_entry_party_map.get(name, [])), 6)
-							],
-						),
-						None,
-					)
+
+					# Get the raw data
+					party_data = journal_entry_party_map.get(name, [])
+					chunks = [party_data[i : i + 6] for i in range(0, len(party_data), 6)]
+
+					filtered_chunks = [
+						chunk for chunk in chunks if abs(round(chunk[amount_index])) == abs(tax_amount)
+					]
+
+					matching_entry = filtered_chunks[0] if filtered_chunks else None
+
 					if matching_entry:
-						if matching_entry[1] == "Purchase Invoice":
-							doc_info = frappe.get_doc(matching_entry[1], matching_entry[2])
-							bill_no = doc_info.bill_no
-							bill_date = doc_info.bill_date
-						elif matching_entry[1] == "Sales Invoice":
-							doc_info = frappe.get_doc(matching_entry[1], matching_entry[2])
-							invoice_no = doc_info.name
-							invoice_date = doc_info.posting_date
+						doctype = matching_entry[1]
+						docname = matching_entry[2]
+
+						if doctype == "Purchase Invoice":
+							bill_info = frappe.db.get_value(
+								doctype, docname, ["bill_no", "bill_date"], as_dict=True
+							)
+							if bill_info:
+								bill_no = bill_info.bill_no
+								bill_date = bill_info.bill_date
+
+						elif doctype == "Sales Invoice":
+							inv_info = frappe.db.get_value(
+								doctype, docname, ["name", "posting_date"], as_dict=True
+							)
+							if inv_info:
+								invoice_no = inv_info.name
+								invoice_date = inv_info.posting_date
+
 					else:
 						bill_date = ""
 						bill_no = ""

@@ -30,4 +30,5 @@ def before_tests():
 		)
 
 	enable_all_roles_and_domains()
+	# Manually commit to save setup progress in case of timeout # nosemgrep
 	frappe.db.commit()

@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 
 
 def execute(filters=None):
@@ -15,56 +16,56 @@ def get_columns():
 	return [
 		{
 			"fieldname": "payslip_number",
-			"label": "Payroll Number",
+			"label": _("Payroll Number"),
 			"fieldtype": "Link",
 			"options": "Salary Slip",
 			"width": 150,
 		},
 		{
 			"fieldname": "first_name",
-			"label": "First Name",
+			"label": _("First Name"),
 			"fieldtype": "Data",
 			"width": 100,
 		},
 		{
 			"fieldname": "last_name",
-			"label": "Last Name",
+			"label": _("Last Name"),
 			"fieldtype": "Data",
 			"width": 100,
 		},
 		{
 			"fieldname": "identity_type",
-			"label": "Identity Type",
+			"label": _("Identity Type"),
 			"fieldtype": "Data",
 			"width": 150,
 		},
 		{
 			"fieldname": "national_id",
-			"label": "ID Number",
+			"label": _("ID Number"),
 			"fieldtype": "Data",
 			"width": 150,
 		},
 		{
 			"fieldname": "tax_id",
-			"label": "KRA PIN",
+			"label": _("KRA PIN"),
 			"fieldtype": "Data",
 			"width": 150,
 		},
 		{
 			"fieldname": "nhif_no",
-			"label": "SHIF No",
+			"label": _("SHIF No"),
 			"fieldtype": "Data",
 			"width": 150,
 		},
 		{
 			"fieldname": "amount",
-			"label": "Contribution Amount",
+			"label": _("Contribution Amount"),
 			"fieldtype": "Currency",
 			"width": 150,
 		},
 		{
 			"fieldname": "cell_number",
-			"label": "Phone",
+			"label": _("Phone"),
 			"fieldtype": "Data",
 			"width": 150,
 		},

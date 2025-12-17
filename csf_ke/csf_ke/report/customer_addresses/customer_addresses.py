@@ -4,6 +4,7 @@
 from collections import defaultdict
 
 import frappe
+from frappe import _
 from frappe.query_builder import DocType
 
 
@@ -124,7 +125,7 @@ def execute(filters=None):
 	columns = [
 		{"fieldname": "Account Manager", "label": "Account Manager", "fieldtype": "Data", "width": 250},
 		{
-			"fieldname": "Customer Name",
+			"fieldname": _("Customer Name"),
 			"label": "Customer",
 			"fieldtype": "Link",
 			"options": "Customer",

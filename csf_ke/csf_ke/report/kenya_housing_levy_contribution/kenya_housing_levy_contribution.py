@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 
 from ..kenya_shif_contribution.kenya_shif_contribution import apply_filters
 
@@ -17,25 +18,25 @@ def get_columns():
 	return [
 		{
 			"fieldname": "national_id",
-			"label": "Member Number (ID Number)",
+			"label": _("Member Number (ID Number)"),
 			"fieldtype": "Data",
 			"width": 150,
 		},
 		{
 			"fieldname": "full_name",
-			"label": "Member Name",
+			"label": _("Member Name"),
 			"fieldtype": "Data",
 			"width": 250,
 		},
 		{
 			"fieldname": "tax_id",
-			"label": "KRA PIN",
+			"label": _("KRA PIN"),
 			"fieldtype": "Data",
 			"width": 150,
 		},
 		{
 			"fieldname": "amount",
-			"label": "Gross Salary",
+			"label": _("Gross Salary"),
 			"fieldtype": "Currency",
 			"width": 150,
 		},

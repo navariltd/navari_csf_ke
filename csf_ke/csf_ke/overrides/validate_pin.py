@@ -1,6 +1,7 @@
 import re
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 
 
@@ -28,7 +29,7 @@ def validate_pin(doctype: Document, customer: Document) -> None:
 
 	pattern = r"^[A-Z]\d{9}[A-Z]$"
 	if not re.match(pattern, customer.tax_id):
-		frappe.throw("Invalid Customer KRA PIN format. Expected P123456789H or A123456789B.")
+		frappe.throw(_("Invalid Customer KRA PIN format. Expected P123456789H or A123456789B."))
 
 	company = frappe.defaults.get_defaults().get("company")
 	if not company:

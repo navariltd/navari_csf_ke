@@ -210,7 +210,7 @@ class KenyaPurchaseTaxReport:
 			purchase_invoice["taxable_value"] = total_taxable_value
 			purchase_invoice["amount_of_vat"] = total_vat
 
-		report_details = list(filter(lambda report_entry: report_entry["taxable_value"], report_details))
+		report_details = [entry for entry in report_details if entry.get("taxable_value")]
 
 		for report_entry in report_details:
 			if report_entry["pin_of_supplier"]:
