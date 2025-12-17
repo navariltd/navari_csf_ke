@@ -90,14 +90,14 @@ jobs:
         run: |
           bench get-app erpnext --branch version-15
           bench get-app hrms --branch version-15
-          bench get-app nairobi_explorer $GITHUB_WORKSPACE
+          bench get-app csf_ke $GITHUB_WORKSPACE
     
       - name: Install
         working-directory: /home/runner/frappe-bench
         run: |
           bench setup requirements --dev
           bench new-site --db-root-password root --admin-password admin test_site
-          bench --site test_site install-app nairobi_explorer
+          bench --site test_site install-app csf_ke
           bench build
         env:
           CI: 'Yes'
@@ -106,6 +106,6 @@ jobs:
         working-directory: /home/runner/frappe-bench
         run: |
           bench --site test_site set-config allow_tests true
-          bench --site test_site run-tests --app nairobi_explorer
+          bench --site test_site run-tests --app csf_ke
         env:
           TYPE: server
