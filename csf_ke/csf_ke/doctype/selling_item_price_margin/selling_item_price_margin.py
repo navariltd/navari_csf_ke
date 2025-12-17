@@ -63,9 +63,7 @@ class SellingItemPriceMargin(Document):
 						record["selling_price"], record["start_date"], record["end_date"]
 					)
 					frappe.throw(
-						_(
-							"Item '{0}' already exists in another record with the same selling price. Date overlap:\n{1}"
-						).format(item.item_code, overlap_details)
+						f"Item '{item.item_code}' already exists in another record with the same selling price. Date overlap:\n{overlap_details}"
 					)
 				else:
 					continue

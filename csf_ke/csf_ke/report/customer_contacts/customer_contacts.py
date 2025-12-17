@@ -124,8 +124,8 @@ def execute(filters=None):
 	columns = [
 		{"fieldname": "Account Manager", "label": "Account Manager", "fieldtype": "Data", "width": 250},
 		{
-			"fieldname": _("Customer Name"),
-			"label": "Customer",
+			"fieldname": "Customer Name",
+			"label": _("Customer"),
 			"fieldtype": "Link",
 			"options": "Customer",
 			"width": 250,
