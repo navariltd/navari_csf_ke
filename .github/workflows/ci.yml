@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - develop
+      - version-15
   pull_request:
 
 concurrency:
