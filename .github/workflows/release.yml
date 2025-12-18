@@ -21,12 +21,13 @@ jobs:
         with:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
-          repositories: csf_ke
+          owner: navariltd
+          repositories: navari_csf_ke
 
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          repository: navariltd/navari_csf_ke
           fetch-depth: 0
           token: ${{ steps.get_app_token.outputs.token }}
 
