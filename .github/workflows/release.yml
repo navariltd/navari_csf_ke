@@ -1,14 +1,16 @@
 name: Release
 
 on:
-  repository_dispatch:
-    types: [ci-success]
+  push:
+    branches:
+      - 'version-*'
 
 permissions:
   contents: write
 
 jobs:
   release:
+    name: Release
     runs-on: ubuntu-latest
 
     steps:
@@ -24,7 +26,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.client_payload.ref }}
           fetch-depth: 0
           token: ${{ steps.get_app_token.outputs.token }}
 
