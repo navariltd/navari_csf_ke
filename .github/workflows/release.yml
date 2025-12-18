@@ -22,7 +22,7 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-          repositories: csf_ke
+          repositories: navari_csf_ke
 
       - name: Checkout repository
         uses: actions/checkout@v4
