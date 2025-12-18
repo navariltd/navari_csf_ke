@@ -24,7 +24,7 @@ The P10 Payroll Tax Report is a report that generates structured payroll tax dat
 
 ## How to Use
 
-1. **Accessing the Report:** "Kenya Workspace" -> "P10A Tax Report" or search for "P10A TAX Report" on the "Awesome Seachbar"
+1. **Accessing the Report:** "Kenya Workspace" -> "P10A Tax Report" or search for "P10A TAX Report" on the "Awesome Searchbar"
 
 2.  **Filtering:**
     *   Company (required)
