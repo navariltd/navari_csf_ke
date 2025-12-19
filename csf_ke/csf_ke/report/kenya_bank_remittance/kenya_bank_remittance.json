@@ -1,0 +1,29 @@
+{
+ "add_total_row": 0,
+ "add_translate_data": 0,
+ "columns": [],
+ "creation": "2025-12-02 10:41:15.946060",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": "Standard",
+ "letterhead": null,
+ "modified": "2025-12-02 10:41:15.946060",
+ "modified_by": "Administrator",
+ "module": "CSF KE",
+ "name": "Kenya Bank Remittance",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Payroll Entry",
+ "report_name": "Kenya Bank Remittance",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "HR Manager"
+  }
+ ],
+ "timeout": 0
+}

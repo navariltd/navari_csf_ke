@@ -7,7 +7,6 @@ from frappe.model.document import Document
 
 
 class SalesInvoiceSettings(Document):
-	
 	def before_save(self):
 		self.toggle_item_code_mandatory()
 
@@ -24,7 +23,7 @@ class SalesInvoiceSettings(Document):
 			"doc_type": DOCTYPE,
 			"field_name": FIELD_NAME,
 			"property": PROPERTY,
-			"property_type": PROPERTY_TYPE
+			"property_type": PROPERTY_TYPE,
 		}
 
 		existing_property = frappe.db.exists("Property Setter", field_filters)
@@ -32,20 +31,22 @@ class SalesInvoiceSettings(Document):
 		try:
 			if self.set_item_code_mandatory:
 				if existing_property:
-				
-					frappe.db.set_value("Property Setter", field_filters, "value", VALUE, update_modified=False)
+					frappe.db.set_value(
+						"Property Setter", field_filters, "value", VALUE, update_modified=False
+					)
 
 				else:
-
-					frappe.get_doc({
-						"doctype": "Property Setter",
-						"doctype_or_field": "DocField",
-						"doc_type": DOCTYPE,
-						"field_name": FIELD_NAME,
-						"property": PROPERTY,
-						"property_type": PROPERTY_TYPE,
-						"value": VALUE
-					}).insert(ignore_permissions=True)
+					frappe.get_doc(
+						{
+							"doctype": "Property Setter",
+							"doctype_or_field": "DocField",
+							"doc_type": DOCTYPE,
+							"field_name": FIELD_NAME,
+							"property": PROPERTY,
+							"property_type": PROPERTY_TYPE,
+							"value": VALUE,
+						}
+					).insert(ignore_permissions=True)
 
 			elif existing_property:
 				frappe.delete_doc("Property Setter", existing_property, ignore_permissions=True)

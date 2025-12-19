@@ -30,7 +30,7 @@ frappe.query_reports["Kenya P9A Tax Deduction Card Report"] = {
           frappe.db.get_value("Company", company, "tax_id", function (value) {
             frappe.query_report.set_filter_value(
               "company_tax_id",
-              value["tax_id"]
+              value["tax_id"],
             );
           });
         }
@@ -70,7 +70,7 @@ frappe.query_reports["Kenya P9A Tax Deduction Card Report"] = {
           frappe.db.get_value("Company", company, "tax_id", function (value) {
             frappe.query_report.set_filter_value(
               "company_tax_id",
-              value["tax_id"]
+              value["tax_id"],
             );
           });
         }

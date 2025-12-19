@@ -4,13 +4,13 @@
 from collections import OrderedDict
 
 import frappe
+from erpnext.controllers.queries import get_match_cond
+from erpnext.stock.report.stock_ledger.stock_ledger import get_item_group_condition
+from erpnext.stock.utils import get_incoming_rate
 from frappe import _, qb, scrub
 from frappe.query_builder import Order
 from frappe.utils import cint, flt, formatdate
 
-from erpnext.controllers.queries import get_match_cond
-from erpnext.stock.report.stock_ledger.stock_ledger import get_item_group_condition
-from erpnext.stock.utils import get_incoming_rate
 
 def execute(filters=None):
 	if not filters:
@@ -47,8 +47,8 @@ def execute(filters=None):
 				"item_code",
 				"item_name",
 				"item_group",
-	"default_uom",
-	"uom_required",
+				"default_uom",
+				"uom_required",
 				"qty",
 				"qty_uom",
 				"base_rate",
@@ -159,9 +159,7 @@ def execute(filters=None):
 	return columns, data
 
 
-def get_data_when_grouped_by_invoice(
-	columns, gross_profit_data, filters, group_wise_columns, data
-):
+def get_data_when_grouped_by_invoice(columns, gross_profit_data, filters, group_wise_columns, data):
 	column_names = get_column_names()
 
 	# to display item as Item Code: Item Name
@@ -255,14 +253,14 @@ def get_columns(group_wise_columns, filters):
 				"options": "Warehouse",
 				"width": 100,
 			},
-   "default_uom": {
+			"default_uom": {
 				"label": _("Default UOM"),
 				"fieldname": "default_uom",
 				"fieldtype": "Link",
 				"options": "UOM",
 				"width": 100,
 			},
-   "uom_required": {
+			"uom_required": {
 				"label": _("UOM Required"),
 				"fieldname": "uom_required",
 				"fieldtype": "Link",
@@ -270,7 +268,14 @@ def get_columns(group_wise_columns, filters):
 				"width": 100,
 			},
 			"qty": {"label": _("Qty"), "fieldname": "qty", "fieldtype": "Float", "width": 80},
-   "qty_uom": {"label": f"Qty ({filters.get('uom')})", "fieldname": "qty_uom", "fieldtype": "Float", "width": 80} if filters.get("uom") else {"label": _("Qty"), "fieldname": "qty", "fieldtype": "Float", "width": 80, "hidden": 1},
+			"qty_uom": {
+				"label": f"Qty ({filters.get('uom')})",
+				"fieldname": "qty_uom",
+				"fieldtype": "Float",
+				"width": 80,
+			}
+			if filters.get("uom")
+			else {"label": _("Qty"), "fieldname": "qty", "fieldtype": "Float", "width": 80, "hidden": 1},
 			"base_rate": {
 				"label": _("Avg. Selling Rate"),
 				"fieldname": "avg._selling_rate",
@@ -369,7 +374,6 @@ def get_columns(group_wise_columns, filters):
 			},
 		}
 	)
-	
 
 	for col in group_wise_columns.get(scrub(filters.group_by)):
 		columns.append(column_map.get(col))
@@ -401,7 +405,7 @@ def get_column_names():
 			"description": "description",
 			"warehouse": "warehouse",
 			"qty": "qty",
-   "qty_uom": "qty_uom",
+			"qty_uom": "qty_uom",
 			"base_rate": "avg._selling_rate",
 			"buying_rate": "valuation_rate",
 			"base_amount": "selling_amount",
@@ -413,7 +417,7 @@ def get_column_names():
 	)
 
 
-class GrossProfitGenerator(object):
+class GrossProfitGenerator:
 	def __init__(self, filters=None):
 		self.sle = {}
 		self.data = []
@@ -512,10 +516,11 @@ class GrossProfitGenerator(object):
 	def get_average_rate_based_on_group_by(self):
 		for key in list(self.grouped):
 			if self.filters.get("group_by") == "Invoice":
-				for i, row in enumerate(self.grouped[key]):
+				for _i, row in enumerate(self.grouped[key]):
 					if row.indent == 1.0:
 						if (
-							row.parent in self.returned_invoices and row.item_code in self.returned_invoices[row.parent]
+							row.parent in self.returned_invoices
+							and row.item_code in self.returned_invoices[row.parent]
 						):
 							returned_item_rows = self.returned_invoices[row.parent][row.item_code]
 							for returned_item_row in returned_item_rows:
@@ -528,7 +533,9 @@ class GrossProfitGenerator(object):
 										row.qty = 0
 										returned_item_row.qty += row.qty
 								row.base_amount += flt(returned_item_row.base_amount, self.currency_precision)
-							row.buying_amount = flt(flt(row.qty) * flt(row.buying_rate), self.currency_precision)
+							row.buying_amount = flt(
+								flt(row.qty) * flt(row.buying_rate), self.currency_precision
+							)
 						if flt(row.qty) or row.base_amount:
 							row = self.set_average_rate(row)
 							self.grouped_data.append(row)
@@ -583,9 +590,7 @@ class GrossProfitGenerator(object):
 		new_row.buying_rate = (
 			flt(new_row.buying_amount / new_row.qty, self.float_precision) if new_row.qty else 0
 		)
-		new_row.base_rate = (
-			flt(new_row.base_amount / new_row.qty, self.float_precision) if new_row.qty else 0
-		)
+		new_row.base_rate = flt(new_row.base_amount / new_row.qty, self.float_precision) if new_row.qty else 0
 		return new_row
 
 	def set_average_gross_profit(self, new_row):
@@ -597,21 +602,25 @@ class GrossProfitGenerator(object):
 		)
 
 	def get_returned_invoice_items(self):
-		sales_invoices_doc=frappe.qb.DocType("Sales Invoice")
-		sales_invoices_item_doc=frappe.qb.DocType("Sales Invoice Item")
-  
-		query = frappe.qb.from_(sales_invoices_doc)\
-			.inner_join(sales_invoices_item_doc)\
-			.on(sales_invoices_doc.name == sales_invoices_item_doc.parent)\
-				.select(sales_invoices_doc.name.as_("name"), sales_invoices_item_doc.item_code.as_("item_code"),
-				sales_invoices_item_doc.stock_qty.as_("qty"), sales_invoices_item_doc.base_net_amount.as_("base_amount"), 
-				sales_invoices_doc.return_against.as_("return_against"))\
-			.where(
-				(sales_invoices_doc.docstatus == 1) &
-				(sales_invoices_doc.is_return == 1))
-    
+		sales_invoices_doc = frappe.qb.DocType("Sales Invoice")
+		sales_invoices_item_doc = frappe.qb.DocType("Sales Invoice Item")
+
+		query = (
+			frappe.qb.from_(sales_invoices_doc)
+			.inner_join(sales_invoices_item_doc)
+			.on(sales_invoices_doc.name == sales_invoices_item_doc.parent)
+			.select(
+				sales_invoices_doc.name.as_("name"),
+				sales_invoices_item_doc.item_code.as_("item_code"),
+				sales_invoices_item_doc.stock_qty.as_("qty"),
+				sales_invoices_item_doc.base_net_amount.as_("base_amount"),
+				sales_invoices_doc.return_against.as_("return_against"),
+			)
+			.where((sales_invoices_doc.docstatus == 1) & (sales_invoices_doc.is_return == 1))
+		)
+
 		returned_invoices = query.run(as_dict=True)
-		
+
 		self.returned_invoices = frappe._dict()
 		for inv in returned_invoices:
 			self.returned_invoices.setdefault(inv.return_against, frappe._dict()).setdefault(
@@ -643,7 +652,7 @@ class GrossProfitGenerator(object):
 				and parent == sle.voucher_no
 				and sle.voucher_detail_no == item_row
 			):
-				previous_stock_value = len(my_sle) > i + 1 and flt(my_sle[i + 1].stock_value) or 0.0
+				previous_stock_value = (len(my_sle) > i + 1 and flt(my_sle[i + 1].stock_value)) or 0.0
 
 				if previous_stock_value:
 					return abs(previous_stock_value - flt(sle.stock_value)) * flt(row.qty) / abs(flt(sle.qty))
@@ -673,7 +682,7 @@ class GrossProfitGenerator(object):
 			elif self.delivery_notes.get((row.parent, row.item_code), None):
 				#  check if Invoice has delivery notes
 				dn = self.delivery_notes.get((row.parent, row.item_code))
-				parenttype, parent, item_row, warehouse = (
+				parenttype, parent, item_row, _warehouse = (
 					"Delivery Note",
 					dn["delivery_note"],
 					dn["item_row"],
@@ -712,7 +721,7 @@ class GrossProfitGenerator(object):
 
 	def get_average_buying_rate(self, row, item_code):
 		args = row
-		if not item_code in self.average_buying_rate:
+		if item_code not in self.average_buying_rate:
 			args.update(
 				{
 					"voucher_type": row.parenttype,
@@ -768,7 +777,7 @@ class GrossProfitGenerator(object):
 		conditions += " and (is_return = 0 or (is_return=1 and return_against is null))"
 
 		if self.filters.item_group:
-			conditions += " and {0}".format(get_item_group_condition(self.filters.item_group))
+			conditions += f" and {get_item_group_condition(self.filters.item_group)}"
 
 		if self.filters.sales_person:
 			conditions += """
@@ -786,15 +795,14 @@ class GrossProfitGenerator(object):
 			sales_team_table = ""
 
 		if self.filters.group_by == "Payment Term":
-			payment_term_cols = """,if(`tabSales Invoice`.is_return = 1,
-										'{0}',
-										coalesce(schedule.payment_term, '{1}')) as payment_term,
-									schedule.invoice_portion,
-									schedule.payment_amount """.format(
-				_("Sales Return"), _("No Terms")
-			)
-			payment_term_table = """ left join `tabPayment Schedule` schedule on schedule.parent = `tabSales Invoice`.name and
-																				`tabSales Invoice`.is_return = 0 """
+			payment_term_cols = f""",
+				if(`tabSales Invoice`.is_return = 1,
+					'{_("Sales Return")}',
+					coalesce(schedule.payment_term, '{_("No Terms")}')) as payment_term,
+					schedule.invoice_portion,
+					schedule.payment_amount
+			"""
+			payment_term_table = """ left join `tabPayment Schedule` schedule on schedule.parent = `tabSales Invoice`.name and `tabSales Invoice`.is_return = 0 """
 		else:
 			payment_term_cols = ""
 			payment_term_table = ""
@@ -822,14 +830,14 @@ class GrossProfitGenerator(object):
 				`tabSales Invoice`.territory, `tabSales Invoice Item`.item_code,
 				`tabSales Invoice Item`.item_name, `tabSales Invoice Item`.description,
 				`tabSales Invoice Item`.uom as uom_required, `tabSales Invoice Item`.stock_uom as default_uom,
-				
+
 				`tabSales Invoice Item`.warehouse, `tabSales Invoice Item`.item_group,
 				`tabSales Invoice Item`.brand, `tabSales Invoice Item`.so_detail,
 				`tabSales Invoice Item`.sales_order, `tabSales Invoice Item`.dn_detail,
 				`tabSales Invoice Item`.delivery_note, `tabSales Invoice Item`.stock_qty as qty,
 				`tabSales Invoice Item`.base_net_rate, `tabSales Invoice Item`.base_net_amount,
 				`tabSales Invoice Item`.name as "item_row", `tabSales Invoice`.is_return,
-				
+
 				`tabSales Invoice Item`.cost_center, `tabSales Invoice Item`.serial_and_batch_bundle
 				{sales_person_cols}
 				{payment_term_cols}
@@ -867,17 +875,17 @@ class GrossProfitGenerator(object):
 				total_quantities[item_code] = quantity
 
 		for item_code, total_quantity in total_quantities.items():
-		# Update rows' qty_uom based on the total quantity for each item code
+			# Update rows' qty_uom based on the total quantity for each item code
 			for row in self.si_list:
-
 				if row.get("item_code") == item_code:
 					quantity = total_quantity
 					uom_required = row.uom_required
-					default_uom=row.default_uom
-					chosen_uom=filters.get("uom")
+					default_uom = row.default_uom
+					chosen_uom = filters.get("uom")
 					row.qty_uom = GrossProfitGenerator.calculate_qty_in_chosen_uom(
-					item_code, quantity, chosen_uom, uom_required, default_uom)
-			
+						item_code, quantity, chosen_uom, uom_required, default_uom
+					)
+
 	def get_delivery_notes(self):
 		self.delivery_notes = frappe._dict({})
 		if self.si_list:
@@ -951,7 +959,7 @@ class GrossProfitGenerator(object):
 				"dn_detail": None,
 				"delivery_note": None,
 				"qty": None,
-	"qty_uom": None,
+				"qty_uom": None,
 				"item_row": None,
 				"is_return": row.is_return,
 				"cost_center": row.cost_center,
@@ -994,9 +1002,7 @@ class GrossProfitGenerator(object):
 		)
 
 	def get_bundle_item_details(self, item_code):
-		return frappe.db.get_value(
-			"Item", item_code, ["item_name", "description", "item_group", "brand"]
-		)
+		return frappe.db.get_value("Item", item_code, ["item_name", "description", "item_group", "brand"])
 
 	def get_stock_ledger_entries(self, item_code, warehouse):
 		if item_code and warehouse:
@@ -1020,7 +1026,9 @@ class GrossProfitGenerator(object):
 						& (sle.is_cancelled == 0)
 					)
 					.orderby(sle.item_code)
-					.orderby(sle.warehouse, sle.posting_date, sle.posting_time, sle.creation, order=Order.desc)
+					.orderby(
+						sle.warehouse, sle.posting_date, sle.posting_time, sle.creation, order=Order.desc
+					)
 					.run(as_dict=True)
 				)
 
@@ -1056,15 +1064,14 @@ class GrossProfitGenerator(object):
 			).setdefault(d.parent_item, []).append(d)
 
 	def load_non_stock_items(self):
-		item_doc=frappe.qb.DocType("Item")
+		item_doc = frappe.qb.DocType("Item")
 		query = frappe.qb.from_(item_doc).select(item_doc.name.as_("name")).where(item_doc.is_stock_item == 0)
 		self.non_stock_items = query.run(as_dict=True)
-		
 
 	def get_conversion_factor(item_code, default_uom):
-		conversion_factor = frappe.get_value("UOM Conversion Detail",
-											{"parent": item_code, "uom": default_uom},
-											"conversion_factor")
+		conversion_factor = frappe.get_value(
+			"UOM Conversion Detail", {"parent": item_code, "uom": default_uom}, "conversion_factor"
+		)
 
 		if not conversion_factor:
 			conversion_factor = 1.0  # If no conversion factor is found, default to 1
@@ -1073,7 +1080,7 @@ class GrossProfitGenerator(object):
 
 	def calculate_qty_in_chosen_uom(item_code, qty, chosen_uom, sales_invoice_uom, default_uom):
 		if chosen_uom != default_uom:
-			conversion_factor =GrossProfitGenerator.get_conversion_factor(item_code, default_uom)
+			conversion_factor = GrossProfitGenerator.get_conversion_factor(item_code, default_uom)
 			if chosen_uom == "Bag" and sales_invoice_uom == "Bag":
 				# If the chosen unit of measure is Kgs, calculate the quantity from the existing quantity
 				calculated_qty = qty
@@ -1086,4 +1093,3 @@ class GrossProfitGenerator(object):
 			calculated_qty = qty
 
 		return calculated_qty
-
