@@ -4,6 +4,7 @@
 import csv
 import os
 import re
+from collections import defaultdict
 from datetime import datetime
 
 import frappe
@@ -30,7 +31,22 @@ class KenyaSalesTaxReport:
 		return columns, data, None, None, report_summary
 
 	def get_columns(self):
-		columns = [
+		columns = []
+
+		# Add accounting dimension column if filter is set
+		if self.filters.get("accounting_dimension"):
+			dimension_label = self.filters.get("accounting_dimension")
+			columns.append(
+				{
+					"label": _(dimension_label),
+					"fieldname": "accounting_dimension_value",
+					"fieldtype": "Link",
+					"options": dimension_label,
+					"width": 180,
+				}
+			)
+
+		columns += [
 			{
 				"label": _("PIN of purchaser"),
 				"fieldname": "pin_of_purchaser",
@@ -43,7 +59,12 @@ class KenyaSalesTaxReport:
 				"fieldtype": "Data",
 				"width": 240,
 			},
-			{"label": _("Invoice Date"), "fieldname": "invoice_date", "fieldtype": "Date", "width": 160},
+			{
+				"label": _("Invoice Date"),
+				"fieldname": "invoice_date",
+				"fieldtype": "Date",
+				"width": 160,
+			},
 			{
 				"label": _("Invoice Number"),
 				"fieldname": "invoice_name",
@@ -63,7 +84,12 @@ class KenyaSalesTaxReport:
 				"fieldtype": "Data",
 				"width": 200,
 			},
-			{"fieldname": "cu_link", "label": _("CU Link"), "fieldtype": "Data", "width": 200},
+			{
+				"fieldname": "cu_link",
+				"label": _("CU Link"),
+				"fieldtype": "Data",
+				"width": 200,
+			},
 			{
 				"label": _("CU Invoice Date"),
 				"fieldname": "cu_invoice_date",
@@ -118,24 +144,35 @@ class KenyaSalesTaxReport:
 		sale_invoice_doc = frappe.qb.DocType("Sales Invoice")
 		customer_doc = frappe.qb.DocType("Customer")
 
+		# Build select fields list
+		select_fields = [
+			sale_invoice_doc.tax_id.as_("pin_of_purchaser"),
+			sale_invoice_doc.customer_name.as_("name_of_purchaser"),
+			sale_invoice_doc.etr_serial_number.as_("etr_serial_number"),
+			sale_invoice_doc.etr_invoice_number.as_("etr_invoice_number"),
+			sale_invoice_doc.cu_link.as_("cu_link"),
+			sale_invoice_doc.cu_invoice_date.as_("cu_invoice_date"),
+			sale_invoice_doc.posting_date.as_("invoice_date"),
+			sale_invoice_doc.name.as_("invoice_name"),
+			sale_invoice_doc.base_grand_total.as_("invoice_total_sales"),
+			sale_invoice_doc.return_against.as_("return_against"),
+		]
+
+		# Add accounting dimension field if specified
+		accounting_dimension = self.filters.get("accounting_dimension")
+		if accounting_dimension:
+			dimension_field_map = {"Cost Center": "cost_center", "Project": "project"}
+			dimension_field = dimension_field_map.get(accounting_dimension)
+			if dimension_field:
+				select_fields.append(
+					getattr(sale_invoice_doc, dimension_field).as_("accounting_dimension_value")
+				)
+
 		sales_invoice_query = (
 			frappe.qb.from_(sale_invoice_doc)
 			.inner_join(customer_doc)
 			.on(sale_invoice_doc.customer == customer_doc.name)
-			.select(
-				sale_invoice_doc.tax_id.as_("pin_of_purchaser")
-				if sale_invoice_doc.tax_id
-				else "".as_("pin_of_purchaser"),
-				sale_invoice_doc.customer_name.as_("name_of_purchaser"),
-				sale_invoice_doc.etr_serial_number.as_("etr_serial_number"),
-				sale_invoice_doc.etr_invoice_number.as_("etr_invoice_number"),
-				sale_invoice_doc.cu_link.as_("cu_link"),
-				sale_invoice_doc.cu_invoice_date.as_("cu_invoice_date"),
-				sale_invoice_doc.posting_date.as_("invoice_date"),
-				sale_invoice_doc.name.as_("invoice_name"),
-				sale_invoice_doc.base_grand_total.as_("invoice_total_sales"),
-				sale_invoice_doc.return_against.as_("return_against"),
-			)
+			.select(*select_fields)
 			.where(sale_invoice_doc.docstatus == 1)
 		)
 
@@ -194,8 +231,6 @@ class KenyaSalesTaxReport:
 		sales_invoices = self.get_sales_invoices()
 
 		for sales_invoice in sales_invoices:
-			report_details.append(sales_invoice)
-
 			items_or_services = self.get_sales_invoice_items(
 				sales_invoice.invoice_name, self.filters.tax_template
 			)
@@ -205,7 +240,9 @@ class KenyaSalesTaxReport:
 
 			for item_or_service in items_or_services:
 				tax_rate = frappe.db.get_value(
-					"Item Tax Template Detail", {"parent": item_or_service["item_tax_template"]}, ["tax_rate"]
+					"Item Tax Template Detail",
+					{"parent": item_or_service["item_tax_template"]},
+					["tax_rate"],
 				)
 				item_or_service["amount_of_vat"] = (
 					0 if not tax_rate else item_or_service["taxable_value"] * (tax_rate / 100)
@@ -213,12 +250,12 @@ class KenyaSalesTaxReport:
 
 				total_taxable_value += item_or_service["taxable_value"]
 				total_vat += item_or_service["amount_of_vat"]
-				item_or_service["indent"] = 1
 
 			sales_invoice["taxable_value"] = total_taxable_value
 			sales_invoice["amount_of_vat"] = total_vat
 
-		report_details = [entry for entry in report_details if entry.get("taxable_value")]
+			if total_taxable_value:
+				report_details.append(sales_invoice)
 
 		for report_entry in report_details:
 			if report_entry["pin_of_purchaser"]:
@@ -228,7 +265,39 @@ class KenyaSalesTaxReport:
 				self.unregistered_customers_total_sales += report_entry["invoice_total_sales"]
 				self.unregistered_customers_total_vat += report_entry["amount_of_vat"]
 
+		# Group by accounting dimension if specified
+		if self.filters.get("accounting_dimension") and report_details:
+			report_details = self.group_by_dimension(report_details)
+
 		return report_details
+
+	def group_by_dimension(self, data):
+		"""Group data by accounting dimension and add group headers with totals"""
+		grouped_data = defaultdict(list)
+		for row in data:
+			dimension_value = row.get("accounting_dimension_value") or _("No Dimension")
+			grouped_data[dimension_value].append(row)
+
+		final_data = []
+		for dimension_value in sorted(grouped_data.keys()):
+			group_rows = grouped_data[dimension_value]
+
+			group_taxable_value = sum(row.get("taxable_value", 0) for row in group_rows)
+			group_amount_of_vat = sum(row.get("amount_of_vat", 0) for row in group_rows)
+
+			group_header = {
+				"accounting_dimension_value": dimension_value,
+				"taxable_value": group_taxable_value,
+				"amount_of_vat": group_amount_of_vat,
+				"is_group_header": True,
+			}
+			final_data.append(group_header)
+
+			for row in group_rows:
+				row["indent"] = 1
+				final_data.append(row)
+
+		return final_data
 
 	def get_report_summary(self):
 		return [
@@ -327,12 +396,17 @@ def download_custom_csv_format(company, from_date=None, to_date=None):
 										invoice.get("invoice_name", ""),
 										invoice.get("taxable_value", ""),
 										"",
-										f"|{invoice.get('return_cu_invoice_number', '')}"
-										if invoice.return_against
-										else "",
-										invoice.get("return_cu_invoice_date").strftime("%d/%m/%Y")
-										if invoice.return_against and invoice.get("return_cu_invoice_date")
-										else "",
+										(
+											f"|{invoice.get('return_cu_invoice_number', '')}"
+											if invoice.return_against
+											else ""
+										),
+										(
+											invoice.get("return_cu_invoice_date").strftime("%d/%m/%Y")
+											if invoice.return_against
+											and invoice.get("return_cu_invoice_date")
+											else ""
+										),
 									]
 								)
 

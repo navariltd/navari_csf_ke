@@ -46,7 +46,37 @@ frappe.query_reports["Kenya Sales Tax Report"] = {
       reqd: 0,
       width: "100px",
     },
+    {
+      fieldname: "accounting_dimension",
+      label: __("Accounting Dimension"),
+      fieldtype: "Select",
+      options: ["", "Cost Center", "Project"],
+      default: "",
+      reqd: 0,
+      width: "120px",
+    },
   ],
+
+  formatter: function (value, row, column, data, default_formatter) {
+    value = default_formatter(value, row, column, data);
+
+    // Bold formatting for group header rows
+    if (data && data.is_group_header) {
+      if (
+        [
+          "taxable_value",
+          "amount_of_vat",
+          "name_of_purchaser",
+          "accounting_dimension_value",
+        ].includes(column.fieldname)
+      ) {
+        value = `<span style="font-weight: bold;">${value}</span>`;
+      }
+    }
+
+    return value;
+  },
+
   onload: function (report) {
     report.page.add_menu_item("Export CSVs", function () {
       frappe.call({
