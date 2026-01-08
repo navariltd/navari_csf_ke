@@ -139,7 +139,6 @@ after_migrate = "csf_ke.csf_ke.doctype.tims_hscode.tims_hscode.insert_new_record
 doc_events = {
 	"Purchase Receipt": {"on_submit": "csf_ke.csf_ke.doctype.api.update_item_price_list.update_item_prices"},
 	"Purchase Invoice": {"on_submit": "csf_ke.csf_ke.doctype.api.update_item_price_list.update_item_prices"},
-	"Item": {"before_save": "csf_ke.csf_ke.utils.get_tims_hscode.validate_mandatory_hscode"},
 	"Item Group": {"before_save": "csf_ke.csf_ke.utils.get_tims_hscode.validate_mandatory_hscode"},
 	"Customer": {"before_save": "csf_ke.csf_ke.overrides.customer.validate_customer_kra"},
 	"Sales Order": {
