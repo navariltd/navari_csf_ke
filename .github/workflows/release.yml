@@ -1,19 +1,16 @@
 name: Release
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
+  push:
+    branches:
+      - 'version-*'
 
 permissions:
   contents: write
 
 jobs:
   release:
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      startsWith(github.event.workflow_run.head_branch, 'version-')
+    name: Release
     runs-on: ubuntu-latest
 
     steps:
@@ -29,8 +26,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          repository: navariltd/navari_csf_ke
-          ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 0
           token: ${{ steps.get_app_token.outputs.token }}
 

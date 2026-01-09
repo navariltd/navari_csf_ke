@@ -5,11 +5,14 @@ on:
   push:
     branches:
       - develop
-      - version-15
+      - 'version-*'
   pull_request:
+    branches:
+      - develop
+      - 'version-*'
 
 concurrency:
-  group: develop-csf_ke-${{ github.event.number }}
+  group: ${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: true
 
 jobs:
