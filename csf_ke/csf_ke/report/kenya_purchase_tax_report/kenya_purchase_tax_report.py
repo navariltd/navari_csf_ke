@@ -5,6 +5,7 @@
 import csv
 import os
 import re
+from collections import defaultdict
 from datetime import datetime
 
 import frappe
@@ -31,7 +32,22 @@ class KenyaPurchaseTaxReport:
 		return columns, data, None, None, report_summary
 
 	def get_columns(self):
-		columns = [
+		columns = []
+
+		# Add accounting dimension column if filter is set
+		if self.filters.get("accounting_dimension"):
+			dimension_label = self.filters.get("accounting_dimension")
+			columns.append(
+				{
+					"label": _(dimension_label),
+					"fieldname": "accounting_dimension_value",
+					"fieldtype": "Link",
+					"options": dimension_label,
+					"width": 180,
+				}
+			)
+
+		columns += [
 			{
 				"label": _("PIN of supplier"),
 				"fieldname": "pin_of_supplier",
@@ -110,19 +126,32 @@ class KenyaPurchaseTaxReport:
 		purchase_invoice_ = frappe.qb.DocType("Purchase Invoice")
 		supplier_ = frappe.qb.DocType("Supplier")
 
+		# Build select fields list
+		select_fields = [
+			supplier_.tax_id.as_("pin_of_supplier"),
+			purchase_invoice_.supplier_name.as_("name_of_supplier"),
+			purchase_invoice_.etr_invoice_number.as_("etr_invoice_number"),
+			purchase_invoice_.posting_date.as_("invoice_date"),
+			purchase_invoice_.name.as_("invoice_name"),
+			purchase_invoice_.base_grand_total.as_("invoice_total_purchases"),
+			purchase_invoice_.return_against.as_("return_against"),
+		]
+
+		# Add accounting dimension field if specified
+		accounting_dimension = self.filters.get("accounting_dimension")
+		if accounting_dimension:
+			dimension_field_map = {"Cost Center": "cost_center", "Project": "project"}
+			dimension_field = dimension_field_map.get(accounting_dimension)
+			if dimension_field:
+				select_fields.append(
+					getattr(purchase_invoice_, dimension_field).as_("accounting_dimension_value")
+				)
+
 		purchase_invoices_query = (
 			frappe.qb.from_(purchase_invoice_)
 			.inner_join(supplier_)
 			.on(purchase_invoice_.supplier == supplier_.name)
-			.select(
-				(supplier_.tax_id.as_("pin_of_supplier") if supplier_.tax_id else " ".as_("pin_of_supplier")),
-				purchase_invoice_.supplier_name.as_("name_of_supplier"),
-				purchase_invoice_.etr_invoice_number.as_("etr_invoice_number"),
-				purchase_invoice_.posting_date.as_("invoice_date"),
-				purchase_invoice_.name.as_("invoice_name"),
-				purchase_invoice_.base_grand_total.as_("invoice_total_purchases"),
-				purchase_invoice_.return_against.as_("return_against"),
-			)
+			.select(*select_fields)
 			.where(purchase_invoice_.docstatus == 1)
 		)
 
@@ -184,8 +213,6 @@ class KenyaPurchaseTaxReport:
 		purchase_invoices = self.get_purchase_invoices()
 
 		for purchase_invoice in purchase_invoices:
-			report_details.append(purchase_invoice)
-
 			items_or_services = self.get_purchase_invoice_items(
 				purchase_invoice.invoice_name, self.filters.tax_template
 			)
@@ -205,12 +232,12 @@ class KenyaPurchaseTaxReport:
 
 				total_taxable_value += item_or_service["taxable_value"]
 				total_vat += item_or_service["amount_of_vat"]
-				item_or_service["indent"] = 1
 
 			purchase_invoice["taxable_value"] = total_taxable_value
 			purchase_invoice["amount_of_vat"] = total_vat
 
-		report_details = [entry for entry in report_details if entry.get("taxable_value")]
+			if total_taxable_value:
+				report_details.append(purchase_invoice)
 
 		for report_entry in report_details:
 			if report_entry["pin_of_supplier"]:
@@ -220,7 +247,38 @@ class KenyaPurchaseTaxReport:
 				self.unregistered_suppliers_total_purchases += report_entry["invoice_total_purchases"]
 				self.unregistered_suppliers_total_vat += report_entry["amount_of_vat"]
 
+		if self.filters.get("accounting_dimension") and report_details:
+			report_details = self.group_by_dimension(report_details)
+
 		return report_details
+
+	def group_by_dimension(self, data):
+		"""Group data by accounting dimension and add group headers with totals"""
+		grouped_data = defaultdict(list)
+		for row in data:
+			dimension_value = row.get("accounting_dimension_value") or _("No Dimension")
+			grouped_data[dimension_value].append(row)
+
+		final_data = []
+		for dimension_value in sorted(grouped_data.keys()):
+			group_rows = grouped_data[dimension_value]
+
+			group_taxable_value = sum(row.get("taxable_value", 0) for row in group_rows)
+			group_amount_of_vat = sum(row.get("amount_of_vat", 0) for row in group_rows)
+
+			group_header = {
+				"accounting_dimension_value": dimension_value,
+				"taxable_value": group_taxable_value,
+				"amount_of_vat": group_amount_of_vat,
+				"is_group_header": True,
+			}
+			final_data.append(group_header)
+
+			for row in group_rows:
+				row["indent"] = 1
+				final_data.append(row)
+
+		return final_data
 
 	def get_report_summary(self):
 		return [
@@ -321,9 +379,12 @@ def download_custom_csv_format(company, from_date=None, to_date=None):
 										invoice.get("taxable_value", ""),
 										"",
 										f"{'|' + invoice.get('return_cu_invoice_number', '') if invoice.return_against else ''}",
-										invoice.get("return_cu_invoice_date").strftime("%d/%m/%Y")
-										if invoice.return_against and invoice.get("return_cu_invoice_date")
-										else "",
+										(
+											invoice.get("return_cu_invoice_date").strftime("%d/%m/%Y")
+											if invoice.return_against
+											and invoice.get("return_cu_invoice_date")
+											else ""
+										),
 									]
 								)
 

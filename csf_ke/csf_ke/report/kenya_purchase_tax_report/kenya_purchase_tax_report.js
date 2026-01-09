@@ -46,8 +46,64 @@ frappe.query_reports["Kenya Purchase Tax Report"] = {
       reqd: 0,
       width: "100px",
     },
+    {
+      fieldname: "accounting_dimension",
+      label: __("Accounting Dimension"),
+      fieldtype: "Select",
+      options: ["", "Cost Center", "Project"],
+      default: "",
+      reqd: 0,
+      width: "120px",
+    },
   ],
+
+  formatter: function (value, row, column, data, default_formatter) {
+    value = default_formatter(value, row, column, data);
+
+    // Bold formatting for group header rows
+    if (data && data.is_group_header) {
+      if (
+        [
+          "taxable_value",
+          "amount_of_vat",
+          "name_of_supplier",
+          "accounting_dimension_value",
+        ].includes(column.fieldname)
+      ) {
+        value = `<span style="font-weight: bold;">${value}</span>`;
+      }
+    }
+
+    return value;
+  },
+
   onload: function (report) {
+    frappe.call({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Accounting Dimension",
+        fields: ["document_type"],
+        filters: {
+          disabled: 0,
+        },
+      },
+      callback: function (r) {
+        let options = ["", "Cost Center", "Project"];
+        if (r.message) {
+          r.message.forEach(function (d) {
+            if (!options.includes(d.document_type)) {
+              options.push(d.document_type);
+            }
+          });
+        }
+        let dimension_filter = report.get_filter("accounting_dimension");
+        if (dimension_filter) {
+          dimension_filter.df.options = options;
+          dimension_filter.refresh();
+        }
+      },
+    });
+
     report.page.add_menu_item("Export CSVs", function () {
       frappe.call({
         method:
