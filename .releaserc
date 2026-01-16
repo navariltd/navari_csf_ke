@@ -1,6 +1,6 @@
 {
 	"branches": [
-		"version-15"
+		"version-16"
 	],
 	"tagFormat": "v${version}",
 	"repositoryUrl": "https://github.com/navariltd/navari_csf_ke.git",
