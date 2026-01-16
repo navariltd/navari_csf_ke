@@ -15,7 +15,7 @@ add_to_apps_screen = [
 		"logo": "/assets/csf_ke_docs/images/csf_ke.svg",
 		"title": "Kenya",
 		"route": "/desk/kenya",
-		"has_permission": "csf_ke.check_app_permission"
+		"has_permission": "csf_ke.check_app_permission",
 	}
 ]
 

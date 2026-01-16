@@ -3,6 +3,7 @@ from frappe.utils.user import is_website_user
 
 __version__ = "2.3.0"
 
+
 def is_frappe_version(version: str, above: bool = False, below: bool = False):
 	from frappe.pulse.utils import get_frappe_version
 
@@ -20,8 +21,8 @@ def is_frappe_version(version: str, above: bool = False, below: bool = False):
 def check_app_permission():
 	if frappe.session.user == "Administrator":
 		return True
-	
+
 	if is_website_user():
 		return False
-	
+
 	return True
