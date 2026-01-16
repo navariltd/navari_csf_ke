@@ -9,6 +9,17 @@ app_license = "GNU General Public License (v3)"
 required_apps = ["erpnext", "hrms"]
 
 
+add_to_apps_screen = [
+	{
+		"name": "csf_ke",
+		"logo": "/assets/csf_ke_docs/images/csf_ke.svg",
+		"title": "Kenya",
+		"route": "/desk/kenya",
+		"has_permission": "csf_ke.check_app_permission",
+	}
+]
+
+
 fixtures = [
 	{
 		"doctype": "Custom Field",
@@ -28,7 +39,7 @@ fixtures = [
 		],
 	},
 	{
-		"doctype": "PSOA Template",
+		"doctype": "Statement of Account Template",
 	},
 ]
 
