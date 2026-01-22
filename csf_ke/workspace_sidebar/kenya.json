@@ -21,8 +21,9 @@
   {
    "child": 0,
    "collapsible": 1,
+   "icon": "database",
    "indent": 0,
-   "keep_closed": 0,
+   "keep_closed": 1,
    "label": "Tax Masters",
    "link_type": "DocType",
    "show_arrow": 0,
@@ -31,6 +32,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "hash",
    "indent": 0,
    "keep_closed": 0,
    "label": "TIMs HSCode",
@@ -42,6 +44,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "percent",
    "indent": 0,
    "keep_closed": 0,
    "label": "VAT Withholding",
@@ -55,7 +58,7 @@
    "collapsible": 1,
    "icon": "chart",
    "indent": 0,
-   "keep_closed": 0,
+   "keep_closed": 1,
    "label": "Accounting Reports",
    "link_type": "DocType",
    "show_arrow": 0,
@@ -64,6 +67,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "file-minus-corner",
    "indent": 0,
    "keep_closed": 0,
    "label": "Sales Tax Report",
@@ -75,6 +79,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "file-plus-corner",
    "indent": 0,
    "keep_closed": 0,
    "label": "Purchase Tax Report",
@@ -86,6 +91,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "scissors",
    "indent": 0,
    "keep_closed": 0,
    "label": "Withholding Tax",
@@ -99,7 +105,7 @@
    "collapsible": 1,
    "icon": "chart-candlestick",
    "indent": 0,
-   "keep_closed": 0,
+   "keep_closed": 1,
    "label": "Statutory Reports",
    "link_type": "DocType",
    "show_arrow": 0,
@@ -108,6 +114,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "shield-check",
    "indent": 0,
    "keep_closed": 0,
    "label": "NSSF Report",
@@ -119,6 +126,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "heart-plus",
    "indent": 0,
    "keep_closed": 0,
    "label": "SHIF Report",
@@ -130,6 +138,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "book-open",
    "indent": 0,
    "keep_closed": 0,
    "label": "HELB Report",
@@ -141,6 +150,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "file-spreadsheet",
    "indent": 0,
    "keep_closed": 0,
    "label": "P10A Tax Report",
@@ -152,6 +162,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "file-spreadsheet",
    "indent": 0,
    "keep_closed": 0,
    "label": "P9A Tax Reduction Report",
@@ -163,6 +174,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "home",
    "indent": 0,
    "keep_closed": 0,
    "label": "Housing Levy Report",
@@ -176,7 +188,7 @@
    "collapsible": 1,
    "icon": "chart-area",
    "indent": 0,
-   "keep_closed": 0,
+   "keep_closed": 1,
    "label": "Payroll Reports",
    "link_type": "DocType",
    "show_arrow": 0,
@@ -185,6 +197,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "users",
    "indent": 0,
    "keep_closed": 0,
    "label": "Payroll Register Report",
@@ -196,6 +209,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "chart-bar-stacked",
    "indent": 0,
    "keep_closed": 0,
    "label": "Periodic Payroll Comparison",
@@ -207,6 +221,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "briefcase-business",
    "indent": 0,
    "keep_closed": 0,
    "label": "Bank Payroll Advice Report",
@@ -218,6 +233,7 @@
   {
    "child": 1,
    "collapsible": 1,
+   "icon": "landmark",
    "indent": 0,
    "keep_closed": 0,
    "label": "Kenya Bank Remittance",
@@ -227,7 +243,7 @@
    "type": "Link"
   }
  ],
- "modified": "2026-01-16 17:12:13.800169",
+ "modified": "2026-01-22 09:15:26.865347",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya",
