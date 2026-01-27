@@ -28,7 +28,7 @@ fixtures = [
 		],
 	},
 	{
-		"doctype": "PSOA Template",
+		"doctype": "Statement of Account Template",
 	},
 ]
 

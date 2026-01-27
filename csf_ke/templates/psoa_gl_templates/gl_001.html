@@ -163,7 +163,7 @@
         {% set running_balance = running_balance + (row.debit or 0) - (row.credit or 0) %}
         <tr>
           <td class="text-center">{{ frappe.format(row.posting_date, 'Date') }}</td>
-          <td class="text-left">{{ row.voucher_type }} - {{ row.voucher_no }}</td>
+          <td class="text-left">{{ row.voucher_type or '' }} - {{ row.voucher_no or '' }}</td>
           <td class="currency">{{ "{:,.2f}".format(row.debit) if row.debit else '-' }}</td>
           <td class="currency">{{ "{:,.2f}".format(row.credit) if row.credit else '-' }}</td>
           <td class="currency">{{ "{:,.2f}".format(running_balance) }}</td>
