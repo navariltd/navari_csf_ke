@@ -228,7 +228,7 @@
           <td class="text-center">
             {{ frappe.format(row.posting_date, 'Date') }}
           </td>
-          <td class="text-left">{{ row.voucher_no }}</td>
+          <td class="text-left">{{ row.voucher_no or '' }}</td>
           <td class="currency">{{ "{:,.0f}".format(row.invoiced) }}</td>
           <td class="currency">-</td>
           <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
@@ -239,7 +239,7 @@
           <td class="text-center">
             {{ frappe.format(row.posting_date, 'Date') }}
           </td>
-          <td class="text-left">Payment - {{ row.voucher_no }}</td>
+          <td class="text-left">Payment - {{ row.voucher_no or '' }}</td>
           <td class="currency">-</td>
           <td class="currency">{{ "{:,.0f}".format(row.paid) }}</td>
           <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
@@ -250,7 +250,7 @@
           <td class="text-center">
             {{ frappe.format(row.posting_date, 'Date') }}
           </td>
-          <td class="text-left">Credit Note - {{ row.voucher_no }}</td>
+          <td class="text-left">Credit Note - {{ row.voucher_no or '' }}</td>
           <td class="currency">-</td>
           <td class="currency">{{ "{:,.0f}".format(row.credit_note) }}</td>
           <td class="currency">{{ "{:,.0f}".format(running_balance) }}</td>
