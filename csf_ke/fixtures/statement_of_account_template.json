@@ -1,0 +1,38 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Statement of Account Template",
+  "modified": "2026-01-27 04:49:37.365147",
+  "name": "PSOA-Accounts Receivable-001",
+  "report": "Accounts Receivable",
+  "template_name": "AR 1",
+  "template_path": "csf_ke/templates/psoa_ar_templates/ar_001.html"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Statement of Account Template",
+  "modified": "2026-01-27 04:49:26.107163",
+  "name": "PSOA-General Ledger-002",
+  "report": "General Ledger",
+  "template_name": "GL 1",
+  "template_path": "csf_ke/templates/psoa_gl_templates/gl_001.html"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Statement of Account Template",
+  "modified": "2026-01-27 04:49:31.636521",
+  "name": "PSOA-Accounts Receivable-003",
+  "report": "Accounts Receivable",
+  "template_name": "AR 2",
+  "template_path": "csf_ke/templates/psoa_ar_templates/ar_002.html"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Statement of Account Template",
+  "modified": "2026-01-27 04:49:21.945869",
+  "name": "PSOA-General Ledger-004",
+  "report": "General Ledger",
+  "template_name": "GL 2",
+  "template_path": "csf_ke/templates/psoa_gl_templates/gl_002.html"
+ }
+]
