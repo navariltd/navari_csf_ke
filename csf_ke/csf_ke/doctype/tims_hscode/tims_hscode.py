@@ -13,6 +13,9 @@ class TIMsHSCode(Document):
 
 
 def insert_new_records():
+	if not frappe.db.exists("UOM", "Kg"):
+		frappe.get_doc({"doctype": "UOM", "uom_name": "Kg", "enabled": 1}).insert(ignore_permissions=True)
+
 	base_path = frappe.get_module_path("csf_ke")
 	json_file_path = os.path.join(base_path, "doctype", "tims_hscode", "tims_hscode_data.json")
 
