@@ -80,6 +80,18 @@ class KenyaPurchaseTaxReport:
 				"width": 200,
 			},
 			{
+				"label": _("Supplier Invoice No"),
+				"fieldname": "bill_no",
+				"fieldtype": "Data",
+				"width": 200,
+			},
+			{
+				"label": _("Supplier Invoice Date"),
+				"fieldname": "bill_date",
+				"fieldtype": "Data",
+				"width": 200,
+			},
+			{
 				"label": _("Taxable Value(Ksh)"),
 				"fieldname": "taxable_value",
 				"fieldtype": "Currency",
@@ -131,8 +143,10 @@ class KenyaPurchaseTaxReport:
 			supplier_.tax_id.as_("pin_of_supplier"),
 			purchase_invoice_.supplier_name.as_("name_of_supplier"),
 			purchase_invoice_.etr_invoice_number.as_("etr_invoice_number"),
-			purchase_invoice_.posting_date.as_("invoice_date"),
+			purchase_invoice_.bill_date.as_("invoice_date"),
 			purchase_invoice_.name.as_("invoice_name"),
+			purchase_invoice_.bill_date.as_("bill_date"),
+			purchase_invoice_.bill_no.as_("bill_no"),
 			purchase_invoice_.base_grand_total.as_("invoice_total_purchases"),
 			purchase_invoice_.return_against.as_("return_against"),
 		]
@@ -332,20 +346,29 @@ def download_custom_csv_format(company, from_date=None, to_date=None):
 
 	csv_files = {}
 
+	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
 	for template_name in tax_templates:
 		pattern = re.compile(rf"{re.escape(template_name)}[\s\-_]*[\d\%]*", re.IGNORECASE)
 
 		all_tax_templates = frappe.get_all("Item Tax Template", fields=["name"])
 
+		template_found = False
+
 		for template in all_tax_templates:
 			match = pattern.match(template["name"])
 			if match:
+				if template_found:
+					continue
+
+				template_found = True
+
 				# Sanitize the company and template names for the file name
 				company_abbr = frappe.db.get_value("Company", company, "abbr") or ""
 				sanitized_template_name = re.sub(r"[^\w]+", "_", template_name).lower()
 
 				# Generate a valid file name
-				csv_file_name = f"purchase_{sanitized_template_name[:5]}_{company_abbr}_{from_date_str}_to_{to_date_str}.csv".strip(
+				csv_file_name = f"purchase_{sanitized_template_name[:7]}_{company_abbr}_{from_date_str}_to_{to_date_str}_{timestamp}.csv".strip(
 					"_"
 				)
 
@@ -372,9 +395,9 @@ def download_custom_csv_format(company, from_date=None, to_date=None):
 										"Local",
 										invoice.get("pin_of_supplier", ""),
 										invoice.get("name_of_supplier", ""),
-										invoice.get("invoice_date", "").strftime("%d/%m/%Y"),
+										invoice.get("bill_date", "").strftime("%d/%m/%Y"),
 										f"|{(invoice.get('etr_invoice_number', ''))}",
-										invoice.get("invoice_name", ""),
+										invoice.get("bill_no", ""),
 										"",
 										invoice.get("taxable_value", ""),
 										"",
@@ -402,6 +425,6 @@ def download_custom_csv_format(company, from_date=None, to_date=None):
 					)
 					file_record.insert()
 
-					csv_files[company_abbr] = file_url
+					csv_files[sanitized_template_name] = file_url
 
 	return csv_files
