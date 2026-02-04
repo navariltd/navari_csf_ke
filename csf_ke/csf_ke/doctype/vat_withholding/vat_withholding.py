@@ -12,7 +12,6 @@ class VATWithholding(Document):
 	@frappe.whitelist()
 	def set_missing_values(self):
 		self.currency = "KES"
-		self.company = frappe.defaults.get_user_default("Company")
 
 		if not self.customer and self.withholder_pin:
 			self.customer = frappe.db.get_value("Customer", {"tax_id": self.withholder_pin}, "name")
