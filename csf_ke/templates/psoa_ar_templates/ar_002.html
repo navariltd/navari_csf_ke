@@ -181,6 +181,56 @@ first.opening_balance or 0 %}
       .amount {
         white-space: nowrap;
       }
+
+      /* ── Aging section – structure & spacing only, no new colours ── */
+      .aging-section {
+        margin-top: 24px;
+      }
+
+      .aging-section h4 {
+        font-size: 11pt;
+        font-weight: bold;
+        margin-bottom: 6px;
+      }
+
+      .aging-meta {
+        font-size: 8pt;
+        color: #444;
+        margin-bottom: 12px;
+      }
+
+      .aging-cards {
+        display: flex;
+        width: 100%;
+        border: 1px solid #000;
+        border-collapse: collapse;
+      }
+
+      .aging-card {
+        flex: 1;
+        padding: 10px 8px;
+        text-align: center;
+        border-right: 1px solid #000;
+      }
+
+      .aging-card:last-child {
+        border-right: none;
+      }
+
+      .aging-range {
+        font-size: 7.5pt;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding-bottom: 6px;
+        margin-bottom: 6px;
+        border-bottom: 1px solid #ccc;
+      }
+
+      .aging-amount {
+        font-size: 9.5pt;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
@@ -266,7 +316,7 @@ first.opening_balance or 0 %}
       </div>
     </div>
 
-    {% set running_balance = opening_balance %}
+    {% set ns = namespace(running_balance=opening_balance) %}
 
     <table class="transactions">
       <thead>
@@ -295,8 +345,8 @@ first.opening_balance or 0 %}
         </tr>
 
         {% if rows %} {% for row in rows %} {% if row.voucher_type == "Sales
-        Invoice" or row.invoiced %} {% set running_balance = running_balance +
-        (row.invoiced or 0) %}
+        Invoice" or row.invoiced %} {% set ns.running_balance =
+        ns.running_balance + (row.invoiced or 0) %}
         <tr>
           <td>
             {{ frappe.format(row.posting_date, "Date") if row.posting_date else
@@ -312,10 +362,10 @@ first.opening_balance or 0 %}
             {{ "{:,.2f}".format(row.invoiced) if row.invoiced else '' }}
           </td>
           <td class="amount">-</td>
-          <td class="amount">{{ "{:,.2f}".format(running_balance) }}</td>
+          <td class="amount">{{ "{:,.2f}".format(ns.running_balance) }}</td>
         </tr>
         {% endif %} {% if row.voucher_type == "Payment Entry" or row.paid %} {%
-        set running_balance = running_balance - (row.paid or 0) %}
+        set ns.running_balance = ns.running_balance - (row.paid or 0) %}
         <tr>
           <td>
             {{ frappe.format(row.posting_date, "Date") if row.posting_date else
@@ -331,10 +381,10 @@ first.opening_balance or 0 %}
           <td class="amount">
             {{ "{:,.2f}".format(row.paid) if row.paid else '' }}
           </td>
-          <td class="amount">{{ "{:,.2f}".format(running_balance) }}</td>
+          <td class="amount">{{ "{:,.2f}".format(ns.running_balance) }}</td>
         </tr>
         {% endif %} {% if row.voucher_type == "Journal Entry" %} {% if row.debit
-        and row.debit > 0 %} {% set running_balance = running_balance +
+        and row.debit > 0 %} {% set ns.running_balance = ns.running_balance +
         row.debit %}
         <tr>
           <td>
@@ -349,10 +399,10 @@ first.opening_balance or 0 %}
           <td>{{ row.currency or currency }}</td>
           <td class="amount">{{ "{:,.2f}".format(row.debit) }}</td>
           <td class="amount">-</td>
-          <td class="amount">{{ "{:,.2f}".format(running_balance) }}</td>
+          <td class="amount">{{ "{:,.2f}".format(ns.running_balance) }}</td>
         </tr>
         {% endif %} {% if row.credit and row.credit > 0 %} {% set
-        running_balance = running_balance - row.credit %}
+        ns.running_balance = ns.running_balance - row.credit %}
         <tr>
           <td>
             {{ frappe.format(row.posting_date, "Date") if row.posting_date else
@@ -366,10 +416,10 @@ first.opening_balance or 0 %}
           <td>{{ row.currency or currency }}</td>
           <td class="amount">-</td>
           <td class="amount">{{ "{:,.2f}".format(row.credit) }}</td>
-          <td class="amount">{{ "{:,.2f}".format(running_balance) }}</td>
+          <td class="amount">{{ "{:,.2f}".format(ns.running_balance) }}</td>
         </tr>
-        {% endif %} {% endif %} {% if row.credit_note %} {% set running_balance
-        = running_balance - row.credit_note %}
+        {% endif %} {% endif %} {% if row.credit_note %} {% set
+        ns.running_balance = ns.running_balance - row.credit_note %}
         <tr>
           <td>
             {{ frappe.format(row.posting_date, "Date") if row.posting_date else
@@ -383,7 +433,7 @@ first.opening_balance or 0 %}
           <td>{{ row.currency or currency }}</td>
           <td class="amount">-</td>
           <td class="amount">{{ "{:,.2f}".format(row.credit_note) }}</td>
-          <td class="amount">{{ "{:,.2f}".format(running_balance) }}</td>
+          <td class="amount">{{ "{:,.2f}".format(ns.running_balance) }}</td>
         </tr>
         {% endif %} {% endfor %}
 
@@ -397,7 +447,7 @@ first.opening_balance or 0 %}
           <td></td>
           <td></td>
           <td class="amount">
-            <strong>{{ "{:,.2f}".format(running_balance) }}</strong>
+            <strong>{{ "{:,.2f}".format(ns.running_balance) }}</strong>
           </td>
         </tr>
         {% else %}
@@ -410,7 +460,52 @@ first.opening_balance or 0 %}
       </tbody>
     </table>
 
-    {% if letter_head and letter_head.footer %}
+    {% if ageing %}
+    <div class="aging-section">
+      <h4>Aging Summary</h4>
+      <p class="aging-meta">
+        {{ _("Based on") }} {{ ageing.ageing_based_on }} &ndash; {{ _("up to")
+        }} {{ frappe.format(filters.to_date, 'Date') }}
+      </p>
+      <div class="aging-cards">
+        <div class="aging-card">
+          <div class="aging-range">0 &ndash; 30</div>
+          <div class="aging-amount">
+            {{ frappe.utils.fmt_money(ageing.range1,
+            currency=filters.presentation_currency) }}
+          </div>
+        </div>
+        <div class="aging-card">
+          <div class="aging-range">30 &ndash; 60</div>
+          <div class="aging-amount">
+            {{ frappe.utils.fmt_money(ageing.range2,
+            currency=filters.presentation_currency) }}
+          </div>
+        </div>
+        <div class="aging-card">
+          <div class="aging-range">60 &ndash; 90</div>
+          <div class="aging-amount">
+            {{ frappe.utils.fmt_money(ageing.range3,
+            currency=filters.presentation_currency) }}
+          </div>
+        </div>
+        <div class="aging-card">
+          <div class="aging-range">90 &ndash; 120</div>
+          <div class="aging-amount">
+            {{ frappe.utils.fmt_money(ageing.range4,
+            currency=filters.presentation_currency) }}
+          </div>
+        </div>
+        <div class="aging-card">
+          <div class="aging-range">120+</div>
+          <div class="aging-amount">
+            {{ frappe.utils.fmt_money(ageing.range5,
+            currency=filters.presentation_currency) }}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %} {% if letter_head and letter_head.footer %}
     <div class="footer">{{ letter_head.footer }}</div>
     {% endif %}
   </body>
