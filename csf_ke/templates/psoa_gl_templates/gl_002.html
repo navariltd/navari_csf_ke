@@ -274,21 +274,25 @@ first.opening_balance or 0 %}
         filters.party else None %} {% if customer %}
         <table>
           <tr>
-            <td>Customer Name:</td>
+            <td><strong>Customer Name:</strong></td>
             <td>{{ customer.customer_name or '' }}</td>
           </tr>
           <tr>
-            <td>Contact Name:</td>
+            <td><strong>Contact Name:</strong></td>
             <td>{{ first.customer_primary_contact or '' }}</td>
           </tr>
           <tr>
-            <td>Email:</td>
+            <td><strong>Email:</strong></td>
             <td>
-              {% set address_name = frappe.db.get_value("Dynamic Link",
-              {"link_doctype": "Customer", "link_name": customer.name},
-              "parent") %} {% if address_name %} {% set address =
-              frappe.get_doc("Address", address_name) %} {% if address and
-              address.email_id %} {{ address.email_id }} {% endif %} {% endif %}
+              {% set address_name = frappe.db.get_value( "Dynamic Link", {
+              "link_doctype": "Customer", "link_name": customer.name,
+              "parenttype": "Address" }, "parent" ) %} {% if address_name and
+              frappe.db.exists("Address", address_name) %} {% set address =
+              frappe.get_doc("Address", address_name) %} {% if address.phone %}
+              <strong>Phone:</strong> {{ address.phone }} <br />
+              {% endif %} {% if address.email_id %}
+              <strong>Email:</strong> {{ address.email_id }} <br />
+              {% endif %} {% endif %}
             </td>
           </tr>
           <tr>
