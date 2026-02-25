@@ -595,6 +595,8 @@
     "contri",
     "hscodes",
     "financials",
-    "nosemgrep"
+    "nosemgrep",
+    "cuin",
+    "cuurl"
   ]
 }
