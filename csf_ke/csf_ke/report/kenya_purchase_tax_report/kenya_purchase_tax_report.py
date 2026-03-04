@@ -439,7 +439,9 @@ def download_custom_csv_format(company, from_date=None, to_date=None):
 								"Local",
 								invoice.get("pin_of_supplier", ""),
 								invoice.get("name_of_supplier", ""),
-								invoice.get("bill_date", "").strftime("%d/%m/%Y"),
+								invoice.get("bill_date").strftime("%d/%m/%Y")
+								if invoice.get("bill_date")
+								else "",
 								f"|{(invoice.get('etr_invoice_number', ''))}",
 								invoice.get("bill_no", ""),
 								"",
