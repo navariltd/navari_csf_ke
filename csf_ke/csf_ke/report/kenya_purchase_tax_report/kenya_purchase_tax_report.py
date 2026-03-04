@@ -255,10 +255,10 @@ class KenyaPurchaseTaxReport:
 
 		for report_entry in report_details:
 			if report_entry["pin_of_supplier"]:
-				self.registered_suppliers_total_purchases += report_entry["invoice_total_purchases"]
+				self.registered_suppliers_total_purchases += report_entry["taxable_value"]
 				self.registered_suppliers_total_vat += report_entry["amount_of_vat"]
 			else:
-				self.unregistered_suppliers_total_purchases += report_entry["invoice_total_purchases"]
+				self.unregistered_suppliers_total_purchases += report_entry["taxable_value"]
 				self.unregistered_suppliers_total_vat += report_entry["amount_of_vat"]
 
 		if self.filters.get("accounting_dimension") and report_details:
