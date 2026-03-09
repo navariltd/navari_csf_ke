@@ -380,7 +380,7 @@ def _get_tax_templates_from_report_data(company, from_date=None, to_date=None):
 
 
 @frappe.whitelist()
-def download_custom_csv_format(company, from_date=None, to_date=None):
+def download_custom_csv_format(company: str, from_date: str | None = None, to_date: str | None = None):
 	if not from_date:
 		frappe.throw(_("From Date is required"))
 	if not to_date:
