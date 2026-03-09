@@ -332,10 +332,60 @@ class KenyaSalesTaxReport:
 		]
 
 
-@frappe.whitelist()
-def download_custom_csv_format(company, from_date=None, to_date=None):
+def _normalize_companies(company):
 	if not company:
-		frappe.throw(_("Company is required"))
+		return frappe.get_all("Company", pluck="name")
+
+	if isinstance(company, str):
+		company = company.strip()
+		if not company:
+			return frappe.get_all("Company", pluck="name")
+
+		if company.startswith("["):
+			try:
+				parsed_companies = frappe.parse_json(company)
+			except Exception:
+				parsed_companies = None
+
+			if isinstance(parsed_companies, list):
+				return [item for item in parsed_companies if item]
+
+		if "," in company:
+			return [item.strip() for item in company.split(",") if item.strip()]
+
+		return [company]
+
+	if isinstance(company, (list, tuple, set)):
+		return [item for item in company if item]
+
+	return [company]
+
+
+def _get_tax_templates_from_report_data(company, from_date=None, to_date=None):
+	sales_invoice_ = frappe.qb.DocType("Sales Invoice")
+	sales_invoice_item_ = frappe.qb.DocType("Sales Invoice Item")
+
+	tax_templates_query = (
+		frappe.qb.from_(sales_invoice_item_)
+		.inner_join(sales_invoice_)
+		.on(sales_invoice_item_.parent == sales_invoice_.name)
+		.select(sales_invoice_item_.item_tax_template)
+		.distinct()
+		.where(sales_invoice_.docstatus == 1)
+		.where(sales_invoice_.company == company)
+	)
+
+	if from_date:
+		tax_templates_query = tax_templates_query.where(sales_invoice_.posting_date >= from_date)
+	if to_date:
+		tax_templates_query = tax_templates_query.where(sales_invoice_.posting_date <= to_date)
+
+	tax_template_rows = tax_templates_query.run(as_dict=True)
+	return sorted({row.get("item_tax_template") for row in tax_template_rows if row.get("item_tax_template")})
+
+
+@frappe.whitelist()
+def download_custom_csv_format(company: str, from_date: str | None = None, to_date: str | None = None):
 	if not from_date:
 		frappe.throw(_("From Date is required"))
 	if not to_date:
@@ -347,92 +397,86 @@ def download_custom_csv_format(company, from_date=None, to_date=None):
 	private_path = frappe.utils.get_site_path("private", "files")
 	os.makedirs(private_path, exist_ok=True)
 
-	tax_templates = ["VAT 16%", "Exempt", "Zero-Rated"]
+	companies = _normalize_companies(company)
+	if not companies:
+		frappe.throw(_("At least one company is required"))
 
 	csv_files = {}
 
 	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-	for template_name in tax_templates:
-		pattern = re.compile(rf"{re.escape(template_name)}[\s\-_]*[\d\%]*", re.IGNORECASE)
+	for company_name in companies:
+		tax_templates = _get_tax_templates_from_report_data(company_name, from_date, to_date)
+		if not tax_templates:
+			continue
 
-		all_tax_templates = frappe.get_all("Item Tax Template", fields=["name"])
+		company_abbr = frappe.db.get_value("Company", company_name, "abbr") or ""
 
-		template_found = False
+		for template_name in tax_templates:
+			sanitized_template_name = re.sub(r"[^\w]+", "_", template_name).lower()
 
-		for template in all_tax_templates:
-			match = pattern.match(template["name"])
-			if match:
-				if template_found:
-					continue
+			csv_file_name = f"sales_{sanitized_template_name[:20]}_{company_abbr}_{from_date_str}_to_{to_date_str}_{timestamp}.csv".strip(
+				"_"
+			)
 
-				template_found = True
+			full_file_path = os.path.join(private_path, csv_file_name)
+			file_url = f"/private/files/{csv_file_name}"
 
-				# Sanitize the company and template names for the file name
-				company_abbr = frappe.db.get_value("Company", company, "abbr") or ""
-				sanitized_template_name = re.sub(r"[^\w]+", "_", template_name).lower()
+			sales_invoices = KenyaSalesTaxReport(
+				{
+					"company": company_name,
+					"from_date": from_date,
+					"to_date": to_date,
+					"tax_template": template_name,
+				}
+			).get_data()
 
-				# Generate a valid file name
-				csv_file_name = f"sales_{sanitized_template_name[:6]}_{company_abbr}_{from_date_str}_to_{to_date_str}_{timestamp}.csv".strip(
-					"_"
-				)
+			if not sales_invoices:
+				continue
 
-				full_file_path = os.path.join(private_path, csv_file_name)
-				file_url = f"/private/files/{csv_file_name}"
+			with open(full_file_path, "w", newline="") as csvfile:
+				writer = csv.writer(csvfile)
 
-				sales_invoices = KenyaSalesTaxReport(
-					{
-						"company": company,
-						"from_date": from_date,
-						"to_date": to_date,
-						"tax_template": template["name"],
-					}
-				).get_data()
+				for invoice in sales_invoices:
+					if invoice.get("pin_of_purchaser"):
+						writer.writerow(
+							[
+								invoice.get("pin_of_purchaser", ""),
+								invoice.get("name_of_purchaser", ""),
+								invoice.get("etr_serial_number", ""),
+								invoice.get("invoice_date", "").strftime("%d/%m/%Y"),
+								f"|{(invoice.get('etr_invoice_number', ''))}",
+								invoice.get("invoice_name", ""),
+								invoice.get("taxable_value", ""),
+								"",
+								(
+									f"|{invoice.get('return_cu_invoice_number', '')}"
+									if invoice.return_against
+									else ""
+								),
+								(
+									invoice.get("return_cu_invoice_date").strftime("%d/%m/%Y")
+									if invoice.return_against and invoice.get("return_cu_invoice_date")
+									else ""
+								),
+							]
+						)
 
-				if sales_invoices:
-					with open(full_file_path, "w", newline="") as csvfile:
-						writer = csv.writer(csvfile)
+			file_record = frappe.get_doc(
+				{
+					"doctype": "File",
+					"file_name": csv_file_name,
+					"file_url": file_url,
+					"attached_to_name": company_name,
+					"attached_to_doctype": "Sales Invoice",
+					"file_size": os.path.getsize(full_file_path),
+					"is_private": 1,
+					"file_type": "CSV",
+				}
+			)
+			file_record.insert()
 
-						for invoice in sales_invoices:
-							if invoice.get("pin_of_purchaser"):
-								writer.writerow(
-									[
-										invoice.get("pin_of_purchaser", ""),
-										invoice.get("name_of_purchaser", ""),
-										invoice.get("etr_serial_number", ""),
-										invoice.get("invoice_date", "").strftime("%d/%m/%Y"),
-										f"|{(invoice.get('etr_invoice_number', ''))}",
-										invoice.get("invoice_name", ""),
-										invoice.get("taxable_value", ""),
-										"",
-										(
-											f"|{invoice.get('return_cu_invoice_number', '')}"
-											if invoice.return_against
-											else ""
-										),
-										(
-											invoice.get("return_cu_invoice_date").strftime("%d/%m/%Y")
-											if invoice.return_against
-											and invoice.get("return_cu_invoice_date")
-											else ""
-										),
-									]
-								)
-
-					file_record = frappe.get_doc(
-						{
-							"doctype": "File",
-							"file_name": csv_file_name,
-							"file_url": file_url,
-							"attached_to_name": company,
-							"attached_to_doctype": "Sales Invoice",
-							"file_size": os.path.getsize(full_file_path),
-							"is_private": 1,
-							"file_type": "CSV",
-						}
-					)
-					file_record.insert()
-
-					csv_files[sanitized_template_name] = file_url
+			display_key = f"{company_name} - {template_name}" if len(companies) > 1 else template_name
+			csv_files[display_key] = file_url
 
 	return csv_files
