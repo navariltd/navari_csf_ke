@@ -45,7 +45,14 @@ before_tests = "csf_ke.setup.utils.before_tests"
 # include js, css files in header of desk.html
 # app_include_css = "/assets/csf_ke/css/csf_ke.css"
 # app_include_js = "/assets/csf_ke/js/csf_ke.js"
-
+# app_include_js = "csf_ke.bundle.js"
+app_include_js = [
+    "/assets/csf_ke/js/deposit_utils.js",
+    "/assets/csf_ke/js/sales_order.js",
+	"/assets/csf_ke/js/sales_invoice.js",
+    "/assets/csf_ke/js/purchase_order.js",
+    "/assets/csf_ke/js/purchase_invoice.js",
+]
 # include js, css files in header of web template
 # web_include_css = "/assets/csf_ke/css/csf_ke.css"
 # web_include_js = "/assets/csf_ke/js/csf_ke.js"
@@ -145,7 +152,15 @@ after_migrate = "csf_ke.csf_ke.doctype.tims_hscode.tims_hscode.insert_new_record
 
 doc_events = {
 	"Purchase Receipt": {"on_submit": "csf_ke.csf_ke.doctype.api.update_item_price_list.update_item_prices"},
-	"Purchase Invoice": {"on_submit": "csf_ke.csf_ke.doctype.api.update_item_price_list.update_item_prices"},
+	"Purchase Invoice": {
+        "on_submit": "csf_ke.csf_ke.doctype.api.update_item_price_list.update_item_prices",
+		"before_validate": [
+            "csf_ke.custom.deposit_utils.validate_invoice",
+            "csf_ke.custom.deposit_utils.apply_deposit_deduction"
+		],
+        "on_cancel": "csf_ke.custom.deposit_utils.cancel_deposit_invoice",        
+        "on_trash": "csf_ke.custom.deposit_utils.cancel_deposit_invoice",
+},
 	"Item Group": {"before_save": "csf_ke.csf_ke.utils.get_tims_hscode.validate_mandatory_hscode"},
 	"Customer": {"before_save": "csf_ke.csf_ke.overrides.customer.validate_customer_kra"},
 	"Sales Order": {
@@ -155,6 +170,13 @@ doc_events = {
 	"Sales Invoice": {
 		"before_submit": "csf_ke.csf_ke.overrides.sales_doc.validate_customer_kra",
 		"on_submit": "csf_ke.csf_ke.utils.item_price.update_item_price",
+		"before_validate": [
+            "csf_ke.custom.deposit_utils.validate_invoice",
+            "csf_ke.custom.deposit_utils.apply_deposit_deduction"
+		],
+        "on_cancel": "csf_ke.custom.deposit_utils.cancel_deposit_invoice",        
+        "on_trash": "csf_ke.custom.deposit_utils.cancel_deposit_invoice",
+
 	},
 	"Delivery Note": {
 		"on_submit": "csf_ke.csf_ke.utils.item_price.update_item_price",
