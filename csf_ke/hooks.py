@@ -62,7 +62,13 @@ before_tests = "csf_ke.setup.utils.before_tests"
 
 # include js in doctype views
 
-doctype_js = {"Customer": "csf_ke/overrides/customer.js"}
+doctype_js = {
+    "Customer": "csf_ke/overrides/customer.js",
+    "Purchase Invoice": "public/js/purchase_invoice.js",
+	"Sales Order": "public/js/sales_order.js",
+	"Purchase Order": "public/js/purchase_order.js",
+	"Sales Invoice": "public/js/sales_invoice.js",
+			  }
 
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -90,6 +96,7 @@ doctype_js = {"Customer": "csf_ke/overrides/customer.js"}
 
 # before_install = "csf_ke.install.before_install"
 # after_install = "csf_ke.install.after_install"
+after_install = "csf_ke.install.after_install"
 after_migrate = "csf_ke.csf_ke.doctype.tims_hscode.tims_hscode.insert_new_records"
 
 # Uninstallation
