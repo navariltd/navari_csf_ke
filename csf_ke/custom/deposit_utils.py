@@ -219,7 +219,7 @@ def create_deposit_invoice(source_name, target_doc=None):
 
         # Add the deposit item
         deposit_item = frappe.call(
-            "erpnext_thailand.custom.item.get_deposit_item", company=source.company
+            "csf_ke.custom.item.get_deposit_item", company=source.company
         )
         if not deposit_item:
             frappe.throw(_("No deposit item is configured for the company {0}.").format(source.company))
