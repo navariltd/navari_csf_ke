@@ -22,7 +22,7 @@ def validate_deposit_item(doc, method):
 
 
 @frappe.whitelist()
-def get_deposit_item(company):
+def get_deposit_item(company: str) -> dict:
 	# Fetch the deposit item
 	deposit_item = frappe.db.get_value(
 		"Item", {"is_deposit_item": 1, "disabled": 0}, ["name", "item_name", "stock_uom"], as_dict=True

@@ -1,4 +1,5 @@
 import json
+from typing import Optional, Union
 
 import frappe
 from frappe import _
@@ -211,7 +212,9 @@ def apply_deposit_deduction(doc, method):
 
 
 @frappe.whitelist()
-def create_deposit_invoice(source_name, target_doc=None):
+def create_deposit_invoice(
+	source_name: str, target_doc: dict | None = None
+) -> "frappe.model.document.Document":
 	"""
 	Create a deposit Invoice from an Order.
 	This method is used with frappe.model.open_mapped_doc.
@@ -271,7 +274,7 @@ def create_deposit_invoice(source_name, target_doc=None):
 
 
 @frappe.whitelist()
-def get_deposits(doc):
+def get_deposits(doc: str) -> list[dict]:
 	invoice = json.loads(doc)
 	deductions = get_tied_to_order_deposits(invoice)
 	if invoice.get("use_untied_deposit"):
