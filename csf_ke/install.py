@@ -1,6 +1,5 @@
 import click
-from frappe.custom.doctype.custom_field.custom_field import \
-    create_custom_fields
+from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
 from csf_ke.constants import DEPOSIT_CUSTOM_FIELDS
 
@@ -21,10 +20,7 @@ def after_install():
 		raise e
 
 
-
 def make_custom_fields():
 	print("Setup custom fields for erpnext...")
 
 	create_custom_fields(DEPOSIT_CUSTOM_FIELDS, ignore_validate=True)
-	
-
