@@ -51,12 +51,12 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.14'
 
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 22
+          node-version: 24
           check-latest: true
 
       - name: Cache pip
@@ -86,15 +86,15 @@ jobs:
       - name: Setup
         run: |
           pip install frappe-bench
-          bench init --frappe-branch version-15 --skip-redis-config-generation --skip-assets --python "$(which python)" ~/frappe-bench
+          bench init --frappe-branch version-16 --skip-redis-config-generation --skip-assets --python "$(which python)" ~/frappe-bench
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL character_set_server = 'utf8mb4'"
           mariadb --host 127.0.0.1 --port 3306 -u root -proot -e "SET GLOBAL collation_server = 'utf8mb4_unicode_ci'"
     
       - name: Get Dependencies
         working-directory: /home/runner/frappe-bench
         run: |
-          bench get-app erpnext --branch version-15
-          bench get-app hrms --branch version-15
+          bench get-app erpnext --branch version-16
+          bench get-app hrms --branch version-16
           bench get-app csf_ke $GITHUB_WORKSPACE
     
       - name: Install
