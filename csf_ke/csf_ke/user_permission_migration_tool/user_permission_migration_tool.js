@@ -3,7 +3,7 @@
 
 frappe.ui.form.on("User Permission Migration Tool", {
   refresh(frm) {
-    frm.add_custom_button("Run Migration", () => {
+    frm.add_custom_button(__("Run Migration"), () => {
       frappe.call({
         method: "run_permission_migration",
         doc: frm.doc,
@@ -11,7 +11,7 @@ frappe.ui.form.on("User Permission Migration Tool", {
           docname: frm.doc.name,
         },
         freeze: true,
-        freeze_message: "Starting migration...",
+        freeze_message: __("Starting migration..."),
       });
     });
   },

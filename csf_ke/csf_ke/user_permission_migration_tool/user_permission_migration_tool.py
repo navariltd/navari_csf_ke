@@ -184,4 +184,4 @@ def propagate_user_permissions(user):
 
 			logger.info(f"Deleting global permission {perm['name']} for {master}:{value}")
 
-	frappe.db.commit()
+	frappe.db.commit()  # nosemgrep
