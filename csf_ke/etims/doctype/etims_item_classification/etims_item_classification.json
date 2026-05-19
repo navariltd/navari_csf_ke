@@ -1,0 +1,88 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "field:itemclscd",
+ "creation": "2026-03-22 12:30:46.981187",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "classification_details_section",
+  "itemclscd",
+  "itemclslvl",
+  "column_break_ycuy",
+  "itemclsnm",
+  "taxtycd"
+ ],
+ "fields": [
+  {
+   "fieldname": "classification_details_section",
+   "fieldtype": "Section Break",
+   "label": "Classification Details"
+  },
+  {
+   "fieldname": "itemclscd",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item Classification Code",
+   "non_negative": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "itemclslvl",
+   "fieldtype": "Int",
+   "label": "Item Classification Level",
+   "non_negative": 1
+  },
+  {
+   "fieldname": "column_break_ycuy",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "itemclsnm",
+   "fieldtype": "Text",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Item Classification Name"
+  },
+  {
+   "fieldname": "taxtycd",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Taxation Type Code"
+  }
+ ],
+ "in_create": 1,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-19 13:58:09.936608",
+ "modified_by": "Administrator",
+ "module": "eTims",
+ "name": "eTims Item Classification",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "search_fields": "itemclsnm, itemclscd",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "itemclscd",
+ "track_changes": 1
+}
