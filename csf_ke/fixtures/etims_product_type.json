@@ -1,0 +1,35 @@
+[
+ {
+  "code": "consu",
+  "code_description": "Consumable",
+  "code_name": "Consumable",
+  "docstatus": 0,
+  "doctype": "eTims Product Type",
+  "modified": "2026-02-20 13:02:20.862400",
+  "name": "consu",
+  "remark": null,
+  "sort_order": "1"
+ },
+ {
+  "code": "sku",
+  "code_description": "Store Keeping Unit (SKU)",
+  "code_name": "Store Keeping Unit (SKU)",
+  "docstatus": 0,
+  "doctype": "eTims Product Type",
+  "modified": "2026-02-20 13:02:20.873344",
+  "name": "sku",
+  "remark": null,
+  "sort_order": "2"
+ },
+ {
+  "code": "service",
+  "code_description": "Service without stock",
+  "code_name": "Service",
+  "docstatus": 0,
+  "doctype": "eTims Product Type",
+  "modified": "2026-02-20 13:02:20.875739",
+  "name": "service",
+  "remark": null,
+  "sort_order": "3"
+ }
+]

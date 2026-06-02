@@ -1,0 +1,35 @@
+[
+ {
+  "code": "2",
+  "code_description": null,
+  "code_name": "Finished Product",
+  "docstatus": 0,
+  "doctype": "eTims Item Type",
+  "modified": "2026-02-20 12:58:16.536233",
+  "name": "2",
+  "remark": null,
+  "sort_order": "2"
+ },
+ {
+  "code": "1",
+  "code_description": null,
+  "code_name": "Raw Material",
+  "docstatus": 0,
+  "doctype": "eTims Item Type",
+  "modified": "2026-02-20 12:58:16.541373",
+  "name": "1",
+  "remark": null,
+  "sort_order": "1"
+ },
+ {
+  "code": "3",
+  "code_description": null,
+  "code_name": "Service",
+  "docstatus": 0,
+  "doctype": "eTims Item Type",
+  "modified": "2026-02-20 12:58:16.542968",
+  "name": "3",
+  "remark": null,
+  "sort_order": "3"
+ }
+]
