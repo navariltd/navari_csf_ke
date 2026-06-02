@@ -1,91 +1,91 @@
 {
- "actions": [],
- "allow_import": 1,
- "allow_rename": 1,
- "autoname": "field:code",
- "creation": "2026-03-22 12:20:53.629156",
- "doctype": "DocType",
- "engine": "InnoDB",
- "field_order": [
-  "packaging_unit_details_section",
-  "code",
-  "digitax_id",
-  "sort_order",
-  "column_break_xdkn",
-  "code_name",
-  "code_description"
- ],
- "fields": [
-  {
-   "fieldname": "packaging_unit_details_section",
-   "fieldtype": "Section Break",
-   "label": "Packaging Unit Details"
-  },
-  {
-   "fieldname": "code",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Code",
-   "unique": 1
-  },
-  {
-   "fieldname": "digitax_id",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "in_list_view": 1,
-   "label": "Slade ID",
-   "unique": 1
-  },
-  {
-   "fieldname": "sort_order",
-   "fieldtype": "Int",
-   "label": "Sort Order"
-  },
-  {
-   "fieldname": "column_break_xdkn",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "code_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Code Name"
-  },
-  {
-   "fieldname": "code_description",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Code Description"
-  }
- ],
- "in_create": 1,
- "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-05-19 13:58:20.936732",
- "modified_by": "Administrator",
- "module": "eTims",
- "name": "eTims Packaging Unit",
- "naming_rule": "By fieldname",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
- "row_format": "Dynamic",
- "search_fields": "code, code_name",
- "show_title_field_in_link": 1,
- "sort_field": "modified",
- "sort_order": "ASC",
- "states": [],
- "title_field": "code_name"
+  "actions": [],
+  "allow_import": 1,
+  "allow_rename": 1,
+  "autoname": "field:code",
+  "creation": "2026-03-22 12:20:53.629156",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "packaging_unit_details_section",
+    "code",
+    "etims_id",
+    "sort_order",
+    "column_break_xdkn",
+    "code_name",
+    "code_description"
+  ],
+  "fields": [
+    {
+      "fieldname": "packaging_unit_details_section",
+      "fieldtype": "Section Break",
+      "label": "Packaging Unit Details"
+    },
+    {
+      "fieldname": "code",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Code",
+      "unique": 1
+    },
+    {
+      "fieldname": "etims_id",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "in_list_view": 1,
+      "label": "Slade ID",
+      "unique": 1
+    },
+    {
+      "fieldname": "sort_order",
+      "fieldtype": "Int",
+      "label": "Sort Order"
+    },
+    {
+      "fieldname": "column_break_xdkn",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "code_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Code Name"
+    },
+    {
+      "fieldname": "code_description",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Code Description"
+    }
+  ],
+  "in_create": 1,
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-05-19 13:58:20.936732",
+  "modified_by": "Administrator",
+  "module": "eTims",
+  "name": "eTims Packaging Unit",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "row_format": "Dynamic",
+  "search_fields": "code, code_name",
+  "show_title_field_in_link": 1,
+  "sort_field": "modified",
+  "sort_order": "ASC",
+  "states": [],
+  "title_field": "code_name"
 }

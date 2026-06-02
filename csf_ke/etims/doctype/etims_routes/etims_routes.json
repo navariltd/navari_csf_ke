@@ -1,68 +1,67 @@
 {
- "actions": [],
- "allow_rename": 1,
- "autoname": "format:{vendor}",
- "creation": "2026-03-22 09:28:28.678440",
- "default_view": "List",
- "doctype": "DocType",
- "engine": "InnoDB",
- "field_order": [
-  "vendor_settings_section",
-  "vendor",
-  "routes_mapping_section",
-  "routes_table"
- ],
- "fields": [
-  {
-   "fieldname": "vendor_settings_section",
-   "fieldtype": "Section Break",
-   "label": "Vendor Settings"
-  },
-  {
-   "default": "Digitax",
-   "fieldname": "vendor",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "API Provider",
-   "options": "\nOSCU KRA\nVSCU Digitax\nPergamon\nDigitax",
-   "reqd": 1
-  },
-  {
-   "fieldname": "routes_mapping_section",
-   "fieldtype": "Section Break",
-   "label": "Routes Mapping"
-  },
-  {
-   "fieldname": "routes_table",
-   "fieldtype": "Table",
-   "label": "Routes Table",
-   "options": "eTims Route Table Item"
-  }
- ],
- "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-05-19 13:55:52.447859",
- "modified_by": "Administrator",
- "module": "eTims",
- "name": "eTims Routes",
- "naming_rule": "Expression (old style)",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "print": 1,
-   "read": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
- "row_format": "Dynamic",
- "sort_field": "modified",
- "sort_order": "DESC",
- "states": [],
- "track_changes": 1,
- "track_views": 1
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "format:{vendor}",
+  "creation": "2026-03-22 09:28:28.678440",
+  "default_view": "List",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "vendor_settings_section",
+    "vendor",
+    "routes_mapping_section",
+    "routes_table"
+  ],
+  "fields": [
+    {
+      "fieldname": "vendor_settings_section",
+      "fieldtype": "Section Break",
+      "label": "Vendor Settings"
+    },
+    {
+      "default": "OSCU KRA",
+      "fieldname": "vendor",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "API Provider",
+      "reqd": 1
+    },
+    {
+      "fieldname": "routes_mapping_section",
+      "fieldtype": "Section Break",
+      "label": "Routes Mapping"
+    },
+    {
+      "fieldname": "routes_table",
+      "fieldtype": "Table",
+      "label": "Routes Table",
+      "options": "eTims Route Table Item"
+    }
+  ],
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-05-19 13:55:52.447859",
+  "modified_by": "Administrator",
+  "module": "eTims",
+  "name": "eTims Routes",
+  "naming_rule": "Expression (old style)",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "print": 1,
+      "read": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "row_format": "Dynamic",
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1,
+  "track_views": 1
 }
