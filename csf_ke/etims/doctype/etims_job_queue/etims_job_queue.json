@@ -177,7 +177,7 @@
    "read_only": 1
   },
   {
-   "default": "100",
+   "default": "1000",
    "fieldname": "page_size",
    "fieldtype": "Int",
    "label": "Page Size",
@@ -233,7 +233,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-02 16:39:09.068101",
+ "modified": "2026-06-03 15:30:22.574503",
  "modified_by": "Administrator",
  "module": "eTims",
  "name": "eTims Job Queue",
