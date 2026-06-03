@@ -8,6 +8,7 @@
  "field_order": [
   "setup_doctype",
   "setup_docname",
+  "etims_id",
   "disabled"
  ],
  "fields": [
@@ -49,13 +50,25 @@
    "in_preview": 1,
    "in_standard_filter": 1,
    "label": "Disabled"
+  },
+  {
+   "fieldname": "etims_id",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
+   "label": "eTims ID",
+   "read_only": 1,
+   "reqd": 1,
+   "sticky": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-02 15:05:03.534209",
+ "modified": "2026-06-03 14:56:28.131587",
  "modified_by": "Administrator",
  "module": "eTims",
  "name": "eTims ID Mapping",

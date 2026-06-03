@@ -12,7 +12,9 @@
   "itemclslvl",
   "column_break_ycuy",
   "itemclsnm",
-  "taxtycd"
+  "taxtycd",
+  "section_break_ubvc",
+  "etims_id_mapping"
  ],
  "fields": [
   {
@@ -52,12 +54,22 @@
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "Taxation Type Code"
+  },
+  {
+   "fieldname": "section_break_ubvc",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "etims_id_mapping",
+   "fieldtype": "Table",
+   "label": "eTims ID Mapping",
+   "options": "eTims ID Mapping"
   }
  ],
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-19 13:58:09.936608",
+ "modified": "2026-06-03 15:19:20.231225",
  "modified_by": "Administrator",
  "module": "eTims",
  "name": "eTims Item Classification",

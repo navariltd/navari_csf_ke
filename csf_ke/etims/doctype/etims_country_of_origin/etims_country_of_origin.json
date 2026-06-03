@@ -8,9 +8,11 @@
  "field_order": [
   "country_details_section",
   "code",
+  "alpha_3_code",
   "currency_code",
   "sort_order",
   "column_break_rksv",
+  "country_code",
   "code_name",
   "code_description"
  ],
@@ -25,7 +27,7 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "in_standard_filter": 1,
-   "label": "Code"
+   "label": "Alpha 2 Code"
   },
   {
    "fieldname": "currency_code",
@@ -54,12 +56,24 @@
    "fieldname": "code_description",
    "fieldtype": "Data",
    "label": "Code Description"
+  },
+  {
+   "fieldname": "alpha_3_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Alpha 3 Code"
+  },
+  {
+   "fieldname": "country_code",
+   "fieldtype": "Data",
+   "label": "Country Code"
   }
  ],
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-19 13:58:31.297865",
+ "modified": "2026-06-03 15:12:42.333523",
  "modified_by": "Administrator",
  "module": "eTims",
  "name": "eTims Country of Origin",

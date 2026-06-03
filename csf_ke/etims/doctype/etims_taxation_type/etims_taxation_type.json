@@ -14,10 +14,14 @@
   "srtord",
   "useyn",
   "column_break_mhhy",
+  "percentage",
+  "amount_type",
   "cdclsnm",
   "userdfncd1",
   "userdfncd2",
-  "userdfncd3"
+  "userdfncd3",
+  "section_break_dibi",
+  "etims_id_mapping"
  ],
  "fields": [
   {
@@ -82,12 +86,35 @@
    "fieldname": "userdfncd3",
    "fieldtype": "Data",
    "label": "User Defined Code 3"
+  },
+  {
+   "fieldname": "section_break_dibi",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "etims_id_mapping",
+   "fieldtype": "Table",
+   "label": "eTims ID Mapping",
+   "options": "eTims ID Mapping"
+  },
+  {
+   "fieldname": "percentage",
+   "fieldtype": "Percent",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Percentage"
+  },
+  {
+   "fieldname": "amount_type",
+   "fieldtype": "Data",
+   "label": "Amount Type"
   }
  ],
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-19 13:56:43.503570",
+ "modified": "2026-06-03 16:14:47.024436",
  "modified_by": "Administrator",
  "module": "eTims",
  "name": "eTims Taxation Type",
@@ -108,7 +135,7 @@
   }
  ],
  "row_format": "Dynamic",
- "search_fields": "cd,cdnm",
+ "search_fields": "cd,cdnm,amount_type,percentage",
  "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
