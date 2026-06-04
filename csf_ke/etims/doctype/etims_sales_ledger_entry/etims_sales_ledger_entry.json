@@ -7,7 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "etims_settings",
-  "slade360_id",
+  "etims_id",
   "type",
   "invoice_date",
   "is_signed",
@@ -56,13 +56,6 @@
    "in_standard_filter": 1,
    "label": "eTims Settings",
    "options": "Navari KRA eTims Settings"
-  },
-  {
-   "fieldname": "slade360_id",
-   "fieldtype": "Data",
-   "label": "Slade360 ID",
-   "read_only": 1,
-   "unique": 1
   },
   {
    "fieldname": "type",
@@ -147,7 +140,8 @@
    "in_list_view": 1,
    "label": "Sales Invoice",
    "options": "Sales Invoice",
-   "read_only": 1
+   "read_only": 1,
+   "search_index": 1
   },
   {
    "fieldname": "etims_invoice",
@@ -324,13 +318,20 @@
    "label": "Sales Invoice Lines",
    "options": "eTIMS Sales Ledger Item",
    "read_only": 1
+  },
+  {
+   "fieldname": "etims_id",
+   "fieldtype": "Data",
+   "label": "eTims ID",
+   "read_only": 1,
+   "unique": 1
   }
  ],
  "grid_page_length": 50,
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-02 16:35:21.394893",
+ "modified": "2026-06-04 13:03:54.113546",
  "modified_by": "Administrator",
  "module": "eTims",
  "name": "eTIMS Sales Ledger Entry",
@@ -396,7 +397,7 @@
  ],
  "row_format": "Dynamic",
  "rows_threshold_for_grid_search": 20,
- "search_fields": "scu_invoice_number,sales_invoice,company,reference_number,slade360_id",
+ "search_fields": "scu_invoice_number,sales_invoice,company,reference_number,etims_id",
  "show_title_field_in_link": 1,
  "sort_field": "modified",
  "sort_order": "DESC",
