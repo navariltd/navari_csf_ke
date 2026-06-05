@@ -1,228 +1,228 @@
 {
- "actions": [],
- "allow_import": 1,
- "allow_rename": 1,
- "autoname": "hash",
- "creation": "2026-03-22 12:43:06.821039",
- "doctype": "DocType",
- "engine": "InnoDB",
- "field_order": [
-  "item_name",
-  "product_name",
-  "product_code",
-  "origin_nation_code",
-  "declaration_date",
-  "item_sequence",
-  "package",
-  "suppliers_name",
-  "invoice_foreign_currency_amount",
-  "purchase_invoice",
-  "column_break_cbnh",
-  "task_code",
-  "export_nation_code",
-  "declaration_number",
-  "hs_code",
-  "packaging_unit_code",
-  "quantity_unit_code",
-  "agent_name",
-  "invoice_foreign_currency",
-  "invoice_foreign_currency_rate",
-  "column_break_dkbf",
-  "branch",
-  "imported_item_status",
-  "imported_item_status_code",
-  "quantity",
-  "net_weight",
-  "gross_weight",
-  "is_mapped",
-  "sent_to_etims"
- ],
- "fields": [
-  {
-   "fieldname": "item_name",
-   "fieldtype": "Data",
-   "label": "Item Name"
-  },
-  {
-   "fieldname": "product_name",
-   "fieldtype": "Data",
-   "label": "Product Name"
-  },
-  {
-   "fieldname": "product_code",
-   "fieldtype": "Data",
-   "label": "Product Code"
-  },
-  {
-   "fieldname": "origin_nation_code",
-   "fieldtype": "Link",
-   "label": "Origin Nation Code",
-   "options": "eTims Country of Origin"
-  },
-  {
-   "fieldname": "declaration_date",
-   "fieldtype": "Date",
-   "label": "Declaration Date"
-  },
-  {
-   "fieldname": "item_sequence",
-   "fieldtype": "Int",
-   "label": "Item Sequence"
-  },
-  {
-   "fieldname": "package",
-   "fieldtype": "Data",
-   "label": "Package"
-  },
-  {
-   "fieldname": "suppliers_name",
-   "fieldtype": "Data",
-   "label": "Supplier's Name"
-  },
-  {
-   "fieldname": "invoice_foreign_currency_amount",
-   "fieldtype": "Data",
-   "label": "Invoice Foreign Currency Amount"
-  },
-  {
-   "fieldname": "purchase_invoice",
-   "fieldtype": "Data",
-   "hidden": 1,
-   "label": "Purchase Invoice"
-  },
-  {
-   "fieldname": "column_break_cbnh",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "task_code",
-   "fieldtype": "Data",
-   "label": "Task Code"
-  },
-  {
-   "fieldname": "export_nation_code",
-   "fieldtype": "Link",
-   "label": "Export Nation Code",
-   "options": "eTims Country of Origin"
-  },
-  {
-   "fieldname": "declaration_number",
-   "fieldtype": "Data",
-   "label": "Declaration Number"
-  },
-  {
-   "fieldname": "hs_code",
-   "fieldtype": "Data",
-   "label": "HS Code"
-  },
-  {
-   "fieldname": "packaging_unit_code",
-   "fieldtype": "Link",
-   "label": "Packaging Unit Code",
-   "options": "eTims Packaging Unit"
-  },
-  {
-   "fieldname": "quantity_unit_code",
-   "fieldtype": "Link",
-   "label": "Quantity Unit Code",
-   "options": "eTims Unit of Quantity"
-  },
-  {
-   "fieldname": "agent_name",
-   "fieldtype": "Data",
-   "label": "Agent Name"
-  },
-  {
-   "fieldname": "invoice_foreign_currency",
-   "fieldtype": "Data",
-   "label": "Invoice Foreign Currency"
-  },
-  {
-   "fieldname": "invoice_foreign_currency_rate",
-   "fieldtype": "Data",
-   "label": "Invoice Foreign Currency Rate"
-  },
-  {
-   "fieldname": "column_break_dkbf",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "branch",
-   "fieldtype": "Link",
-   "label": "Branch",
-   "options": "Branch"
-  },
-  {
-   "fieldname": "imported_item_status",
-   "fieldtype": "Link",
-   "label": "imported Item Status",
-   "options": "eTims Import Item Status"
-  },
-  {
-   "fieldname": "imported_item_status_code",
-   "fieldtype": "Data",
-   "label": "imported Item Status Code"
-  },
-  {
-   "fieldname": "quantity",
-   "fieldtype": "Int",
-   "label": "Quantity"
-  },
-  {
-   "fieldname": "net_weight",
-   "fieldtype": "Float",
-   "label": "Net Weight"
-  },
-  {
-   "fieldname": "gross_weight",
-   "fieldtype": "Float",
-   "label": "Gross Weight",
-   "precision": "2"
-  },
-  {
-   "default": "0",
-   "fieldname": "is_mapped",
-   "fieldtype": "Check",
-   "label": "Is Mapped",
-   "read_only": 1
-  },
-  {
-   "default": "0",
-   "fieldname": "sent_to_etims",
-   "fieldtype": "Check",
-   "label": "Sent to eTims",
-   "read_only": 1
-  }
- ],
- "in_create": 1,
- "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-05-19 13:57:51.714186",
- "modified_by": "Administrator",
- "module": "eTims",
- "name": "eTims Registered Imported Item",
- "naming_rule": "Random",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
- "row_format": "Dynamic",
- "search_fields": "item_name, task_code",
- "show_title_field_in_link": 1,
- "sort_field": "modified",
- "sort_order": "DESC",
- "states": [],
- "title_field": "item_name",
- "track_changes": 1
+  "actions": [],
+  "allow_import": 1,
+  "allow_rename": 1,
+  "autoname": "hash",
+  "creation": "2026-03-22 12:43:06.821039",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "item_name",
+    "product_name",
+    "product_code",
+    "origin_nation_code",
+    "declaration_date",
+    "item_sequence",
+    "package",
+    "suppliers_name",
+    "invoice_foreign_currency_amount",
+    "purchase_invoice",
+    "column_break_cbnh",
+    "task_code",
+    "export_nation_code",
+    "declaration_number",
+    "hs_code",
+    "etims_packaging_unit_code",
+    "quantity_unit_code",
+    "agent_name",
+    "invoice_foreign_currency",
+    "invoice_foreign_currency_rate",
+    "column_break_dkbf",
+    "branch",
+    "imported_item_status",
+    "imported_item_status_code",
+    "quantity",
+    "net_weight",
+    "gross_weight",
+    "is_mapped",
+    "sent_to_etims"
+  ],
+  "fields": [
+    {
+      "fieldname": "item_name",
+      "fieldtype": "Data",
+      "label": "Item Name"
+    },
+    {
+      "fieldname": "product_name",
+      "fieldtype": "Data",
+      "label": "Product Name"
+    },
+    {
+      "fieldname": "product_code",
+      "fieldtype": "Data",
+      "label": "Product Code"
+    },
+    {
+      "fieldname": "origin_nation_code",
+      "fieldtype": "Link",
+      "label": "Origin Nation Code",
+      "options": "eTims Country of Origin"
+    },
+    {
+      "fieldname": "declaration_date",
+      "fieldtype": "Date",
+      "label": "Declaration Date"
+    },
+    {
+      "fieldname": "item_sequence",
+      "fieldtype": "Int",
+      "label": "Item Sequence"
+    },
+    {
+      "fieldname": "package",
+      "fieldtype": "Data",
+      "label": "Package"
+    },
+    {
+      "fieldname": "suppliers_name",
+      "fieldtype": "Data",
+      "label": "Supplier's Name"
+    },
+    {
+      "fieldname": "invoice_foreign_currency_amount",
+      "fieldtype": "Data",
+      "label": "Invoice Foreign Currency Amount"
+    },
+    {
+      "fieldname": "purchase_invoice",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Purchase Invoice"
+    },
+    {
+      "fieldname": "column_break_cbnh",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "task_code",
+      "fieldtype": "Data",
+      "label": "Task Code"
+    },
+    {
+      "fieldname": "export_nation_code",
+      "fieldtype": "Link",
+      "label": "Export Nation Code",
+      "options": "eTims Country of Origin"
+    },
+    {
+      "fieldname": "declaration_number",
+      "fieldtype": "Data",
+      "label": "Declaration Number"
+    },
+    {
+      "fieldname": "hs_code",
+      "fieldtype": "Data",
+      "label": "HS Code"
+    },
+    {
+      "fieldname": "etims_packaging_unit_code",
+      "fieldtype": "Link",
+      "label": "Packaging Unit Code",
+      "options": "eTims Packaging Unit"
+    },
+    {
+      "fieldname": "quantity_unit_code",
+      "fieldtype": "Link",
+      "label": "Quantity Unit Code",
+      "options": "eTims Unit of Quantity"
+    },
+    {
+      "fieldname": "agent_name",
+      "fieldtype": "Data",
+      "label": "Agent Name"
+    },
+    {
+      "fieldname": "invoice_foreign_currency",
+      "fieldtype": "Data",
+      "label": "Invoice Foreign Currency"
+    },
+    {
+      "fieldname": "invoice_foreign_currency_rate",
+      "fieldtype": "Data",
+      "label": "Invoice Foreign Currency Rate"
+    },
+    {
+      "fieldname": "column_break_dkbf",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "branch",
+      "fieldtype": "Link",
+      "label": "Branch",
+      "options": "Branch"
+    },
+    {
+      "fieldname": "imported_item_status",
+      "fieldtype": "Link",
+      "label": "imported Item Status",
+      "options": "eTims Import Item Status"
+    },
+    {
+      "fieldname": "imported_item_status_code",
+      "fieldtype": "Data",
+      "label": "imported Item Status Code"
+    },
+    {
+      "fieldname": "quantity",
+      "fieldtype": "Int",
+      "label": "Quantity"
+    },
+    {
+      "fieldname": "net_weight",
+      "fieldtype": "Float",
+      "label": "Net Weight"
+    },
+    {
+      "fieldname": "gross_weight",
+      "fieldtype": "Float",
+      "label": "Gross Weight",
+      "precision": "2"
+    },
+    {
+      "default": "0",
+      "fieldname": "is_mapped",
+      "fieldtype": "Check",
+      "label": "Is Mapped",
+      "read_only": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "sent_to_etims",
+      "fieldtype": "Check",
+      "label": "Sent to eTims",
+      "read_only": 1
+    }
+  ],
+  "in_create": 1,
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-05-19 13:57:51.714186",
+  "modified_by": "Administrator",
+  "module": "eTims",
+  "name": "eTims Registered Imported Item",
+  "naming_rule": "Random",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "row_format": "Dynamic",
+  "search_fields": "item_name, task_code",
+  "show_title_field_in_link": 1,
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "title_field": "item_name",
+  "track_changes": 1
 }
