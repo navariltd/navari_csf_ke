@@ -10,26 +10,29 @@ required_apps = ["erpnext", "hrms"]
 
 
 fixtures = [
-	{
-		"doctype": "Custom Field",
-		"filters": [
-			["is_system_generated", "=", 0],
-			["module", "=", "CSF KE"],
-		],
-	},
-	{
-		"doctype": "DocType Link",
-		"filters": [
-			[
-				"link_doctype",
-				"in",
-				("Employee Dependent and Beneficiary",),
-			]
-		],
-	},
-	{
-		"doctype": "Statement of Account Template",
-	},
+	# {
+	# 	"doctype": "Custom Field",
+	# 	"filters": [
+	# 		["is_system_generated", "=", 0],
+	# 		["module", "=", "CSF KE"],
+	# 	],
+	# },
+	# {
+	# 	"doctype": "DocType Link",
+	# 	"filters": [
+	# 		[
+	# 			"link_doctype",
+	# 			"in",
+	# 			("Employee Dependent and Beneficiary",),
+	# 		]
+	# 	],
+	# },
+	# {
+	# 	"doctype": "Statement of Account Template",
+	# },
+	# {"doctype": "eTims Country of Origin"},
+	# {"doctype": "eTims Taxation Type"},
+	# {"doctype": "eTims Item Classification"},
 ]
 
 process_soa_html = {
@@ -62,7 +65,11 @@ before_tests = "csf_ke.setup.utils.before_tests"
 
 # include js in doctype views
 
-doctype_js = {"Customer": "csf_ke/overrides/customer.js"}
+doctype_js = {
+	"Customer": "csf_ke/overrides/customer.js",
+	"Supplier": "csf_ke/overrides/supplier.js",
+	"Item": "csf_ke/overrides/item.js",
+}
 
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}

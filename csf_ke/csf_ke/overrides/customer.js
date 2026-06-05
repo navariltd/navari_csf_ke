@@ -1,5 +1,10 @@
 frappe.ui.form.on("Customer", {
   refresh: function (frm) {
+    let grid = frm.get_field("etims_id_mapping").grid;
+    grid.cannot_add_rows = true;
+    grid.cannot_delete_rows = true;
+    grid.only_sortable();
+    frm.refresh_field("etims_id_mapping");
     set_kra_pin_required(frm);
   },
 
