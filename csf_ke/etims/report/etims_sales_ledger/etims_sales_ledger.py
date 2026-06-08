@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+from erpnext.setup.utils import get_exchange_rate
 from frappe import _
 from frappe.query_builder import DocType
 from frappe.query_builder.functions import Sum
@@ -212,7 +213,7 @@ def _get_erp_invoice_data(key, invoice_data, from_date=None, to_date=None):
 		erp_grand_total = flt(invoice_data.get("base_grand_total"))
 		erp_tax_total = flt(invoice_data.get("base_total_taxes_and_charges"))
 	else:
-		conversion_rate = frappe.utils.get_exchange_rate(currency, "KES", invoice_data.get("posting_date"))
+		conversion_rate = get_exchange_rate(currency, "KES", invoice_data.get("posting_date"))
 		erp_grand_total = flt(invoice_data.get("grand_total")) * conversion_rate
 		erp_tax_total = flt(invoice_data.get("total_taxes_and_charges")) * conversion_rate
 
@@ -233,7 +234,7 @@ def _get_erp_invoice_data(key, invoice_data, from_date=None, to_date=None):
 			return flt(q.select(Sum(SI.base_grand_total)).run()[0][0])
 		else:
 			raw = flt(q.select(Sum(SI.grand_total)).run()[0][0])
-			cr = frappe.utils.get_exchange_rate(currency, "KES", invoice_data.get("posting_date"))
+			cr = get_exchange_rate(currency, "KES", invoice_data.get("posting_date"))
 			return raw * cr
 
 	credit_amount_all = _sum_credits()
