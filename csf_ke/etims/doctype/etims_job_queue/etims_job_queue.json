@@ -25,6 +25,7 @@
   "integration_request",
   "retry_count",
   "page_size",
+  "page",
   "is_page",
   "column_break_scoa",
   "last_attempt",
@@ -227,13 +228,20 @@
    "fieldtype": "Data",
    "label": "Error Callback Used",
    "read_only": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "page",
+   "fieldtype": "Int",
+   "label": "Page",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-03 15:30:22.574503",
+ "modified": "2026-06-09 15:46:08.427078",
  "modified_by": "Administrator",
  "module": "eTims",
  "name": "eTims Job Queue",
