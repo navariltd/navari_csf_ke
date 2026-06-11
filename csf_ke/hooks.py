@@ -62,7 +62,11 @@ before_tests = "csf_ke.setup.utils.before_tests"
 
 # include js in doctype views
 
-doctype_js = {"Customer": "csf_ke/overrides/customer.js"}
+doctype_js = {
+	"Customer": "csf_ke/overrides/customer.js",
+	"Supplier": "csf_ke/overrides/supplier.js",
+	"Item": "csf_ke/overrides/item.js",
+}
 
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
