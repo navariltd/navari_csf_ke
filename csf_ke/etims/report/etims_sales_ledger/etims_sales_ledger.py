@@ -34,21 +34,13 @@ def validate_filters(filters):
 
 
 def get_columns(filters):
-
 	return [
 		{
 			"label": _("Sales Invoice"),
 			"fieldname": "sales_invoice",
 			"fieldtype": "Link",
 			"options": "Sales Invoice",
-			"width": 220,
-		},
-		{
-			"label": _("Customer"),
-			"fieldname": "customer",
-			"fieldtype": "Link",
-			"options": "Customer",
-			"width": 150,
+			"width": 140,
 		},
 		{
 			"label": _("Invoice Date"),
@@ -57,62 +49,57 @@ def get_columns(filters):
 			"width": 110,
 		},
 		{
-			"label": _("ERP Invoice Amount"),
-			"fieldname": "erp_invoice_amount",
-			"fieldtype": "Currency",
-			"width": 140,
-		},
-		{
-			"label": _("ERP Invoice Amount (Period)"),
-			"fieldname": "erp_invoice_period_amount",
-			"fieldtype": "Currency",
-			"width": 180,
-		},
-		{
-			"label": _("ERP Tax Amount"),
-			"fieldname": "erp_tax_amount",
-			"fieldtype": "Currency",
-			"width": 130,
-		},
-		{
-			"label": _("ERP Credit Note Amount"),
-			"fieldname": "erp_credit_amount",
-			"fieldtype": "Currency",
+			"label": _("Customer"),
+			"fieldname": "customer",
+			"fieldtype": "Link",
+			"options": "Customer",
 			"width": 160,
-		},
-		{
-			"label": _("ERP Credit Note Amount (Period)"),
-			"fieldname": "erp_credit_period_amount",
-			"fieldtype": "Currency",
-			"width": 190,
 		},
 		{
 			"label": _("Sent to eTIMS"),
 			"fieldname": "etims_status",
 			"fieldtype": "Data",
-			"width": 120,
+			"width": 110,
 		},
 		{
 			"label": _("Reconciliation Status"),
 			"fieldname": "reconciliation_status",
 			"fieldtype": "Data",
-			"width": 200,
+			"width": 180,
 		},
 		{
-			"label": _("eTIMS Invoice Amount"),
+			"label": _("Invoice Amt"),
+			"fieldname": "erp_invoice_amount",
+			"fieldtype": "Currency",
+			"width": 140,
+		},
+		{
+			"label": _("Invoice Amt (Period)"),
+			"fieldname": "erp_invoice_period_amount",
+			"fieldtype": "Currency",
+			"width": 160,
+		},
+		{
+			"label": _("eTIMS Invoice Amt"),
 			"fieldname": "etims_invoice_amount",
 			"fieldtype": "Currency",
-			"width": 150,
+			"width": 140,
 		},
 		{
-			"label": _("eTIMS Credit Amount"),
-			"fieldname": "etims_credit_amount",
+			"label": _("CN Amt"),
+			"fieldname": "erp_credit_amount",
 			"fieldtype": "Currency",
 			"width": 150,
 		},
 		{
-			"label": _("eTIMS VAT Amount"),
-			"fieldname": "etims_total_tax",
+			"label": _("CN Amt (Period)"),
+			"fieldname": "erp_credit_period_amount",
+			"fieldtype": "Currency",
+			"width": 170,
+		},
+		{
+			"label": _("eTIMS CN Amt"),
+			"fieldname": "etims_credit_amount",
 			"fieldtype": "Currency",
 			"width": 140,
 		},
@@ -120,13 +107,37 @@ def get_columns(filters):
 			"label": _("Amount Variance"),
 			"fieldname": "difference",
 			"fieldtype": "Currency",
+			"width": 130,
+		},
+		{
+			"label": _("Invoice Tax Amt"),
+			"fieldname": "erp_tax_amount",
+			"fieldtype": "Currency",
+			"width": 120,
+		},
+		{
+			"label": _("eTIMS Invoice Tax Amt"),
+			"fieldname": "etims_total_tax",
+			"fieldtype": "Currency",
+			"width": 150,
+		},
+		{
+			"label": _("CN Tax Amt"),
+			"fieldname": "erp_credit_tax_amount",
+			"fieldtype": "Currency",
 			"width": 140,
 		},
 		{
-			"label": _("VAT Variance"),
+			"label": _("eTIMS CN Tax Amt"),
+			"fieldname": "etims_credit_tax",
+			"fieldtype": "Currency",
+			"width": 150,
+		},
+		{
+			"label": _("Tax Variance"),
 			"fieldname": "tax_difference",
 			"fieldtype": "Currency",
-			"width": 140,
+			"width": 130,
 		},
 		{
 			"label": _("Indent"),
@@ -187,7 +198,7 @@ def _get_erp_invoice_data(key, invoice_data, from_date=None, to_date=None):
 		erp_grand_total = flt(invoice_data.get("grand_total")) * conversion_rate
 		erp_tax_total = flt(invoice_data.get("total_taxes_and_charges")) * conversion_rate
 
-	def _sum_credits(extra_filters=None):
+	def _sum_credits(field, extra_filters=None):
 		q = (
 			frappe.qb.from_(SI)
 			.where(SI.is_return == 1)
@@ -199,20 +210,28 @@ def _get_erp_invoice_data(key, invoice_data, from_date=None, to_date=None):
 				q = q.where(f)
 
 		if currency == "KES":
-			return flt(q.select(Sum(SI.grand_total)).run()[0][0])
+			return flt(q.select(Sum(getattr(SI, field))).run()[0][0])
 		elif company_currency == "KES":
-			return flt(q.select(Sum(SI.base_grand_total)).run()[0][0])
+			base_field = f"base_{field}"
+			return flt(q.select(Sum(getattr(SI, base_field))).run()[0][0])
 		else:
-			raw = flt(q.select(Sum(SI.grand_total)).run()[0][0])
+			raw = flt(q.select(Sum(getattr(SI, field))).run()[0][0])
 			cr = get_exchange_rate(currency, "KES", invoice_data.get("posting_date"))
 			return raw * cr
 
-	credit_amount_all = _sum_credits()
+	credit_amount_all = _sum_credits("grand_total")
 	credit_amount_period = (
-		_sum_credits([SI.posting_date.between(from_date, to_date)]) if from_date and to_date else 0
+		_sum_credits("grand_total", [SI.posting_date.between(from_date, to_date)])
+		if from_date and to_date
+		else 0
+	)
+	credit_tax_period = (
+		_sum_credits("total_taxes_and_charges", [SI.posting_date.between(from_date, to_date)])
+		if from_date and to_date
+		else 0
 	)
 
-	return erp_grand_total, erp_tax_total, credit_amount_all, credit_amount_period
+	return erp_grand_total, erp_tax_total, credit_amount_all, credit_amount_period, credit_tax_period
 
 
 def _empty_group_row(key):
@@ -225,9 +244,11 @@ def _empty_group_row(key):
 		"erp_tax_amount": 0,
 		"erp_credit_amount": 0,
 		"erp_credit_period_amount": 0,
+		"erp_credit_tax_amount": 0,
 		"etims_invoice_amount": 0,
 		"etims_credit_amount": 0,
 		"etims_total_tax": 0,
+		"etims_credit_tax": 0,
 		"difference": 0,
 		"tax_difference": 0,
 		"etims_status": "",
@@ -239,8 +260,8 @@ def _empty_group_row(key):
 
 
 def _populate_erp_data(key, row, invoice_data, from_date, to_date):
-	erp_grand_total, erp_tax_total, credit_amount_all, credit_amount_period = _get_erp_invoice_data(
-		key, invoice_data, from_date, to_date
+	erp_grand_total, erp_tax_total, credit_amount_all, credit_amount_period, credit_tax_period = (
+		_get_erp_invoice_data(key, invoice_data, from_date, to_date)
 	)
 
 	posting_date = invoice_data.get("posting_date")
@@ -264,9 +285,10 @@ def _populate_erp_data(key, row, invoice_data, from_date, to_date):
 			"invoice_date": posting_date,
 			"erp_invoice_amount": erp_grand_total,
 			"erp_invoice_period_amount": erp_grand_total if in_period else 0,
-			"erp_tax_amount": erp_tax_total,
+			"erp_tax_amount": erp_tax_total if in_period else 0,
 			"erp_credit_amount": credit_amount_all,
 			"erp_credit_period_amount": credit_amount_period,
+			"erp_credit_tax_amount": credit_tax_period,
 			"etims_status": etims_status,
 		}
 	)
@@ -288,7 +310,7 @@ def get_data(filters):
 			Ledger.sales_invoice,
 			Ledger.invoice_date,
 			Ledger.type,
-			Ledger.total_amount,
+			Ledger.total_gross_amount,
 			Ledger.total_vat,
 			Ledger.customer_name,
 			Ledger.reference_number,
@@ -354,11 +376,11 @@ def get_data(filters):
 
 		if key in grouped:
 			if r.type == "Sales Invoice":
-				grouped[key]["etims_invoice_amount"] += flt(r.total_amount)
+				grouped[key]["etims_invoice_amount"] += flt(r.total_gross_amount)
+				grouped[key]["etims_total_tax"] += flt(r.total_vat)
 			else:
-				grouped[key]["etims_credit_amount"] += flt(r.total_amount)
-
-			grouped[key]["etims_total_tax"] += flt(r.total_vat)
+				grouped[key]["etims_credit_amount"] += flt(r.total_gross_amount)
+				grouped[key]["etims_credit_tax"] += flt(r.total_vat)
 
 			grouped[key].setdefault("children", []).append(
 				{
@@ -374,9 +396,11 @@ def get_data(filters):
 					"erp_tax_amount": 0,
 					"erp_credit_amount": 0,
 					"erp_credit_period_amount": 0,
-					"etims_invoice_amount": flt(r.total_amount) if r.type == "Sales Invoice" else 0,
-					"etims_credit_amount": flt(r.total_amount) if r.type == "Credit Note" else 0,
-					"etims_total_tax": flt(r.total_vat),
+					"erp_credit_tax_amount": 0,
+					"etims_invoice_amount": flt(r.total_gross_amount) if r.type == "Sales Invoice" else 0,
+					"etims_credit_amount": flt(r.total_gross_amount) if r.type == "Credit Note" else 0,
+					"etims_total_tax": flt(r.total_vat) if r.type == "Sales Invoice" else 0,
+					"etims_credit_tax": flt(r.total_vat) if r.type == "Credit Note" else 0,
 					"difference": 0,
 					"tax_difference": 0,
 					"etims_status": "",
@@ -392,9 +416,11 @@ def get_data(filters):
 	total_erp_tax = 0
 	total_erp_credit = 0
 	total_erp_credit_period = 0
+	total_erp_credit_tax = 0
 	total_etims_invoice = 0
 	total_etims_credit = 0
 	total_etims_tax = 0
+	total_etims_credit_tax = 0
 	total_variance = 0
 
 	sorted_groups = sorted(
@@ -408,12 +434,13 @@ def get_data(filters):
 		erp_total = flt(row["erp_invoice_period_amount"]) + flt(row["erp_credit_period_amount"])
 
 		row["difference"] = etims_total - erp_total
-		row["tax_difference"] = flt(row["etims_total_tax"]) - flt(row["erp_tax_amount"])
+
+		etims_tax_total = flt(row["etims_total_tax"]) + flt(row["etims_credit_tax"])
+		erp_tax_total = flt(row["erp_tax_amount"]) + flt(row["erp_credit_tax_amount"])
+		row["tax_difference"] = etims_tax_total - erp_tax_total
 
 		variance_percent = (abs(row["difference"]) / erp_total * 100) if erp_total > 0 else 0
-		tax_variance_percent = (
-			(abs(row["tax_difference"]) / row["erp_tax_amount"] * 100) if row["erp_tax_amount"] > 0 else 0
-		)
+		tax_variance_percent = (abs(row["tax_difference"]) / erp_tax_total * 100) if erp_tax_total > 0 else 0
 
 		is_sent = row.get("etims_status") == "Yes"
 		has_etims_data = flt(row["etims_invoice_amount"]) != 0 or flt(row["etims_credit_amount"]) != 0
@@ -465,9 +492,11 @@ def get_data(filters):
 		total_erp_tax += flt(row["erp_tax_amount"])
 		total_erp_credit += flt(row["erp_credit_amount"])
 		total_erp_credit_period += flt(row["erp_credit_period_amount"])
+		total_erp_credit_tax += flt(row["erp_credit_tax_amount"])
 		total_etims_invoice += flt(row["etims_invoice_amount"])
 		total_etims_credit += flt(row["etims_credit_amount"])
 		total_etims_tax += flt(row["etims_total_tax"])
+		total_etims_credit_tax += flt(row["etims_credit_tax"])
 		total_variance += abs(row["difference"])
 
 		result.append(row)
@@ -483,11 +512,14 @@ def get_data(filters):
 			"erp_tax_amount": total_erp_tax,
 			"erp_credit_amount": total_erp_credit,
 			"erp_credit_period_amount": total_erp_credit_period,
+			"erp_credit_tax_amount": total_erp_credit_tax,
 			"etims_invoice_amount": total_etims_invoice,
 			"etims_credit_amount": total_etims_credit,
 			"etims_total_tax": total_etims_tax,
+			"etims_credit_tax": total_etims_credit_tax,
 			"difference": total_variance,
-			"tax_difference": total_etims_tax - total_erp_tax,
+			"tax_difference": (total_etims_tax + total_etims_credit_tax)
+			- (total_erp_tax + total_erp_credit_tax),
 			"etims_status": "",
 			"reconciliation_status": "",
 			"indent": 0,
@@ -517,9 +549,9 @@ def get_chart(data):
 	return {
 		"data": {
 			"labels": [
-				_("ERP Invoice Amount (Period)"),
+				_("Invoice Amount (Period)"),
 				_("eTIMS Invoice Amount"),
-				_("ERP Credit Notes (Period)"),
+				_("Credit Notes (Period)"),
 				_("eTIMS Credit Notes"),
 				_("Total Variance"),
 			],
@@ -586,7 +618,7 @@ def get_report_summary(data):
 	return [
 		{
 			"value": period_erp_invoice,
-			"label": _("Total ERP Invoice Amount (Period)"),
+			"label": _("Total Invoice Amount (Period)"),
 			"datatype": "Currency",
 			"indicator": "Blue",
 		},
@@ -598,7 +630,7 @@ def get_report_summary(data):
 		},
 		{
 			"value": period_erp_credit,
-			"label": _("Total ERP Credit Notes (Period)"),
+			"label": _("Total Credit Notes (Period)"),
 			"datatype": "Currency",
 			"indicator": "Blue",
 		},
