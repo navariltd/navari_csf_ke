@@ -127,6 +127,8 @@
    "fieldtype": "Link",
    "in_filter": 1,
    "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Company",
    "options": "Company",
    "read_only": 1
@@ -140,6 +142,8 @@
    "fieldtype": "Data",
    "in_filter": 1,
    "in_list_view": 1,
+   "in_preview": 1,
+   "in_standard_filter": 1,
    "label": "Settings",
    "read_only": 1
   },
@@ -241,7 +245,7 @@
  "in_create": 1,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-06-09 15:46:08.427078",
+ "modified": "2026-06-13 13:46:59.458899",
  "modified_by": "Administrator",
  "module": "eTims",
  "name": "eTims Job Queue",
