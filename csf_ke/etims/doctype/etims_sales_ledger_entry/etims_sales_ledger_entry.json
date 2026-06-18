@@ -337,8 +337,13 @@
  "grid_page_length": 50,
  "in_create": 1,
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-06-13 13:42:24.279008",
+ "links": [
+  {
+   "link_doctype": "eTIMS Sales Ledger Entry",
+   "link_fieldname": "etims_invoice"
+  }
+ ],
+ "modified": "2026-06-18 02:23:26.155691",
  "modified_by": "Administrator",
  "module": "eTims",
  "name": "eTIMS Sales Ledger Entry",

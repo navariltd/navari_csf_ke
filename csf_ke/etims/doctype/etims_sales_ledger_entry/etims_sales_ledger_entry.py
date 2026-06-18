@@ -27,3 +27,7 @@ class eTIMSSalesLedgerEntry(Document):
 			)
 			if sales_invoice:
 				self.sales_invoice = sales_invoice
+
+		if self.sales_invoice:
+			company = frappe.db.get_value("Sales Invoice", self.sales_invoice, "company")
+			self.company = company
