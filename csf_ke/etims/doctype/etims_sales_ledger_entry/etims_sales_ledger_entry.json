@@ -137,6 +137,7 @@
    "fieldtype": "Link",
    "in_filter": 1,
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Sales Invoice",
    "options": "Sales Invoice",
    "read_only": 1,
@@ -147,6 +148,7 @@
    "fieldtype": "Link",
    "in_filter": 1,
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "eTims Invoice",
    "options": "eTIMS Sales Ledger Entry",
    "read_only": 1
@@ -175,7 +177,9 @@
   {
    "fieldname": "customer_name",
    "fieldtype": "Data",
+   "in_filter": 1,
    "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "Customer Name",
    "read_only": 1
   },
@@ -237,6 +241,7 @@
   {
    "fieldname": "scu_invoice_number",
    "fieldtype": "Data",
+   "in_filter": 1,
    "in_list_view": 1,
    "in_standard_filter": 1,
    "label": "SCU Invoice Number",
@@ -321,6 +326,9 @@
   {
    "fieldname": "etims_id",
    "fieldtype": "Data",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "eTims ID",
    "read_only": 1,
    "unique": 1
@@ -329,8 +337,13 @@
  "grid_page_length": 50,
  "in_create": 1,
  "index_web_pages_for_search": 1,
- "links": [],
- "modified": "2026-06-13 13:42:24.279008",
+ "links": [
+  {
+   "link_doctype": "eTIMS Sales Ledger Entry",
+   "link_fieldname": "etims_invoice"
+  }
+ ],
+ "modified": "2026-06-18 02:23:26.155691",
  "modified_by": "Administrator",
  "module": "eTims",
  "name": "eTIMS Sales Ledger Entry",
