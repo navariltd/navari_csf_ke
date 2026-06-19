@@ -74,6 +74,7 @@ class eTimsQueueManager(Document):
 				return
 
 		self.db_set("queue_status", "Processing", update_modified=False)
+
 		frappe.db.commit()
 
 		frappe.enqueue(
@@ -105,12 +106,14 @@ class eTimsQueueManager(Document):
 		"""
 		if self.disabled:
 			self.db_set("queue_status", "Paused", update_modified=False)
+			frappe.db.commit()
 			return
 
 		self.reload()
 
 		if not self.current_job:
 			self.db_set("queue_status", "Idle", update_modified=False)
+			frappe.db.commit()
 			return
 
 		job_doc = frappe.get_doc("eTims Job Queue", self.current_job)
@@ -239,7 +242,6 @@ class eTimsQueueManager(Document):
 			},
 			update_modified=False,
 		)
-		frappe.db.commit()
 
 
 def _bg_run_current_job(manager_name: str) -> None:
