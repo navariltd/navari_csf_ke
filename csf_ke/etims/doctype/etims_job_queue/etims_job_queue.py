@@ -64,7 +64,13 @@ class eTimsJobQueue(Document):
 		self.db_set(update_fields, commit=True)
 
 		if status in ("Success", "Failed"):
-			frappe.get_single("eTims Queue Manager").advance_queue()
+			frappe.enqueue(
+				"csf_ke.etims.doctype.etims_queue_manager.etims_queue_manager._bg_run_current_job",
+				manager_name="eTims Queue Manager",
+				queue="default",
+				is_async=True,
+				enqueue_after_commit=True,
+			)
 
 	def enqueue_next_page(self, next_url: str) -> None:
 		"""
