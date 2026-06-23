@@ -33,7 +33,6 @@ class KenyaSalesTaxReport:
 	def get_columns(self):
 		columns = []
 
-		# Add accounting dimension column if filter is set
 		if self.filters.get("accounting_dimension"):
 			dimension_label = self.filters.get("accounting_dimension")
 			columns.append(
@@ -73,25 +72,25 @@ class KenyaSalesTaxReport:
 				"width": 200,
 			},
 			{
-				"label": _("ETR Serial Number"),
+				"label": _("SCU Serial Number"),
 				"fieldname": "etr_serial_number",
 				"fieldtype": "Data",
 				"width": 200,
 			},
 			{
-				"label": _("ETR Invoice Number"),
+				"label": _("SCU Invoice Number"),
 				"fieldname": "etr_invoice_number",
 				"fieldtype": "Data",
 				"width": 200,
 			},
 			{
 				"fieldname": "cu_link",
-				"label": _("CU Link"),
+				"label": _("SCU Link"),
 				"fieldtype": "Data",
 				"width": 200,
 			},
 			{
-				"label": _("CU Invoice Date"),
+				"label": _("SCU Invoice Date"),
 				"fieldname": "cu_invoice_date",
 				"fieldtype": "Date",
 				"width": 200,
@@ -109,16 +108,16 @@ class KenyaSalesTaxReport:
 				"width": 160,
 			},
 			{
-				"label": _("Return CU Invoice Number"),
+				"label": _("Return Against SCU Number"),
 				"fieldname": "return_cu_invoice_number",
 				"fieldtype": "Data",
-				"width": 200,
+				"width": 250,
 			},
 			{
-				"label": _("Return CU Invoice Date"),
+				"label": _("Return Against SCU Invoice Date"),
 				"fieldname": "return_cu_invoice_date",
 				"fieldtype": "Date",
-				"width": 160,
+				"width": 250,
 			},
 		]
 
@@ -144,21 +143,20 @@ class KenyaSalesTaxReport:
 		sale_invoice_doc = frappe.qb.DocType("Sales Invoice")
 		customer_doc = frappe.qb.DocType("Customer")
 
-		# Build select fields list
 		select_fields = [
 			sale_invoice_doc.tax_id.as_("pin_of_purchaser"),
 			sale_invoice_doc.customer_name.as_("name_of_purchaser"),
-			sale_invoice_doc.etr_serial_number.as_("etr_serial_number"),
-			sale_invoice_doc.etr_invoice_number.as_("etr_invoice_number"),
-			sale_invoice_doc.cu_link.as_("cu_link"),
-			sale_invoice_doc.cu_invoice_date.as_("cu_invoice_date"),
 			sale_invoice_doc.posting_date.as_("invoice_date"),
 			sale_invoice_doc.name.as_("invoice_name"),
 			sale_invoice_doc.base_grand_total.as_("invoice_total_sales"),
 			sale_invoice_doc.return_against.as_("return_against"),
+			sale_invoice_doc.etims_id.as_("etims_id"),
+			sale_invoice_doc.etr_serial_number.as_("etr_serial_number"),
+			sale_invoice_doc.etr_invoice_number.as_("etr_invoice_number"),
+			sale_invoice_doc.cu_link.as_("cu_link"),
+			sale_invoice_doc.cu_invoice_date.as_("cu_invoice_date"),
 		]
 
-		# Add accounting dimension field if specified
 		accounting_dimension = self.filters.get("accounting_dimension")
 		if accounting_dimension:
 			dimension_field_map = {"Cost Center": "cost_center", "Project": "project"}
@@ -190,16 +188,47 @@ class KenyaSalesTaxReport:
 		sales_invoices = sales_invoice_query.run(as_dict=True)
 
 		for invoice in sales_invoices:
-			if invoice.get("return_against"):
-				return_invoice_details = frappe.db.get_value(
-					"Sales Invoice",
-					invoice["return_against"],
-					["etr_invoice_number", "cu_invoice_date"],
+			has_etims = False
+			if invoice.get("etims_id"):
+				ledger = frappe.db.get_value(
+					"eTIMS Sales Ledger Entry",
+					{"etims_id": invoice.etims_id},
+					[
+						"scu_id",
+						"scu_invoice_number",
+						"scu_mrc_number",
+						"scu_receipt_number",
+						"etims_qr_code_url",
+					],
 					as_dict=True,
 				)
-				if return_invoice_details:
-					invoice["return_cu_invoice_number"] = return_invoice_details.get("etr_invoice_number")
-					invoice["return_cu_invoice_date"] = return_invoice_details.get("cu_invoice_date")
+				if ledger:
+					invoice["etr_serial_number"] = ledger.get("scu_id")
+					invoice["etr_invoice_number"] = ledger.get("scu_invoice_number")
+					invoice["cu_link"] = ledger.get("etims_qr_code_url")
+					has_etims = True
+
+			if invoice.get("return_against"):
+				return_invoice = frappe.db.get_value(
+					"Sales Invoice",
+					invoice["return_against"],
+					["etims_id", "etr_invoice_number", "cu_invoice_date"],
+					as_dict=True,
+				)
+				if return_invoice:
+					if return_invoice.get("etims_id"):
+						return_ledger = frappe.db.get_value(
+							"eTIMS Sales Ledger Entry",
+							{"etims_id": return_invoice.etims_id},
+							["scu_invoice_number"],
+							as_dict=True,
+						)
+						if return_ledger:
+							invoice["return_cu_invoice_number"] = return_ledger.get("scu_invoice_number")
+							invoice["return_cu_invoice_date"] = return_invoice.get("cu_invoice_date")
+					elif return_invoice.get("etr_invoice_number"):
+						invoice["return_cu_invoice_number"] = return_invoice.get("etr_invoice_number")
+						invoice["return_cu_invoice_date"] = return_invoice.get("cu_invoice_date")
 
 		return sales_invoices
 
@@ -265,14 +294,12 @@ class KenyaSalesTaxReport:
 				self.unregistered_customers_total_sales += report_entry["invoice_total_sales"]
 				self.unregistered_customers_total_vat += report_entry["amount_of_vat"]
 
-		# Group by accounting dimension if specified
 		if self.filters.get("accounting_dimension") and report_details:
 			report_details = self.group_by_dimension(report_details)
 
 		return report_details
 
 	def group_by_dimension(self, data):
-		"""Group data by accounting dimension and add group headers with totals"""
 		grouped_data = defaultdict(list)
 		for row in data:
 			dimension_value = row.get("accounting_dimension_value") or _("No Dimension")
