@@ -1,0 +1,419 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "hash",
+ "creation": "2026-05-06 11:48:57.634716",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "etims_settings",
+  "etims_id",
+  "type",
+  "invoice_date",
+  "is_signed",
+  "column_break_pccr",
+  "reference_number",
+  "document_number",
+  "sales_type",
+  "workflow_state",
+  "column_break_waqb",
+  "company",
+  "sales_invoice",
+  "etims_invoice",
+  "original_etims_invoice_counter",
+  "section_break_fin",
+  "customer",
+  "customer_name",
+  "customer_tax_id",
+  "column_break_gvfn",
+  "tax_inclusive_amount",
+  "tax_exclusive_amount",
+  "total_vat",
+  "column_break_lwna",
+  "total_gross_amount",
+  "total_amount",
+  "section_break_scu",
+  "scu_invoice_number",
+  "scu_receipt_number",
+  "scu_id",
+  "scu_mrc_number",
+  "column_break_roqq",
+  "scu_receipt_signature",
+  "scu_receipt_date",
+  "scu_receipt_time",
+  "column_break_wrci",
+  "etims_qr_code_url",
+  "scu_internal_data",
+  "section_break_items",
+  "sales_invoice_lines"
+ ],
+ "fields": [
+  {
+   "fieldname": "etims_settings",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "eTims Settings",
+   "options": "Navari KRA eTims Settings"
+  },
+  {
+   "fieldname": "type",
+   "fieldtype": "Select",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Type",
+   "options": "Sales Invoice\nCredit Note",
+   "read_only": 1
+  },
+  {
+   "fieldname": "invoice_date",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Invoice Date",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "is_signed",
+   "fieldtype": "Check",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Is Signed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_pccr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "reference_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Reference Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "document_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Document Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_type",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Sales Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "workflow_state",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Workflow State",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_waqb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Company",
+   "options": "Company",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sales_invoice",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Sales Invoice",
+   "options": "Sales Invoice",
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "etims_invoice",
+   "fieldtype": "Link",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "eTims Invoice",
+   "options": "eTIMS Sales Ledger Entry",
+   "read_only": 1
+  },
+  {
+   "fieldname": "original_etims_invoice_counter",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Original eTIMS Invoice Counter",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_fin",
+   "fieldtype": "Section Break",
+   "label": "Customer & Financials"
+  },
+  {
+   "fetch_from": "sales_invoice.customer",
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer_name",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Customer Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "customer_tax_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Customer Tax ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_gvfn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "tax_inclusive_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Tax Inclusive Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "tax_exclusive_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Tax Exclusive Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_vat",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total VAT",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_lwna",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_gross_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total Gross Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Total Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_scu",
+   "fieldtype": "Section Break",
+   "label": "KRA eTIMS (SCU) Data"
+  },
+  {
+   "fieldname": "scu_invoice_number",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "SCU Invoice Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "scu_receipt_number",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "SCU Receipt Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "scu_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "SCU ID",
+   "read_only": 1
+  },
+  {
+   "fieldname": "scu_mrc_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "SCU MRC Number",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_roqq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "scu_receipt_signature",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Receipt Signature",
+   "read_only": 1
+  },
+  {
+   "fieldname": "scu_receipt_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "SCU Receipt Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "scu_receipt_time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "SCU Receipt Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_wrci",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "etims_qr_code_url",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "QR Code URL",
+   "read_only": 1
+  },
+  {
+   "fieldname": "scu_internal_data",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Internal Data",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_items",
+   "fieldtype": "Section Break",
+   "label": "Invoice Items"
+  },
+  {
+   "fieldname": "sales_invoice_lines",
+   "fieldtype": "Table",
+   "label": "Sales Invoice Lines",
+   "options": "eTIMS Sales Ledger Item",
+   "read_only": 1
+  },
+  {
+   "fieldname": "etims_id",
+   "fieldtype": "Data",
+   "in_filter": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "eTims ID",
+   "read_only": 1,
+   "unique": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "in_create": 1,
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "link_doctype": "eTIMS Sales Ledger Entry",
+   "link_fieldname": "etims_invoice"
+  }
+ ],
+ "modified": "2026-06-18 02:23:26.155691",
+ "modified_by": "Administrator",
+ "module": "eTims",
+ "name": "eTIMS Sales Ledger Entry",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Accounts User",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Sales User",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "search_fields": "scu_invoice_number,sales_invoice,company,reference_number,etims_id",
+ "show_title_field_in_link": 1,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "scu_invoice_number",
+ "translated_doctype": 1
+}

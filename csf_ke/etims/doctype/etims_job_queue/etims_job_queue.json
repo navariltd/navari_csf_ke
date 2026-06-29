@@ -1,0 +1,330 @@
+{
+  "actions": [],
+  "allow_rename": 1,
+  "autoname": "hash",
+  "creation": "2026-05-18 13:51:00.644357",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "route_key",
+    "handler_function",
+    "url",
+    "request_method",
+    "column_break_kvkr",
+    "status",
+    "reference_doctype",
+    "reference_docname",
+    "priority",
+    "execution_details_section",
+    "company",
+    "column_break_kmcj",
+    "settings_name",
+    "section_break_kbro",
+    "request_data",
+    "execution_section",
+    "integration_request",
+    "retry_count",
+    "page_size",
+    "page",
+    "is_page",
+    "column_break_scoa",
+    "last_attempt",
+    "completion_time",
+    "error_details_section",
+    "error_message",
+    "error_callback"
+  ],
+  "fields": [
+    {
+      "fieldname": "route_key",
+      "fieldtype": "Data",
+      "in_filter": 1,
+      "in_list_view": 1,
+      "in_preview": 1,
+      "in_standard_filter": 1,
+      "label": "Route Key",
+      "read_only": 1
+    },
+    {
+      "fieldname": "handler_function",
+      "fieldtype": "Data",
+      "in_filter": 1,
+      "in_list_view": 1,
+      "in_preview": 1,
+      "in_standard_filter": 1,
+      "label": "Handler Function",
+      "read_only": 1
+    },
+    {
+      "fieldname": "url",
+      "fieldtype": "Data",
+      "in_filter": 1,
+      "in_list_view": 1,
+      "in_preview": 1,
+      "in_standard_filter": 1,
+      "label": "URL",
+      "read_only": 1
+    },
+    {
+      "fieldname": "request_method",
+      "fieldtype": "Select",
+      "in_filter": 1,
+      "in_list_view": 1,
+      "label": "Request Method",
+      "options": "GET\nPOST\nPUT\nPATCH\nDELETE",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_kvkr",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "status",
+      "fieldtype": "Select",
+      "in_filter": 1,
+      "in_list_view": 1,
+      "in_preview": 1,
+      "in_standard_filter": 1,
+      "label": "Status",
+      "options": "Pending\nProcessing\nCompleted\nFailed",
+      "read_only": 1
+    },
+    {
+      "fieldname": "reference_doctype",
+      "fieldtype": "Link",
+      "in_filter": 1,
+      "in_list_view": 1,
+      "in_preview": 1,
+      "in_standard_filter": 1,
+      "label": "Reference Document Type",
+      "options": "DocType",
+      "read_only": 1
+    },
+    {
+      "fieldname": "reference_docname",
+      "fieldtype": "Dynamic Link",
+      "in_filter": 1,
+      "in_list_view": 1,
+      "in_preview": 1,
+      "in_standard_filter": 1,
+      "label": "Reference Document Name",
+      "options": "reference_doctype",
+      "read_only": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "priority",
+      "fieldtype": "Int",
+      "label": "Priority"
+    },
+    {
+      "fieldname": "execution_details_section",
+      "fieldtype": "Section Break",
+      "label": "Execution Details"
+    },
+    {
+      "fieldname": "company",
+      "fieldtype": "Link",
+      "in_filter": 1,
+      "in_list_view": 1,
+      "in_preview": 1,
+      "in_standard_filter": 1,
+      "label": "Company",
+      "options": "Company",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_kmcj",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "settings_name",
+      "fieldtype": "Data",
+      "in_filter": 1,
+      "in_list_view": 1,
+      "in_preview": 1,
+      "in_standard_filter": 1,
+      "label": "Settings",
+      "read_only": 1
+    },
+    {
+      "fieldname": "section_break_kbro",
+      "fieldtype": "Section Break"
+    },
+    {
+      "fieldname": "request_data",
+      "fieldtype": "JSON",
+      "label": "Request Data",
+      "read_only": 1
+    },
+    {
+      "fieldname": "execution_section",
+      "fieldtype": "Section Break",
+      "label": "Execution"
+    },
+    {
+      "fieldname": "integration_request",
+      "fieldtype": "Link",
+      "in_filter": 1,
+      "in_list_view": 1,
+      "in_preview": 1,
+      "in_standard_filter": 1,
+      "label": "Integration Request",
+      "options": "Integration Request",
+      "read_only": 1
+    },
+    {
+      "fieldname": "retry_count",
+      "fieldtype": "Int",
+      "in_list_view": 1,
+      "in_preview": 1,
+      "label": "Retry Count",
+      "read_only": 1
+    },
+    {
+      "default": "200",
+      "fieldname": "page_size",
+      "fieldtype": "Int",
+      "label": "Page Size",
+      "read_only": 1
+    },
+    {
+      "default": "0",
+      "fieldname": "is_page",
+      "fieldtype": "Check",
+      "hidden": 1,
+      "label": "Is Page",
+      "read_only": 1
+    },
+    {
+      "fieldname": "column_break_scoa",
+      "fieldtype": "Column Break"
+    },
+    {
+      "fieldname": "last_attempt",
+      "fieldtype": "Datetime",
+      "in_list_view": 1,
+      "in_preview": 1,
+      "label": "Last Attempt",
+      "read_only": 1
+    },
+    {
+      "fieldname": "completion_time",
+      "fieldtype": "Datetime",
+      "in_list_view": 1,
+      "in_preview": 1,
+      "label": "Completion Time",
+      "read_only": 1
+    },
+    {
+      "fieldname": "error_details_section",
+      "fieldtype": "Section Break",
+      "label": "Error Details"
+    },
+    {
+      "fieldname": "error_message",
+      "fieldtype": "Text Editor",
+      "label": "Error Message",
+      "read_only": 1
+    },
+    {
+      "fieldname": "error_callback",
+      "fieldtype": "Data",
+      "label": "Error Callback Used",
+      "read_only": 1
+    },
+    {
+      "default": "1",
+      "fieldname": "page",
+      "fieldtype": "Int",
+      "label": "Page",
+      "read_only": 1
+    }
+  ],
+  "grid_page_length": 50,
+  "in_create": 1,
+  "index_web_pages_for_search": 1,
+  "links": [],
+  "modified": "2026-06-13 13:46:59.458899",
+  "modified_by": "Administrator",
+  "module": "eTims",
+  "name": "eTims Job Queue",
+  "naming_rule": "Random",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Accounts Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Accounts User",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Sales Manager",
+      "share": 1,
+      "write": 1
+    },
+    {
+      "create": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "Sales User",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "row_format": "Dynamic",
+  "rows_threshold_for_grid_search": 20,
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": [
+    {
+      "color": "Blue",
+      "title": "Processing"
+    },
+    {
+      "color": "Green",
+      "title": "Completed"
+    },
+    {
+      "color": "Red",
+      "title": "Failed"
+    }
+  ]
+}
