@@ -597,6 +597,10 @@
     "financials",
     "nosemgrep",
     "cuin",
-    "cuurl"
+    "cuurl",
+    "etims",
+    "Countryof",
+    "iban",
+    "Unitof"
   ]
 }
