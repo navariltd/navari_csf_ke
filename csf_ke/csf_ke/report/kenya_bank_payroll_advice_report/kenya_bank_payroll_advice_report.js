@@ -46,6 +46,13 @@ frappe.query_reports["Kenya Bank Payroll Advice Report"] = {
       width: "100px",
     },
     {
+      fieldname: "paying_bank",
+      label: __("Paying Bank"),
+      fieldtype: "Link",
+      options: "Bank Account",
+      width: "100px",
+    },
+    {
       fieldname: "docstatus",
       label: __("Document Status"),
       fieldtype: "Select",
