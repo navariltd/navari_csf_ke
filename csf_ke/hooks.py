@@ -171,6 +171,7 @@ doc_events = {
 		"on_submit": "csf_ke.csf_ke.utils.item_price.update_item_price",
 	},
 	"Job Card": {"before_submit": "csf_ke.csf_ke.overrides.job_card.before_submit"},
+	"Salary Slip": {"before_save": "csf_ke.csf_ke.overrides.salary_slip.set_employee_bank_details"},
 }
 # Scheduled Tasks
 # ---------------
