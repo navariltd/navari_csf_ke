@@ -23,9 +23,11 @@ def update_item_prices(doc, method):
 	# Fetch margin entries based on the currency and buying price list
 	margin_entries = get_margin_entries_and_details(currency, price_list)
 	if not margin_entries:
-		frappe.log_error(
-			f"No margin entries found for currency {currency} and buying price list {price_list}"
-		)
+		# No Selling Item Price Margin is configured for this currency / buying price
+		# list: the margin-pricing feature is simply not in use for this document, which
+		# is a normal state, not an error. Exit quietly — logging here writes one Error
+		# Log row per Purchase Receipt/Invoice submit on every site that does not use
+		# margin-based pricing.
 		return
 
 	margin_lookup = build_margin_lookup(margin_entries)
