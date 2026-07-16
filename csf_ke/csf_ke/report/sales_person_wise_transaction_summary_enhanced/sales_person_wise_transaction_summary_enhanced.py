@@ -25,8 +25,25 @@ def execute(filters=None):
 
 	for d in entries:
 		row = frappe._dict()
-		grouped.setdefault(d.duration, [frappe._dict(duration=d.duration, indent=0)]).append(
-			row.update({"indent": 1})
+		grouped.setdefault(
+			d.duration,
+			[
+				frappe._dict(
+					duration=d.duration,
+					indent=0,
+					qty=None,
+					amount=None,
+					contribution=None,
+					contribution_qty=None,
+					contribution_amt=None,
+				)
+			],
+		).append(
+			row.update(
+				{
+					"indent": 1,
+				}
+			)
 		)
 
 		if d.stock_qty > 0 or filters.get("show_return_entries", 0):
@@ -37,14 +54,13 @@ def execute(filters=None):
 			row.posting_date = d.posting_date
 			row.item_code = d.item_code
 			row.item_group = item_details.get(d.item_code, {}).get("item_group")
-			row.brand = item_details.get(d.item_code, {}).get("item_group")
-			row.stock_qty = d.stock_qty
-			row.base_net_amount = d.base_net_amount
+			row.brand = item_details.get(d.item_code, {}).get("brand")
+			row.qty = d.stock_qty
+			row.amount = d.base_net_amount
 			row.sales_person = d.sales_person
-			row.allocated_percentage = d.allocated_percentage
-			row.contribution = d.stock_qty * d.allocated_percentage / 100
+			row.contribution = d.allocated_percentage
+			row.contribution_qty = d.stock_qty * d.allocated_percentage / 100
 			row.contribution_amt = d.contribution_amt
-			row.company_currency = d.company_currency
 			row.currency = company_currency
 
 	for group in grouped.values():
@@ -195,6 +211,7 @@ def get_duration_clause(filters):
 
 def get_entries(filters):
 	date_field = (filters["doc_type"] == "Sales Order" and "transaction_date") or "posting_date"
+
 	if filters["doc_type"] == "Sales Order":
 		qty_field = "delivered_qty"
 	else:
@@ -219,7 +236,7 @@ def get_entries(filters):
         CASE
             WHEN dt.status = "Closed" THEN ((dt_item.base_net_rate * dt_item.{} * dt_item.conversion_factor) * st.allocated_percentage/100)
             ELSE dt_item.base_net_amount * st.allocated_percentage/100
-        END as contriQUARTERution_amt, {}
+        END as contribution_amt, {}
         FROM
             `tab{}` dt, `tab{} Item` dt_item, `tabSales Team` st
         WHERE
