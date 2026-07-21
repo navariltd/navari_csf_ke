@@ -7,12 +7,19 @@ from collections import OrderedDict
 import frappe
 from erpnext import get_company_currency
 from frappe import _, msgprint, qb
-from frappe.query_builder import Criterion
+from frappe.query_builder import Case, Criterion
+from frappe.query_builder.functions import Month, Quarter, Year
+from pypika.terms import Function, ValueWrapper
+
+ALLOWED_DOCTYPES = ["Sales Order", "Sales Invoice", "Delivery Note"]
+ALLOWED_DURATIONS = ["Monthly", "Quarterly", "Yearly", "Weekly"]
 
 
 def execute(filters=None):
 	if not filters:
 		filters = {}
+
+	validate_filters(filters)
 
 	columns = get_columns(filters)
 	entries = get_entries(filters)
@@ -24,8 +31,10 @@ def execute(filters=None):
 	grouped = OrderedDict()
 
 	for d in entries:
-		row = frappe._dict()
-		grouped.setdefault(
+		if not (d.stock_qty > 0 or filters.get("show_return_entries", 0)):
+			continue
+
+		group = grouped.setdefault(
 			d.duration,
 			[
 				frappe._dict(
@@ -38,35 +47,45 @@ def execute(filters=None):
 					contribution_amt=None,
 				)
 			],
-		).append(
-			row.update(
-				{
-					"indent": 1,
-				}
-			)
 		)
 
-		if d.stock_qty > 0 or filters.get("show_return_entries", 0):
-			row[frappe.scrub(filters["doc_type"])] = d.name
-			row.customer = d.customer
-			row.territory = d.territory
-			row.warehouse = d.warehouse
-			row.posting_date = d.posting_date
-			row.item_code = d.item_code
-			row.item_group = item_details.get(d.item_code, {}).get("item_group")
-			row.brand = item_details.get(d.item_code, {}).get("brand")
-			row.qty = d.stock_qty
-			row.amount = d.base_net_amount
-			row.sales_person = d.sales_person
-			row.contribution = d.allocated_percentage
-			row.contribution_qty = d.stock_qty * d.allocated_percentage / 100
-			row.contribution_amt = d.contribution_amt
-			row.currency = company_currency
+		row = frappe._dict(
+			{
+				"indent": 1,
+				frappe.scrub(filters["doc_type"]): d.name,
+				"customer": d.customer,
+				"territory": d.territory,
+				"warehouse": d.warehouse,
+				"posting_date": d.posting_date,
+				"item_code": d.item_code,
+				"item_group": item_details.get(d.item_code, {}).get("item_group"),
+				"brand": item_details.get(d.item_code, {}).get("brand"),
+				"qty": d.stock_qty,
+				"amount": d.base_net_amount,
+				"sales_person": d.sales_person,
+				"contribution": d.allocated_percentage,
+				"contribution_qty": d.stock_qty * d.allocated_percentage / 100,
+				"contribution_amt": d.contribution_amt,
+				"currency": company_currency,
+			}
+		)
+		group.append(row)
 
 	for group in grouped.values():
 		data.extend(group)
 
 	return columns, data
+
+
+def validate_filters(filters):
+	if not filters.get("doc_type"):
+		msgprint(_("Please select the document type first"), raise_exception=1)
+
+	if filters.get("doc_type") not in ALLOWED_DOCTYPES:
+		frappe.throw(_("{0}, {1} or {2} are the only allowed options.").format(*ALLOWED_DOCTYPES))
+
+	if filters.get("duration") and filters.get("duration") not in ALLOWED_DURATIONS:
+		frappe.throw(_("Duration must be one of {0}.").format(", ".join(ALLOWED_DURATIONS)))
 
 
 def get_columns(filters):
@@ -185,115 +204,100 @@ def get_columns(filters):
 	return columns
 
 
-def get_duration_clause(filters):
-	duration_clause = None
-	if filters["duration"] == "Monthly":
-		duration_clause = "MONTH(dt.{}) as duration"
-
-	elif filters["duration"] == "Quarterly":
-		duration_clause = "QUARTER(dt.{}) as duration"
-
-	elif filters["duration"] == "Yearly":
-		duration_clause = "YEAR(dt.{}) as duration"
-
-	elif filters["duration"] == "Weekly":
-		duration_clause = "WEEK(dt.{}) as duration"
-
-	if duration_clause:
-		if filters["doc_type"] in ("Sales Invoice", "Delivery Note"):
-			duration_clause = duration_clause.format("posting_date")
-
-		else:
-			duration_clause = duration_clause.format("transaction_date")
-
-	return duration_clause
+def get_duration_field(dt, date_field, duration):
+	field = dt[date_field]
+	if duration == "Monthly":
+		return Month(field).as_("duration")
+	if duration == "Quarterly":
+		return Quarter(field).as_("duration")
+	if duration == "Yearly":
+		return Year(field).as_("duration")
+	if duration == "Weekly":
+		return Function("WEEK", field).as_("duration")
+	return ValueWrapper(None).as_("duration")
 
 
 def get_entries(filters):
-	date_field = (filters["doc_type"] == "Sales Order" and "transaction_date") or "posting_date"
+	doc_type = filters["doc_type"]
+	date_field = "transaction_date" if doc_type == "Sales Order" else "posting_date"
+	qty_field = "delivered_qty" if doc_type == "Sales Order" else "qty"
 
-	if filters["doc_type"] == "Sales Order":
-		qty_field = "delivered_qty"
-	else:
-		qty_field = "qty"
+	dt = frappe.qb.DocType(doc_type)
+	dt_item = frappe.qb.DocType(f"{doc_type} Item")
+	st = frappe.qb.DocType("Sales Team")
 
-	conditions, values = get_conditions(filters, date_field)
-	duration_clause = get_duration_clause(filters)
+	calc_qty = dt_item[qty_field] * dt_item.conversion_factor
+	calc_net_amount = dt_item.base_net_rate * calc_qty
 
-	entries = frappe.db.sql(
-		"""
-        SELECT
-            dt.name, dt.customer, dt.territory, dt.{} as posting_date, dt_item.item_code,
-            st.sales_person, st.allocated_percentage, dt_item.warehouse,
-        CASE
-            WHEN dt.status = "Closed" THEN dt_item.{} * dt_item.conversion_factor
-            ELSE dt_item.stock_qty
-        END as stock_qty,
-        CASE
-            WHEN dt.status = "Closed" THEN (dt_item.base_net_rate * dt_item.{} * dt_item.conversion_factor)
-            ELSE dt_item.base_net_amount
-        END as base_net_amount,
-        CASE
-            WHEN dt.status = "Closed" THEN ((dt_item.base_net_rate * dt_item.{} * dt_item.conversion_factor) * st.allocated_percentage/100)
-            ELSE dt_item.base_net_amount * st.allocated_percentage/100
-        END as contribution_amt, {}
-        FROM
-            `tab{}` dt, `tab{} Item` dt_item, `tabSales Team` st
-        WHERE
-            st.parent = dt.name and dt.name = dt_item.parent and st.parenttype = {}
-            and dt.docstatus = 1 {}
-        ORDER BY st.sales_person, dt.name desc
-        """.format(
-			date_field,
-			qty_field,
-			qty_field,
-			qty_field,
-			duration_clause,
-			filters["doc_type"],
-			filters["doc_type"],
-			"%s",
-			conditions,
-		),
-		tuple([filters["doc_type"], *values]),
-		as_dict=1,
+	stock_qty_case = Case().when(dt.status == "Closed", calc_qty).else_(dt_item.stock_qty).as_("stock_qty")
+	base_net_amount_case = (
+		Case()
+		.when(dt.status == "Closed", calc_net_amount)
+		.else_(dt_item.base_net_amount)
+		.as_("base_net_amount")
 	)
+	contribution_amt_case = (
+		Case()
+		.when(dt.status == "Closed", (calc_net_amount * st.allocated_percentage / 100))
+		.else_(dt_item.base_net_amount * st.allocated_percentage / 100)
+		.as_("contribution_amt")
+	)
+	duration_field = get_duration_field(dt, date_field, filters.get("duration"))
 
-	return entries
-
-
-def get_conditions(filters, date_field):
-	conditions = [""]
-	values = []
-
+	doc_filters = {"docstatus": 1}
 	for field in ["company", "customer", "territory"]:
 		if filters.get(field):
-			conditions.append(f"dt.{field}=%s")
-			values.append(filters[field])
+			doc_filters[field] = filters.get(field)
+
+	if filters.get("from_date") and filters.get("to_date"):
+		doc_filters[date_field] = [
+			"between",
+			[filters.get("from_date"), filters.get("to_date")],
+		]
+	elif filters.get("from_date"):
+		doc_filters[date_field] = [">=", filters.get("from_date")]
+	elif filters.get("to_date"):
+		doc_filters[date_field] = ["<=", filters.get("to_date")]
+
+	query = (
+		frappe.get_query(dt, filters=doc_filters, ignore_permissions=False)
+		.join(dt_item)
+		.on(dt.name == dt_item.parent)
+		.join(st)
+		.on(dt.name == st.parent)
+		.select(
+			dt.name,
+			dt.customer,
+			dt.territory,
+			dt[date_field].as_("posting_date"),
+			dt_item.item_code,
+			st.sales_person,
+			st.allocated_percentage,
+			dt_item.warehouse,
+			stock_qty_case,
+			base_net_amount_case,
+			contribution_amt_case,
+			duration_field,
+		)
+		.where(st.parenttype == doc_type)
+	)
 
 	if filters.get("sales_person"):
-		lft, rgt = frappe.get_value("Sales Person", filters.get("sales_person"), ["lft", "rgt"])
-		conditions.append(
-			f"exists(select name from `tabSales Person` where lft >= {lft} and rgt <= {rgt} and name=st.sales_person)"
+		lft, rgt = frappe.db.get_value("Sales Person", filters.get("sales_person"), ["lft", "rgt"])
+		sp = frappe.qb.DocType("Sales Person")
+		query = query.where(
+			st.sales_person.isin(frappe.qb.from_(sp).select(sp.name).where((sp.lft >= lft) & (sp.rgt <= rgt)))
 		)
 
-	if filters.get("from_date"):
-		conditions.append(f"dt.{date_field}>=%s")
-		values.append(filters["from_date"])
+	if filters.get("item_group") or filters.get("brand"):
+		items = get_items(filters)
+		if not items:
+			return []
+		query = query.where(dt_item.item_code.isin([d[0] for d in items]))
 
-	if filters.get("to_date"):
-		conditions.append(f"dt.{date_field}<=%s")
-		values.append(filters["to_date"])
+	query = query.orderby(st.sales_person).orderby(dt.name, order=frappe.qb.desc)
 
-	items = get_items(filters)
-	if items:
-		placeholders = ", ".join(["%s"] * len(items))
-		conditions.append(f"dt_item.item_code in ({placeholders})")
-		values += items
-	else:
-		# return empty result, if no items are fetched after filtering on 'item group' and 'brand'
-		conditions.append("dt_item.item_code = Null")
-
-	return " and ".join(conditions), values
+	return query.run(as_dict=True)
 
 
 def get_items(filters):
