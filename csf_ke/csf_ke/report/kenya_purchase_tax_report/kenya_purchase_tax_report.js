@@ -42,6 +42,14 @@ frappe.query_reports["Kenya Purchase Tax Report"] = {
       hidden: 1,
     },
     {
+      fieldname: "accounting_dimension",
+      label: __("Accounting Dimension"),
+      fieldtype: "Select",
+      options: ["", "Cost Center", "Project"],
+      default: "",
+      reqd: 0,
+    },
+    {
       fieldname: "is_return",
       label: __("Is Return"),
       fieldtype: "Check",
@@ -49,6 +57,25 @@ frappe.query_reports["Kenya Purchase Tax Report"] = {
       reqd: 0,
     },
   ],
+
+  formatter: function (value, row, column, data, default_formatter) {
+    value = default_formatter(value, row, column, data);
+
+    if (data && data.is_group_header) {
+      if (
+        [
+          "accounting_dimension_value",
+          "party_name",
+          "taxable_amount",
+          "vat_amount",
+        ].includes(column.fieldname)
+      ) {
+        value = `<span style="font-weight: bold;">${value}</span>`;
+      }
+    }
+
+    return value;
+  },
 
   onload: function (report) {
     frappe.call({
@@ -82,6 +109,69 @@ frappe.query_reports["Kenya Purchase Tax Report"] = {
           }
         }
       },
+    });
+
+    frappe.call({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Accounting Dimension",
+        fields: ["document_type"],
+        filters: {
+          disabled: 0,
+        },
+      },
+      callback: function (r) {
+        let options = ["", "Cost Center", "Project"];
+        if (r.message) {
+          r.message.forEach(function (d) {
+            if (!options.includes(d.document_type)) {
+              options.push(d.document_type);
+            }
+          });
+        }
+        let dimension_filter = report.get_filter("accounting_dimension");
+        if (dimension_filter) {
+          dimension_filter.df.options = options;
+          dimension_filter.refresh();
+        }
+      },
+    });
+
+    report.page.add_menu_item("Export CSVs", function () {
+      frappe.call({
+        method:
+          "csf_ke.csf_ke.report.kenya_purchase_tax_report.kenya_purchase_tax_report.download_custom_csv_format",
+        args: {
+          company: report.get_filter_value("company"),
+          from_date: report.get_filter_value("from_date"),
+          to_date: report.get_filter_value("to_date"),
+        },
+        callback: function (response) {
+          if (response.message) {
+            const fileLinks = Object.entries(response.message).map(
+              ([template, fileUrl]) => {
+                return `<a href="${fileUrl}" target="_blank">${template} Purchase Report</a>`;
+              },
+            );
+
+            // Display links in a modal
+            frappe.msgprint({
+              title: __("CSV Download Links"),
+              message: __(
+                "The files have been successfully generated. Redirecting to the File List...",
+              ),
+              indicator: "green",
+            });
+
+            // Redirect to the File List
+            frappe.set_route("List", "File", {
+              file_name: ["Like", `purchase`],
+            });
+          } else {
+            frappe.msgprint(__("No files were generated"));
+          }
+        },
+      });
     });
   },
 };
