@@ -188,7 +188,6 @@ class KenyaSalesTaxReport:
 		sales_invoices = sales_invoice_query.run(as_dict=True)
 
 		for invoice in sales_invoices:
-			# has_etims = False
 			if invoice.get("etims_id"):
 				ledger = frappe.db.get_value(
 					"eTIMS Sales Ledger Entry",
@@ -199,6 +198,7 @@ class KenyaSalesTaxReport:
 						"scu_mrc_number",
 						"scu_receipt_number",
 						"etims_qr_code_url",
+						"invoice_date",
 					],
 					as_dict=True,
 				)
@@ -206,7 +206,7 @@ class KenyaSalesTaxReport:
 					invoice["etr_serial_number"] = ledger.get("scu_id")
 					invoice["etr_invoice_number"] = ledger.get("scu_invoice_number")
 					invoice["cu_link"] = ledger.get("etims_qr_code_url")
-					# has_etims = True
+					invoice["cu_invoice_date"] = ledger.get("invoice_date")
 
 			if invoice.get("return_against"):
 				return_invoice = frappe.db.get_value(
@@ -220,12 +220,12 @@ class KenyaSalesTaxReport:
 						return_ledger = frappe.db.get_value(
 							"eTIMS Sales Ledger Entry",
 							{"etims_id": return_invoice.etims_id},
-							["scu_invoice_number"],
+							["scu_invoice_number", "invoice_date"],
 							as_dict=True,
 						)
 						if return_ledger:
 							invoice["return_cu_invoice_number"] = return_ledger.get("scu_invoice_number")
-							invoice["return_cu_invoice_date"] = return_invoice.get("cu_invoice_date")
+							invoice["return_cu_invoice_date"] = return_ledger.get("invoice_date")
 					elif return_invoice.get("etr_invoice_number"):
 						invoice["return_cu_invoice_number"] = return_invoice.get("etr_invoice_number")
 						invoice["return_cu_invoice_date"] = return_invoice.get("cu_invoice_date")
