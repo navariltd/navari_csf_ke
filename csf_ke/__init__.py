@@ -1,7 +1,7 @@
 import frappe
 from frappe.utils.user import is_website_user
 
-__version__ = "16.8.0"
+__version__ = "16.9.0"
 
 
 def is_frappe_version(version: str, above: bool = False, below: bool = False):
