@@ -957,7 +957,7 @@ export function App() {
               <h4>
                 Reconciliation Results{" "}
                 {docName && (
-                  <span style={{ fontWeight: 400, color: "#64748b" }}>
+                  <span className="kstr-accordion-docname">
                     — {docName}
                   </span>
                 )}
