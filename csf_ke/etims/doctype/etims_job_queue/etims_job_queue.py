@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
+from datetime import timedelta
 
 import frappe
 import frappe.defaults
@@ -13,9 +15,86 @@ from ...utils import (
 
 
 class eTimsJobQueue(Document):
+	DUPLICATE_WINDOW_MINUTES = 5
+
 	def validate(self) -> None:
 		if self.url:
 			self.url = clean_url_params(self.url)
+
+	def before_insert(self) -> None:
+		self._reject_duplicate()
+
+	def _reject_duplicate(self) -> None:
+		"""
+		Block insertion if an identical job already exists in the queue.
+
+		A job is considered a duplicate when all of the following fields match
+		an existing record created within the last
+		:attr:`DUPLICATE_WINDOW_MINUTES` minutes:
+
+		    * ``request_method``
+		    * ``route_key``
+		    * ``handler_function``
+		    * ``company``
+		    * ``settings_name``
+		    * ``request_data``
+		    * ``page``
+
+		``request_data`` is compared semantically (JSON decoded) so that
+		key ordering or whitespace differences in the serialised payload do
+		not produce false negatives.
+		"""
+		cutoff = now_datetime() - timedelta(minutes=self.DUPLICATE_WINDOW_MINUTES)
+
+		filters = {}
+		for field in (
+			"request_method",
+			"route_key",
+			"handler_function",
+			"company",
+			"settings_name",
+			"page",
+		):
+			value = self.get(field)
+			if value is not None:
+				filters[field] = value
+
+		filters["creation"] = (">", cutoff)
+
+		current_data = self._normalize_json(self.request_data)
+
+		similar_jobs = frappe.get_all(
+			"eTims Job Queue",
+			filters=filters,
+			fields=["name", "request_data"],
+		)
+
+		for job in similar_jobs:
+			if self._normalize_json(job.request_data) == current_data:
+				similar_job_name = job.name
+				message = (
+					frappe._("Duplicate eTims Job Queue blocked within a {0} minute window.\n").format(
+						self.DUPLICATE_WINDOW_MINUTES
+					)
+					+ frappe._("Similar existing job: {0}").format(similar_job_name)
+					+ f"\n\n{frappe._('New job data')}:\n"
+					+ json.dumps(self.as_dict(), indent=2, default=str)
+				)
+				frappe.log_error(
+					message=message,
+					title=frappe._("Duplicate eTims Job Queue - Similar Job: {0}").format(similar_job_name),
+				)
+				raise frappe.ValidationError(message)
+
+	@staticmethod
+	def _normalize_json(value) -> object:
+		"""Parse a JSON string into a comparable Python object."""
+		if isinstance(value, str):
+			try:
+				return json.loads(value)
+			except (TypeError, ValueError):
+				return value
+		return value
 
 	def after_insert(self) -> None:
 		"""
