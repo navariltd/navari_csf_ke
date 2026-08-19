@@ -7,7 +7,7 @@ const STATUS_META = {
     rowClass: "",
   },
   only_in_system: {
-    label: "Local Only",
+    label: "ERPNext Only",
     badgeClass: "kstr-status-system",
     rowClass: "kstr-row-system-only",
   },
@@ -103,6 +103,30 @@ export function App() {
   const [uploadErrors, setUploadErrors] = React.useState([]);
   const [dragOver, setDragOver] = React.useState(false);
   const [expandedSummaryCards, setExpandedSummaryCards] = React.useState({});
+
+  // Row display limits for summary cards (pagination: 100 → 200 → 400 → …)
+  const [rowLimits, setRowLimits] = React.useState({});
+  const INITIAL_ROWS = 100;
+
+  function getRowLimit(key) {
+    return rowLimits[key] || INITIAL_ROWS;
+  }
+
+  function handleLoadMore(key) {
+    setRowLimits((prev) => ({
+      ...prev,
+      [key]: (prev[key] || INITIAL_ROWS) * 2,
+    }));
+  }
+
+  function getVisibleRows(key, rows) {
+    const limit = getRowLimit(key);
+    return {
+      visible: rows.slice(0, limit),
+      hasMore: rows.length > limit,
+      total: rows.length,
+    };
+  }
 
   // Recent docs
   const [recentDocs, setRecentDocs] = React.useState([]);
@@ -400,31 +424,6 @@ export function App() {
     setUploadErrors([]);
   }
 
-  async function downloadReport() {
-    if (!company || !fromDate || !toDate) {
-      setError("Company, From date and To date are required for export");
-      return;
-    }
-    try {
-      const resp = await frappe.call({
-        method:
-          "csf_ke.csf_ke.report.kenya_sales_tax_report.kenya_sales_tax_report.download_custom_csv_format",
-        args: { company, from_date: fromDate, to_date: toDate },
-      });
-      if (resp.message) {
-        Object.entries(resp.message).forEach(([, url]) => {
-          window.open(url, "_blank");
-        });
-      } else {
-        frappe.msgprint(
-          __("No CSV files generated for the selected date range."),
-        );
-      }
-    } catch (e) {
-      setError(e.message || "Export failed");
-    }
-  }
-
   async function loadRecentDocs() {
     try {
       const resp = await frappe.call({
@@ -440,9 +439,16 @@ export function App() {
 
   function exportResults() {
     if (!result) return;
-    const rows = combinedResults();
-    if (!rows.length) {
+    if (!combinedResults().length) {
       frappe.msgprint(__("No rows to export"));
+      return;
+    }
+    showExportDialog();
+  }
+
+  function exportFileRows(rows, filename) {
+    if (!rows.length) {
+      frappe.msgprint(__(`No matching rows for ${filename}`));
       return;
     }
     const headers = [
@@ -474,7 +480,7 @@ export function App() {
     });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = `kenya_sales_tax_reco_${fromDate}_to_${toDate}.csv`;
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(a.href);
   }
@@ -492,6 +498,78 @@ export function App() {
       })),
       ...(result.matched || []).map((r) => ({ ...r, status: "matched" })),
     ];
+  }
+
+  function showExportDialog() {
+    const d = new frappe.ui.Dialog({
+      title: __("Export Reconciliation Results"),
+      fields: [
+        {
+          fieldname: "export_type",
+          fieldtype: "Select",
+          label: __("Export Type"),
+          options: [
+            "Unified (in 1 file)",
+            "Each File (separate file)",
+          ].join("\n"),
+          default: "Unified (in 1 file)",
+        },
+        { fieldtype: "Section Break" },
+        {
+          fieldname: "include_matched",
+          fieldtype: "Check",
+          label: __("Include Matched"),
+          default: 1,
+        },
+        {
+          fieldname: "include_unmatched",
+          fieldtype: "Check",
+          label: __("Include Unmatched"),
+          default: 1,
+        },
+      ],
+      primary_action_label: __("Export"),
+      primary_action(values) {
+        d.hide();
+
+        const all = combinedResults();
+        const mode = values.export_type;
+        const includeMatched = Boolean(values.include_matched);
+        const includeUnmatched = Boolean(values.include_unmatched);
+
+        const statusFilter = (row) => {
+          if (row.status === "matched") return includeMatched;
+          if (row.status === "only_in_system" || row.status === "only_in_upload") return includeUnmatched;
+          return false;
+        };
+
+        if (mode.startsWith("Unified")) {
+          exportFileRows(
+            all.filter(statusFilter),
+            `kenya_sales_tax_reco_${fromDate}_to_${toDate}.csv`,
+          );
+          return;
+        }
+
+        // per_file
+        let anyExported = false;
+        fileUrls.forEach((url) => {
+          const rows = all.filter(
+            (r) => (r.file_url || "") === url && statusFilter(r),
+          );
+          if (rows.length) {
+            exportFileRows(
+              rows,
+              `${getFileName(url)}_${fromDate}_to_${toDate}.csv`,
+            );
+            anyExported = true;
+          }
+        });
+        if (!anyExported) frappe.msgprint(__("No matching rows to export"));
+      },
+    });
+
+    d.show();
   }
 
   // Toggle collapsible card sections — single click
@@ -525,6 +603,7 @@ export function App() {
     setError("");
     setActiveTab("summary");
     setShowRecent(false);
+    setRowLimits({});
     // Clear route params / URL query so reload gives a fresh page
     setRouteParams({});
     frappe.route_options = {};
@@ -563,6 +642,17 @@ export function App() {
   const invalidDateRange = Boolean(fromDate && toDate && fromDate > toDate);
   const futureDates = Boolean(fromDate && (fromDate > today || toDate > today));
 
+  // Pre-build a Map of file_url → "only in upload" rows for O(1) lookups
+  const uploadOnlyByFile = React.useMemo(() => {
+    const map = new Map();
+    for (const row of result?.only_in_upload || []) {
+      const key = row.file_url || "";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(row);
+    }
+    return map;
+  }, [result]);
+
   return (
     <div className="kstr-page">
       <div className="kstr-header">
@@ -571,7 +661,7 @@ export function App() {
           <p>
             {docName
               ? `Editing: ${docName}`
-              : "Compare the system Sales Tax Report against uploaded eTIMS CSV files"}
+              : "Compare the ERPNext Sales Tax Report against uploaded eTIMS CSV files"}
           </p>
         </div>
         <div className="kstr-header-actions">
@@ -584,9 +674,6 @@ export function App() {
           </button>
           <button className="kstr-btn kstr-btn-cream" onClick={loadRecentDocs}>
             <span className="kstr-btn-icon">📋</span> Recent
-          </button>
-          <button className="kstr-btn kstr-btn-cream" onClick={downloadReport}>
-            <span className="kstr-btn-icon">⤓</span> Export System CSVs
           </button>
           {result && (
             <button className="kstr-btn kstr-btn-cream" onClick={exportResults}>
@@ -957,13 +1044,11 @@ export function App() {
               <h4>
                 Reconciliation Results{" "}
                 {docName && (
-                  <span className="kstr-accordion-docname">
-                    — {docName}
-                  </span>
+                  <span className="kstr-accordion-docname">— {docName}</span>
                 )}
               </h4>
               <p>
-                {counts.matched} matched · {counts.onlySystem} Local only ·{" "}
+                {counts.matched} matched · {counts.onlySystem} ERPNext Only ·{" "}
                 {counts.onlyUpload} in upload only
               </p>
             </div>
@@ -975,23 +1060,23 @@ export function App() {
             <div className="kstr-card-body">
               <div className="kstr-stats">
                 <div className="kstr-stat kstr-stat-blue">
-                  <span className="kstr-stat-label">System Rows</span>
+                  <span className="kstr-stat-label">ERPNext Invoices</span>
                   <span className="kstr-stat-value">{counts.system}</span>
                 </div>
                 <div className="kstr-stat kstr-stat-green">
-                  <span className="kstr-stat-label">Upload Rows</span>
+                  <span className="kstr-stat-label">Uploaded Invoices</span>
                   <span className="kstr-stat-value">{counts.upload}</span>
                 </div>
                 <div className="kstr-stat kstr-stat-emerald">
-                  <span className="kstr-stat-label">Matched</span>
+                  <span className="kstr-stat-label">Reconciled ✓</span>
                   <span className="kstr-stat-value">{counts.matched}</span>
                 </div>
                 <div className="kstr-stat kstr-stat-red">
-                  <span className="kstr-stat-label">Local Only</span>
+                  <span className="kstr-stat-label">Unmatched in ERPNext</span>
                   <span className="kstr-stat-value">{counts.onlySystem}</span>
                 </div>
                 <div className="kstr-stat kstr-stat-amber">
-                  <span className="kstr-stat-label">In Upload Only</span>
+                  <span className="kstr-stat-label">Unmatched in Upload</span>
                   <span className="kstr-stat-value">{counts.onlyUpload}</span>
                 </div>
               </div>
@@ -1020,10 +1105,14 @@ export function App() {
               <div>
                 {activeTab === "summary" ? (
                   <div className="kstr-summary-grid">
-                    {/* Local card — collapsible */}
+                    {/* ERPNext card — collapsible */}
                     {(() => {
                       const key = "system";
                       const isExpanded = expandedSummaryCards[key] !== false;
+                      const { visible, hasMore, total } = getVisibleRows(
+                        key,
+                        result.only_in_system || [],
+                      );
                       return (
                         <div className="kstr-summary-card kstr-summary-danger">
                           <button
@@ -1031,7 +1120,7 @@ export function App() {
                             onClick={() => toggleSummaryCard(key)}
                             aria-expanded={isExpanded}
                           >
-                            Local — Missing in Upload
+                            ERPNext — Missing in Upload
                             <span className="kstr-summary-count">
                               {counts.onlySystem} row(s)
                             </span>
@@ -1041,7 +1130,7 @@ export function App() {
                             className={`kstr-summary-body ${isExpanded ? "kstr-open" : ""}`}
                           >
                             <ul className="kstr-summary-list">
-                              {(result.only_in_system || []).map((r, idx) => (
+                              {visible.map((r, idx) => (
                                 <li key={idx}>
                                   <span className="kstr-scu-number">
                                     {r.etr_invoice_number}
@@ -1051,12 +1140,20 @@ export function App() {
                                   </span>
                                 </li>
                               ))}
-                              {counts.onlySystem === 0 && (
+                              {total === 0 && (
                                 <li>
                                   <span className="kstr-empty">No records</span>
                                 </li>
                               )}
                             </ul>
+                            {hasMore && (
+                              <button
+                                className="kstr-btn kstr-btn-outline-light kstr-btn-sm kstr-load-more"
+                                onClick={() => handleLoadMore(key)}
+                              >
+                                Load more ({total - visible.length} remaining)
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
@@ -1064,10 +1161,12 @@ export function App() {
 
                     {/* One full card per uploaded file — collapsible */}
                     {fileUrls.map((url) => {
-                      const fileRows = (result.only_in_upload || []).filter(
-                        (r) => (r.file_url || "") === url,
-                      );
+                      const fileRows = uploadOnlyByFile.get(url) || [];
                       const isExpanded = expandedSummaryCards[url] !== false;
+                      const { visible, hasMore, total } = getVisibleRows(
+                        url,
+                        fileRows,
+                      );
                       return (
                         <div
                           key={url}
@@ -1088,7 +1187,7 @@ export function App() {
                             className={`kstr-summary-body ${isExpanded ? "kstr-open" : ""}`}
                           >
                             <ul className="kstr-summary-list">
-                              {fileRows.map((r, idx) => (
+                              {visible.map((r, idx) => (
                                 <li key={idx}>
                                   <span className="kstr-scu-number">
                                     {r.etr_invoice_number}
@@ -1098,12 +1197,20 @@ export function App() {
                                   </span>
                                 </li>
                               ))}
-                              {fileRows.length === 0 && (
+                              {total === 0 && (
                                 <li>
                                   <span className="kstr-empty">No records</span>
                                 </li>
                               )}
                             </ul>
+                            {hasMore && (
+                              <button
+                                className="kstr-btn kstr-btn-outline-light kstr-btn-sm kstr-load-more"
+                                onClick={() => handleLoadMore(url)}
+                              >
+                                Load more ({total - visible.length} remaining)
+                              </button>
+                            )}
                           </div>
                         </div>
                       );
@@ -1111,13 +1218,13 @@ export function App() {
                   </div>
                 ) : (
                   <GroupedTabResults
-                    activeTab="all"
                     result={result}
                     fileUrls={fileUrls}
-                    fileNames={fileNames}
                     getFileName={getFileName}
                     expandedSummaryCards={expandedSummaryCards}
                     toggleSummaryCard={toggleSummaryCard}
+                    getVisibleRows={getVisibleRows}
+                    handleLoadMore={handleLoadMore}
                   />
                 )}
               </div>
@@ -1130,68 +1237,60 @@ export function App() {
 }
 
 function GroupedTabResults({
-  activeTab,
   result,
   fileUrls,
-  fileNames,
   getFileName,
   expandedSummaryCards,
   toggleSummaryCard,
+  getVisibleRows,
+  handleLoadMore,
 }) {
-  const isAll = activeTab === "all";
+  // Memoize matched invoice numbers as a Set for O(1) lookups
+  const matchedScuSet = React.useMemo(
+    () => new Set((result?.matched || []).map((m) => m.etr_invoice_number)),
+    [result],
+  );
 
-  // Local: ALL system rows (matched + only_in_system) with status
-  const systemRows = (result?.system_rows || []).map((row) => ({
-    ...row,
-    status: (result?.matched || []).some(
-      (m) => m.etr_invoice_number === row.etr_invoice_number,
-    )
-      ? "matched"
-      : "only_in_system",
-  }));
+  // Pre-build a Map of file_url → upload rows for O(1) lookups
+  const uploadRowsByFile = React.useMemo(() => {
+    const map = new Map();
+    for (const row of result?.upload_rows || []) {
+      const key = row.file_url || "";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(row);
+    }
+    return map;
+  }, [result]);
 
-  // Group ALL upload rows by file (matched + only_in_upload) with status
-  const uploadGroups = (fileUrls || []).map((url) => {
-    const fileRows = (result?.upload_rows || []).filter(
-      (r) => (r.file_url || "") === url,
-    );
-    return {
-      url,
-      rows: fileRows.map((row) => ({
-        ...row,
-        status: (result?.matched || []).some(
-          (m) => m.etr_invoice_number === row.etr_invoice_number,
-        )
-          ? "matched"
-          : "only_in_upload",
-      })),
-    };
-  });
+  // Lightweight card definitions — raw row arrays are NOT mapped here
+  const cards = React.useMemo(() => {
+    const list = [];
 
-  // Build card list
-  const cards = [];
-
-  // Local card first — ALL system rows with status
-  cards.push({
-    key: "system",
-    title: "Local",
-    icon: "💻",
-    type: "warning",
-    rows: systemRows,
-    count: systemRows.length,
-  });
-
-  // One card per file — ALL upload rows for that file with status
-  uploadGroups.forEach((group) => {
-    cards.push({
-      key: group.url,
-      title: `${getFileName(group.url)}`,
-      icon: "📄",
+    // ERPNext card: raw system rows
+    list.push({
+      key: "system",
+      title: "ERPNext",
+      icon: "💻",
       type: "warning",
-      rows: group.rows,
-      count: group.rows.length,
+      source: "system",
+      count: (result?.system_rows || []).length,
     });
-  });
+
+    // One card per uploaded file
+    (fileUrls || []).forEach((url) => {
+      list.push({
+        key: url,
+        title: getFileName(url),
+        icon: "📄",
+        type: "warning",
+        source: "upload",
+        url,
+        count: (uploadRowsByFile.get(url) || []).length,
+      });
+    });
+
+    return list;
+  }, [result, fileUrls, getFileName, uploadRowsByFile]);
 
   // If no cards have content, show empty state
   if (!cards.length || cards.every((c) => c.count === 0)) {
@@ -1202,6 +1301,24 @@ function GroupedTabResults({
     <div className="kstr-summary-grid">
       {cards.map((card) => {
         const isExpanded = expandedSummaryCards[card.key] !== false;
+
+        // Lazy: fetch only the visible slice of RAW rows for this card
+        const rawRows =
+          card.source === "system"
+            ? result?.system_rows || []
+            : uploadRowsByFile.get(card.url) || [];
+
+        const { visible, hasMore, total } = getVisibleRows(card.key, rawRows);
+
+        // Map status lazily — visible rows only, using Set for O(1) lookups
+        const visibleRows = visible.map((row) => ({
+          ...row,
+          status: matchedScuSet.has(row.etr_invoice_number)
+            ? "matched"
+            : card.source === "system"
+              ? "only_in_system"
+              : "only_in_upload",
+        }));
         return (
           <div
             key={card.key}
@@ -1234,7 +1351,7 @@ function GroupedTabResults({
                     </tr>
                   </thead>
                   <tbody>
-                    {card.rows.map((row, idx) => {
+                    {visibleRows.map((row, idx) => {
                       const isMatched = row.status === "matched";
                       return (
                         <tr
@@ -1242,7 +1359,7 @@ function GroupedTabResults({
                           className={
                             isMatched
                               ? "kstr-row-matched"
-                              : row.source === "system"
+                              : row.status === "only_in_system"
                                 ? "kstr-row-system-only"
                                 : "kstr-row-upload-only"
                           }
@@ -1276,7 +1393,7 @@ function GroupedTabResults({
                         </tr>
                       );
                     })}
-                    {card.rows.length === 0 && (
+                    {total === 0 && (
                       <tr>
                         <td colSpan={7}>
                           <span className="kstr-empty">No records</span>
@@ -1285,6 +1402,14 @@ function GroupedTabResults({
                     )}
                   </tbody>
                 </table>
+                {hasMore && (
+                  <button
+                    className="kstr-btn kstr-btn-outline-light kstr-btn-sm kstr-load-more"
+                    onClick={() => handleLoadMore(card.key)}
+                  >
+                    Load more ({total - visible.length} remaining)
+                  </button>
+                )}
               </div>
             </div>
           </div>

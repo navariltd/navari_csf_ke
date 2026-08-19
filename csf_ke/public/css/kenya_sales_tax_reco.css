@@ -1215,6 +1215,32 @@
   margin-top: 20px;
 }
 
+/* -------- Load More button -------- */
+
+.kstr-load-more {
+  width: 100%;
+  margin: 10px 0 0 0;
+  border-top: 1px solid var(--kra-border-soft);
+  border-radius: 0;
+  font-weight: 600;
+  color: var(--kra-green-dark);
+  background: var(--kra-white);
+}
+
+[data-theme="dark"] .kstr-load-more {
+  color: var(--kra-green);
+}
+
+.kstr-load-more:hover {
+  background: var(--kra-green-light);
+  color: var(--kra-green-dark);
+  border-color: var(--kra-green);
+}
+
+[data-theme="dark"] .kstr-load-more:hover {
+  color: var(--kra-green);
+}
+
 /* -------- Responsive -------- */
 
 @media (max-width: 1280px) {
