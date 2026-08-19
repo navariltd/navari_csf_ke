@@ -6,8 +6,9 @@
  "engine": "InnoDB",
  "field_order": [
   "queue_status",
-  "column_break_ahaa",
   "disabled",
+  "column_break_ahaa",
+  "duplicate_detection_window",
   "section_break_lkys",
   "current_job",
   "next_job",
@@ -57,13 +58,20 @@
    "fieldtype": "Link",
    "label": "Last Job",
    "options": "eTims Job Queue"
+  },
+  {
+   "default": "300",
+   "fieldname": "duplicate_detection_window",
+   "fieldtype": "Duration",
+   "hide_days": 1,
+   "label": "Duplicate Detection Window"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-06-11 17:41:04.255279",
+ "modified": "2026-08-19 08:04:59.621005",
  "modified_by": "Administrator",
  "module": "eTims",
  "name": "eTims Queue Manager",
