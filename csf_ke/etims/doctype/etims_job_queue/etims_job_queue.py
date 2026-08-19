@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Callable
+from datetime import timedelta
 
 import frappe
 import frappe.defaults
@@ -13,9 +15,105 @@ from ...utils import (
 
 
 class eTimsJobQueue(Document):
+	#: Fallback duplicate-detection window in seconds when the Queue Manager
+	#: has not configured ``duplicate_detection_window`` (defaults to 5 min).
+	DEFAULT_DUPLICATE_WINDOW_SECONDS = 300
+
 	def validate(self) -> None:
 		if self.url:
 			self.url = clean_url_params(self.url)
+
+	def before_insert(self) -> None:
+		self._reject_duplicate()
+
+	def _get_duplicate_window_seconds(self) -> int:
+		"""
+		Return the duplicate-detection window in seconds.
+
+		Reads the ``duplicate_detection_window`` (Duration field, stored in
+		seconds) from the ``eTims Queue Manager`` singleton.  Falls back to
+		:attr:`DEFAULT_DUPLICATE_WINDOW_SECONDS` when the field is not set.
+
+		Returns:
+		    Window duration in seconds.
+		"""
+		queue_manager = frappe.get_single("eTims Queue Manager")
+		window = queue_manager.get("duplicate_detection_window")
+		return int(window) if window else self.DEFAULT_DUPLICATE_WINDOW_SECONDS
+
+	def _reject_duplicate(self) -> None:
+		"""
+		Block insertion if an identical job already exists in the queue.
+
+		A job is considered a duplicate when all of the following fields match
+		an existing record created within the
+		duplicate-detection window (configured on the ``eTims Queue Manager``,
+		defaulting to 5 minutes):
+
+		    * ``request_method``
+		    * ``route_key``
+		    * ``handler_function``
+		    * ``company``
+		    * ``settings_name``
+		    * ``request_data``
+		    * ``page``
+
+		``request_data`` is compared semantically (JSON decoded) so that
+		key ordering or whitespace differences in the serialised payload do
+		not produce false negatives.
+		"""
+		window_seconds = self._get_duplicate_window_seconds()
+		cutoff = now_datetime() - timedelta(seconds=window_seconds)
+
+		filters = {}
+		for field in (
+			"request_method",
+			"route_key",
+			"handler_function",
+			"company",
+			"settings_name",
+			"page",
+		):
+			value = self.get(field)
+			if value is not None:
+				filters[field] = value
+
+		filters["creation"] = (">", cutoff)
+
+		current_data = self._normalize_json(self.request_data)
+
+		similar_jobs = frappe.get_all(
+			"eTims Job Queue",
+			filters=filters,
+			fields=["name", "request_data"],
+		)
+
+		for job in similar_jobs:
+			if self._normalize_json(job.request_data) == current_data:
+				similar_job_name = job.name
+				message = (
+					frappe._("Duplicate eTims Job blocked within a {0} second window.\n").format(
+						window_seconds
+					)
+					+ frappe._("Similar existing job: {0}").format(similar_job_name)
+					+ f"\n\n{frappe._('New job data')}:\n"
+					+ json.dumps(self.as_dict(), indent=2, default=str)
+				)
+				frappe.log_error(
+					message=message,
+					title=frappe._("Duplicate eTims Job Queue - Similar Job: {0}").format(similar_job_name),
+				)
+				raise frappe.ValidationError(message)
+
+	@staticmethod
+	def _normalize_json(value) -> object:
+		"""Parse a JSON string into a comparable Python object."""
+		if isinstance(value, str):
+			try:
+				return json.loads(value)
+			except (TypeError, ValueError):
+				return value
+		return value
 
 	def after_insert(self) -> None:
 		"""
