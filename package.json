@@ -1,0 +1,17 @@
+{
+  "name": "csf_ke",
+  "version": "1.0.0",
+  "description": "This is a custom application designed to extend the capabilities of [ERPNext](https://erpnext.com/) to meet the unique regulatory and operational requirements of businesses in Kenya. Developed by [Navari Limited](https://navari.co.ke), this app provides seamless integration with Kenyan tax systems, localized payroll reporting, and additional tools tailored to streamline business processes.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  }
+}
