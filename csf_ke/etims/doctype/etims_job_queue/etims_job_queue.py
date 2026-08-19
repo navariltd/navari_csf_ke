@@ -15,7 +15,9 @@ from ...utils import (
 
 
 class eTimsJobQueue(Document):
-	DUPLICATE_WINDOW_MINUTES = 5
+	#: Fallback duplicate-detection window in seconds when the Queue Manager
+	#: has not configured ``duplicate_detection_window`` (defaults to 5 min).
+	DEFAULT_DUPLICATE_WINDOW_SECONDS = 300
 
 	def validate(self) -> None:
 		if self.url:
@@ -24,13 +26,29 @@ class eTimsJobQueue(Document):
 	def before_insert(self) -> None:
 		self._reject_duplicate()
 
+	def _get_duplicate_window_seconds(self) -> int:
+		"""
+		Return the duplicate-detection window in seconds.
+
+		Reads the ``duplicate_detection_window`` (Duration field, stored in
+		seconds) from the ``eTims Queue Manager`` singleton.  Falls back to
+		:attr:`DEFAULT_DUPLICATE_WINDOW_SECONDS` when the field is not set.
+
+		Returns:
+		    Window duration in seconds.
+		"""
+		queue_manager = frappe.get_single("eTims Queue Manager")
+		window = queue_manager.get("duplicate_detection_window")
+		return int(window) if window else self.DEFAULT_DUPLICATE_WINDOW_SECONDS
+
 	def _reject_duplicate(self) -> None:
 		"""
 		Block insertion if an identical job already exists in the queue.
 
 		A job is considered a duplicate when all of the following fields match
-		an existing record created within the last
-		:attr:`DUPLICATE_WINDOW_MINUTES` minutes:
+		an existing record created within the
+		duplicate-detection window (configured on the ``eTims Queue Manager``,
+		defaulting to 5 minutes):
 
 		    * ``request_method``
 		    * ``route_key``
@@ -44,7 +62,8 @@ class eTimsJobQueue(Document):
 		key ordering or whitespace differences in the serialised payload do
 		not produce false negatives.
 		"""
-		cutoff = now_datetime() - timedelta(minutes=self.DUPLICATE_WINDOW_MINUTES)
+		window_seconds = self._get_duplicate_window_seconds()
+		cutoff = now_datetime() - timedelta(seconds=window_seconds)
 
 		filters = {}
 		for field in (
@@ -73,9 +92,9 @@ class eTimsJobQueue(Document):
 			if self._normalize_json(job.request_data) == current_data:
 				similar_job_name = job.name
 				message = (
-					frappe._("Duplicate eTims Job Queue blocked within a {0} minute window.\n").format(
-						self.DUPLICATE_WINDOW_MINUTES
-					)
+					frappe._(
+						"Duplicate eTims Job blocked within a {0} second window.\n"
+					).format(window_seconds)
 					+ frappe._("Similar existing job: {0}").format(similar_job_name)
 					+ f"\n\n{frappe._('New job data')}:\n"
 					+ json.dumps(self.as_dict(), indent=2, default=str)
