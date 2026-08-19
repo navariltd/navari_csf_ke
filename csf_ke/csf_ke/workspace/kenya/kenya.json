@@ -1,7 +1,7 @@
 {
  "app": "csf_ke",
  "charts": [],
- "content": "[{\"id\":\"lFoD5lNDQb\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"Xb7n0Do4eW\",\"type\":\"card\",\"data\":{\"card_name\":\"TIMs HSCodes\",\"col\":4}},{\"id\":\"arLUtR6bvV\",\"type\":\"card\",\"data\":{\"card_name\":\"Pricing Margins\",\"col\":4}},{\"id\":\"fu_Qea0T9L\",\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px;\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"ez66GJZq3i\",\"type\":\"card\",\"data\":{\"card_name\":\"Accounting Reports\",\"col\":4}},{\"id\":\"JdLAESQzix\",\"type\":\"card\",\"data\":{\"card_name\":\"Statutory Reports\",\"col\":4}},{\"id\":\"7bKksk7AZV\",\"type\":\"card\",\"data\":{\"card_name\":\"Payroll Reports\",\"col\":4}}]",
+ "content": "[{\"id\":\"lFoD5lNDQb\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"Xb7n0Do4eW\",\"type\":\"card\",\"data\":{\"card_name\":\"TIMs HSCodes\",\"col\":4}},{\"id\":\"arLUtR6bvV\",\"type\":\"card\",\"data\":{\"card_name\":\"Pricing Margins\",\"col\":4}},{\"id\":\"So12T7Cu6v\",\"type\":\"card\",\"data\":{\"card_name\":\"Reconciliation\",\"col\":4}},{\"id\":\"fu_Qea0T9L\",\"type\":\"header\",\"data\":{\"text\":\"<span style=\\\"font-size: 18px;\\\"><b>Reports &amp; Masters</b></span>\",\"col\":12}},{\"id\":\"ez66GJZq3i\",\"type\":\"card\",\"data\":{\"card_name\":\"Accounting Reports\",\"col\":4}},{\"id\":\"JdLAESQzix\",\"type\":\"card\",\"data\":{\"card_name\":\"Statutory Reports\",\"col\":4}},{\"id\":\"7bKksk7AZV\",\"type\":\"card\",\"data\":{\"card_name\":\"Payroll Reports\",\"col\":4}}]",
  "creation": "2022-11-03 16:41:03.405594",
  "custom_blocks": [],
  "docstatus": 0,
@@ -21,28 +21,6 @@
    "link_to": "Kenya P10 Tax Report",
    "link_type": "Report",
    "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Employee Salary Register",
-   "link_count": 0,
-   "link_to": "Employee Salary Register With Monthly Comparison",
-   "link_type": "Report",
-   "onboard": 0,
-   "report_ref_doctype": "Salary Slip",
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
-   "label": "Salary Register Summary",
-   "link_count": 0,
-   "link_to": "Salary Register Summary With Monthly Comparison",
-   "link_type": "Report",
-   "onboard": 0,
-   "report_ref_doctype": "Salary Slip",
    "type": "Link"
   },
   {
@@ -99,16 +77,6 @@
    "link_count": 0,
    "link_to": "Kenya Sales Tax Report",
    "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 0,
-   "label": "Sales Tax Reconciliation",
-   "link_count": 0,
-   "link_to": "kenya-sales-tax-reco",
-   "link_type": "Page",
    "onboard": 0,
    "type": "Link"
   },
@@ -243,25 +211,34 @@
   {
    "hidden": 0,
    "is_query_report": 1,
-   "label": "Salary Register Summary",
-   "link_count": 0,
-   "link_to": "Salary Register Summary With Monthly Comparison",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
-   "is_query_report": 1,
    "label": "Kenya Bank Remittance",
    "link_count": 0,
    "link_to": "Kenya Bank Remittance",
    "link_type": "Report",
    "onboard": 0,
    "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Reconciliation",
+   "link_count": 1,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Sales Tax Reconciliation",
+   "link_count": 0,
+   "link_to": "kenya-sales-tax-reco",
+   "link_type": "Page",
+   "onboard": 0,
+   "type": "Link"
   }
  ],
- "modified": "2025-12-02 11:22:19.197192",
+ "modified": "2026-08-19 21:34:32.187507",
  "modified_by": "Administrator",
  "module": "CSF KE",
  "name": "Kenya",
