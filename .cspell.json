@@ -602,6 +602,10 @@
     "Countryof",
     "iban",
     "Unitof",
-    "INVI"
+    "INVI",
+    "kstr",
+    "nums",
+    "KRACU",
+    "serialised"
   ]
 }
