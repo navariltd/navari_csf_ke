@@ -27,6 +27,12 @@ def get_columns():
 		{"label": _("Sort Code"), "fieldname": "sort_code", "fieldtype": "Data", "width": 120},
 		{"label": _("Bank Account No"), "fieldname": "bank_account_no", "fieldtype": "Data", "width": 150},
 		{"label": _("Paying Bank Name"), "fieldname": "paying_bank", "fieldtype": "Data", "width": 190},
+		{
+			"label": _("Paying Bank Account Number"),
+			"fieldname": "paying_bank_account_no",
+			"fieldtype": "Data",
+			"width": 190,
+		},
 		{"label": _("Workstation"), "fieldname": "branch", "fieldtype": "Data", "width": 150},
 		{"label": _("Net Pay"), "fieldname": "net_pay", "fieldtype": "Currency", "width": 150},
 	]
@@ -62,6 +68,7 @@ def get_data(filters, company_currency):
 			salary_slip_doc.custom_sort_code.as_("sort_code"),
 			salary_slip_doc.bank_account_no,
 			bank_account_doc.bank.as_("paying_bank"),
+			bank_account_doc.bank_account_no.as_("paying_bank_account_no"),
 			salary_slip_doc.branch,
 			salary_slip_doc.net_pay,
 		)
