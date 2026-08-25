@@ -95,7 +95,9 @@ def parse_csv_file(file_urls):
 
 
 @frappe.whitelist()
-def reconcile(company, from_date, to_date, file_urls, is_return=None, tax_template=None, save_doc=None, doc_name=None):
+def reconcile(
+	company, from_date, to_date, file_urls, is_return=None, tax_template=None, save_doc=None, doc_name=None
+):
 	"""Reconcile system sales tax report data against uploaded CSV data.
 
 	Args:
@@ -180,7 +182,9 @@ def reconcile(company, from_date, to_date, file_urls, is_return=None, tax_templa
 
 
 @frappe.whitelist()
-def save_reconciliation_doc(company, from_date, to_date, file_urls, result, is_return=None, tax_template=None, doc_name=None):
+def save_reconciliation_doc(
+	company, from_date, to_date, file_urls, result, is_return=None, tax_template=None, doc_name=None
+):
 	"""Save/update a Kenya Sales Reconciliation doctype record.
 
 	Args:
@@ -380,7 +384,7 @@ def _decode(content):
 
 
 def _detect_schema(sample_rows):
-	"""Detect which column index holds which logical field.
+	r"""Detect which column index holds which logical field.
 
 	Samples up to 20 data rows and aggregates column position evidence:
 	  - PIN: ^[A-Z]\d{9}[A-Z]$
@@ -500,7 +504,9 @@ def _map_row(raw_row, schema):
 	if not scu_number:
 		return None
 
-	return_scu_number = _clean_scu_number(_cell(schema.get("return_idx"))) if schema.get("return_idx") is not None else ""
+	return_scu_number = (
+		_clean_scu_number(_cell(schema.get("return_idx"))) if schema.get("return_idx") is not None else ""
+	)
 
 	amount_str = _cell(schema.get("amount_idx"))
 	amount = _parse_amount(amount_str)
@@ -517,7 +523,9 @@ def _map_row(raw_row, schema):
 		"taxable_value": amount,
 		"amount_of_vat": 0,
 		"return_cu_invoice_number": return_scu_number,
-		"return_cu_invoice_date": _normalize_date(_cell(schema.get("return_date_idx"))) if schema.get("return_date_idx") is not None else "",
+		"return_cu_invoice_date": _normalize_date(_cell(schema.get("return_date_idx")))
+		if schema.get("return_date_idx") is not None
+		else "",
 	}
 
 
