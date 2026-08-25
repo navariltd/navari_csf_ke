@@ -34,7 +34,13 @@ class KenyaSalesReconciliation(Document):
 
 
 @frappe.whitelist()
-def get_system_report_data(company, from_date, to_date, is_return=None, tax_template=None):
+def get_system_report_data(
+	company: str,
+	from_date: str,
+	to_date: str,
+	is_return: str | None = None,
+	tax_template: str | None = None,
+):
 	"""Fetch the Kenya Sales Tax Report data for a given date range."""
 	filters = {
 		"company": company,
@@ -52,7 +58,7 @@ def get_system_report_data(company, from_date, to_date, is_return=None, tax_temp
 
 
 @frappe.whitelist()
-def parse_csv_file(file_urls):
+def parse_csv_file(file_urls: str | list[str]):
 	"""Parse one or more uploaded CSV files and return normalized row dictionaries.
 
 	Each row is normalized to a common structure with the SCU invoice number as
@@ -96,7 +102,14 @@ def parse_csv_file(file_urls):
 
 @frappe.whitelist()
 def reconcile(
-	company, from_date, to_date, file_urls, is_return=None, tax_template=None, save_doc=None, doc_name=None
+	company: str,
+	from_date: str,
+	to_date: str,
+	file_urls: str | list[str],
+	is_return: str | None = None,
+	tax_template: str | None = None,
+	save_doc: bool | str | None = None,
+	doc_name: str | None = None,
 ):
 	"""Reconcile system sales tax report data against uploaded CSV data.
 
@@ -183,7 +196,14 @@ def reconcile(
 
 @frappe.whitelist()
 def save_reconciliation_doc(
-	company, from_date, to_date, file_urls, result, is_return=None, tax_template=None, doc_name=None
+	company: str,
+	from_date: str,
+	to_date: str,
+	file_urls: str | list[str],
+	result: dict | str,
+	is_return: str | None = None,
+	tax_template: str | None = None,
+	doc_name: str | None = None,
 ):
 	"""Save/update a Kenya Sales Reconciliation doctype record.
 
@@ -240,7 +260,7 @@ def save_reconciliation_doc(
 
 
 @frappe.whitelist()
-def get_reconciliation_doc(doc_name):
+def get_reconciliation_doc(doc_name: str):
 	"""Fetch a saved Kenya Sales Reconciliation doctype record.
 
 	Args:
