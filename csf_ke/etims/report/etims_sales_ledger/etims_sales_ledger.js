@@ -1,6 +1,3 @@
-// Copyright (c) 2026, Navari Ltd and contributors
-// For license information, please see license.txt
-
 frappe.query_reports["eTIMS Sales Ledger"] = {
   tree: true,
   name_field: "sales_invoice",
@@ -63,31 +60,8 @@ frappe.query_reports["eTIMS Sales Ledger"] = {
     },
     {
       fieldname: "reconciliation_status",
-      label: __("Reconciliation Status"),
-      fieldtype: "Select",
-      options: [
-        "",
-        { label: __("Sent and Matched"), value: "Sent and Matched" },
-        {
-          label: __("Sent with Variance (>1%)"),
-          value: "Sent with Variance (>1%)",
-        },
-        {
-          label: __("Sent with Minor Variance (<1%)"),
-          value: "Sent with Minor Variance (<1%)",
-        },
-        {
-          label: __("Sent but No eTIMS Data"),
-          value: "Sent but No eTIMS Data",
-        },
-        { label: __("Not Sent to eTIMS"), value: "Not Sent to eTIMS" },
-        {
-          label: __("eTIMS Data Found but Not Sent"),
-          value: "eTIMS Data Found but Not Sent",
-        },
-        { label: __("Missing in ERPNext"), value: "Missing in ERPNext" },
-      ],
-      default: "",
+      label: __("Reconciliation Filter"),
+      fieldtype: "Data",
     },
     {
       fieldname: "hide_matched",
@@ -105,26 +79,18 @@ frappe.query_reports["eTIMS Sales Ledger"] = {
     }
 
     if (
-      column.fieldname === "difference" &&
+      (column.fieldname === "difference" ||
+        column.fieldname === "tax_difference") &&
       data &&
       data.sales_invoice !== "TOTAL"
     ) {
-      let color = "#28a745";
-      if (data.difference > 1) color = "#dc3545";
-      else if (data.difference < -1) color = "#ffc107";
-      value = data.is_group
-        ? `<strong style="color:${color}">${value}</strong>`
-        : `<span style="color:${color}">${value}</span>`;
-    }
+      let net_erp = flt(data.erp_invoice_amount) - flt(data.erp_credit_amount);
+      let val = flt(data[column.fieldname]);
+      let pct = net_erp ? (Math.abs(val) / Math.abs(net_erp)) * 100 : 0;
 
-    if (
-      column.fieldname === "tax_difference" &&
-      data &&
-      data.sales_invoice !== "TOTAL"
-    ) {
       let color = "#28a745";
-      if (data.tax_difference > 1) color = "#dc3545";
-      else if (data.tax_difference < -1) color = "#ffc107";
+      if (pct > 1) color = "#dc3545";
+
       value = data.is_group
         ? `<strong style="color:${color}">${value}</strong>`
         : `<span style="color:${color}">${value}</span>`;
@@ -135,19 +101,11 @@ frappe.query_reports["eTIMS Sales Ledger"] = {
       data &&
       data.sales_invoice !== "TOTAL"
     ) {
-      let color = "#6c757d";
-      if (data.reconciliation_status === "Sent and Matched") color = "#28a745";
-      if (data.reconciliation_status === "Sent with Variance (>1%)")
-        color = "#dc3545";
-      if (data.reconciliation_status === "Sent with Minor Variance (<1%)")
-        color = "#ffc107";
-      if (data.reconciliation_status === "Sent but No eTIMS Data")
+      let color = "#28a745";
+      if (data.reconciliation_status.includes("ERROR")) color = "#dc3545";
+      else if (data.reconciliation_status.includes("Date Mismatch"))
         color = "#fd7e14";
-      if (data.reconciliation_status === "Not Sent to eTIMS") color = "#6c757d";
-      if (data.reconciliation_status === "eTIMS Data Found but Not Sent")
-        color = "#fd7e14";
-      if (data.reconciliation_status === "Missing in ERPNext")
-        color = "#6f42c1";
+
       value = data.is_group
         ? `<strong style="color:${color}">${value}</strong>`
         : `<span style="color:${color}">${value}</span>`;
