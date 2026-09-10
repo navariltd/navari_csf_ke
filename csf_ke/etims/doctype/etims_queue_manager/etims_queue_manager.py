@@ -96,6 +96,40 @@ class eTimsQueueManager(Document):
 		self._sync_pointers()
 		self.start_next_if_idle()
 
+	@frappe.whitelist()
+	def clear_all_jobs(self) -> None:
+		"""
+		Unlink the queue pointers and delete every ``eTims Job Queue`` record.
+
+		Invoked by the **Clear All Jobs** button on the form.
+
+		Order of operations:
+		    1. The manager's ``current_job``, ``next_job``, and ``last_job``
+		       link fields are unlinked first, so no job is deleted while still
+		       referenced.  ``queue_status`` is reset to ``"Idle"``.
+		    2. Each ``eTims Job Queue`` record is then deleted individually.
+
+		The transaction is intentionally left uncommitted so the caller controls
+		when it is persisted.
+		"""
+		self.db_set(
+			{
+				"current_job": None,
+				"next_job": None,
+				"last_job": None,
+				"queue_status": "Idle",
+			},
+			update_modified=False,
+		)
+
+		for job_name in frappe.get_all("eTims Job Queue", pluck="name"):
+			frappe.delete_doc(
+				"eTims Job Queue",
+				job_name,
+				ignore_permissions=True,
+				force=True,
+			)
+
 	def _execute_current_job(self) -> None:
 		"""
 		Fetch the current job document and call its ``run_queue`` method.
