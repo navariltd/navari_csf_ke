@@ -190,7 +190,7 @@ class eTimsJobQueue(Document):
 			"company": self.company,
 			"status": "Pending",
 			"is_page": 1,
-			"page_size": self.page_size or 100,
+			"page_size": self.page_size or 50,
 			"url": next_url,
 		}
 		frappe.enqueue(
