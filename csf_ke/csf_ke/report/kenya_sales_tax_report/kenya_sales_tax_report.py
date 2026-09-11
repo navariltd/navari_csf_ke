@@ -2,13 +2,16 @@
 # For license information, please see license.txt
 
 import csv
-import os
+import io
 import re
 from collections import defaultdict
 from datetime import datetime
 
 import frappe
 from frappe import _
+from frappe.utils import flt
+
+from csf_ke.csf_ke.utils.tax_report import add_amounts
 
 
 def execute(filters=None):
@@ -388,27 +391,118 @@ def _normalize_companies(company):
 	return [company]
 
 
-def _get_tax_templates_from_report_data(company, from_date=None, to_date=None):
-	sales_invoice_ = frappe.qb.DocType("Sales Invoice")
-	sales_invoice_item_ = frappe.qb.DocType("Sales Invoice Item")
-
-	tax_templates_query = (
-		frappe.qb.from_(sales_invoice_item_)
-		.inner_join(sales_invoice_)
-		.on(sales_invoice_item_.parent == sales_invoice_.name)
-		.select(sales_invoice_item_.item_tax_template)
-		.distinct()
-		.where(sales_invoice_.docstatus == 1)
-		.where(sales_invoice_.company == company)
+def _get_items_by_invoice(invoice_names):
+	sales_invoice_item = frappe.qb.DocType("Sales Invoice Item")
+	items = (
+		frappe.qb.from_(sales_invoice_item)
+		.select(
+			sales_invoice_item.parent,
+			sales_invoice_item.base_net_amount.as_("taxable_value"),
+			sales_invoice_item.item_tax_template,
+		)
+		.where(sales_invoice_item.parent.isin(invoice_names))
+		.run(as_dict=True)
 	)
 
-	if from_date:
-		tax_templates_query = tax_templates_query.where(sales_invoice_.posting_date >= from_date)
-	if to_date:
-		tax_templates_query = tax_templates_query.where(sales_invoice_.posting_date <= to_date)
+	items_by_invoice = defaultdict(list)
+	for item in items:
+		items_by_invoice[item.parent].append(item)
 
-	tax_template_rows = tax_templates_query.run(as_dict=True)
-	return sorted({row.get("item_tax_template") for row in tax_template_rows if row.get("item_tax_template")})
+	return items_by_invoice
+
+
+def _get_item_tax_rate(item_tax_template):
+	# Same lookup get_data does for every item
+	return frappe.db.get_value("Item Tax Template Detail", {"parent": item_tax_template}, ["tax_rate"])
+
+
+def _get_invoices_by_item_tax_template(report):
+	"""Split the report's invoices per Item Tax Template in one pass.
+
+	Gives the same invoices and amounts as running the report once per template (get_data with
+	tax_template), without re-querying every invoice, item and tax rate for each template.
+	"""
+	invoices = report.get_sales_invoices()
+	if not invoices:
+		return {}, set()
+
+	items_by_invoice = _get_items_by_invoice([invoice.invoice_name for invoice in invoices])
+	tax_rates = {}
+	invoices_by_template = defaultdict(list)
+	invoices_without_template = set()
+
+	for invoice in invoices:
+		amounts_by_template = {}
+		for item in items_by_invoice.get(invoice.invoice_name, []):
+			template = item.get("item_tax_template")
+			if not template:
+				invoices_without_template.add(invoice.invoice_name)
+				continue
+
+			if template not in tax_rates:
+				tax_rates[template] = _get_item_tax_rate(template)
+			tax_rate = tax_rates[template]
+			item_vat = flt(item.get("taxable_value")) * (tax_rate / 100) if tax_rate else 0
+
+			taxable_value, amount_of_vat = amounts_by_template.get(template, (0.0, 0.0))
+			amounts_by_template[template] = (
+				add_amounts(taxable_value, item.get("taxable_value")),
+				add_amounts(amount_of_vat, item_vat),
+			)
+
+		for template, (taxable_value, amount_of_vat) in amounts_by_template.items():
+			# get_data leaves out invoices with no taxable value under the template
+			if taxable_value:
+				invoices_by_template[template].append(
+					frappe._dict(invoice, taxable_value=taxable_value, amount_of_vat=amount_of_vat)
+				)
+
+	return dict(sorted(invoices_by_template.items())), invoices_without_template
+
+
+def _format_date(value):
+	return value.strftime("%d/%m/%Y") if value else ""
+
+
+def _build_sales_csv_row(invoice):
+	"""Build one KRA sales CSV row. Customers without a PIN are not filed, so they get no row."""
+	if not invoice.get("pin_of_purchaser"):
+		return None
+
+	return [
+		invoice.get("pin_of_purchaser", ""),
+		invoice.get("name_of_purchaser", ""),
+		invoice.get("etr_serial_number", ""),
+		_format_date(invoice.get("invoice_date")),
+		f"|{(invoice.get('etr_invoice_number', ''))}",
+		invoice.get("invoice_name", ""),
+		invoice.get("taxable_value", ""),
+		"",
+		f"|{invoice.get('return_cu_invoice_number', '')}" if invoice.get("return_against") else "",
+		_format_date(invoice.get("return_cu_invoice_date")) if invoice.get("return_against") else "",
+	]
+
+
+def _save_csv_file(company_name, file_name, csv_rows):
+	csv_content = io.StringIO()
+	csv.writer(csv_content).writerows(csv_rows)
+
+	# Hand the content to File so Frappe writes it once. Pre-writing to disk and passing
+	# file_url made File.save_file store a hash-suffixed copy and orphan the original.
+	file_record = frappe.get_doc(
+		{
+			"doctype": "File",
+			"file_name": file_name,
+			"attached_to_name": company_name,
+			"attached_to_doctype": "Sales Invoice",
+			"is_private": 1,
+			"file_type": "CSV",
+			"content": csv_content.getvalue(),
+		}
+	)
+	file_record.insert()
+
+	return {"name": file_record.name, "file_url": file_record.file_url}
 
 
 @frappe.whitelist()
@@ -421,89 +515,85 @@ def download_custom_csv_format(company: str, from_date: str | None = None, to_da
 	from_date_str = from_date.strftime("%y-%m-%d") if isinstance(from_date, datetime) else from_date
 	to_date_str = to_date.strftime("%y-%m-%d") if isinstance(to_date, datetime) else to_date
 
-	private_path = frappe.utils.get_site_path("private", "files")
-	os.makedirs(private_path, exist_ok=True)
-
 	companies = _normalize_companies(company)
 	if not companies:
 		frappe.throw(_("At least one company is required"))
 
-	csv_files = {}
-
 	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+	templates = []
+	skipped_no_pin = {"invoice_count": 0, "taxable_amount": 0.0, "vat_amount": 0.0}
+	skipped_invoices = set()
+	invoices_without_template = set()
 
 	for company_name in companies:
-		tax_templates = _get_tax_templates_from_report_data(company_name, from_date, to_date)
-		if not tax_templates:
+		report = KenyaSalesTaxReport({"company": company_name, "from_date": from_date, "to_date": to_date})
+		invoices_by_template, company_invoices_without_template = _get_invoices_by_item_tax_template(report)
+		invoices_without_template.update((company_name, name) for name in company_invoices_without_template)
+		if not invoices_by_template:
 			continue
 
-		company_abbr = frappe.db.get_value("Company", company_name, "abbr") or ""
+		company_abbr, currency = frappe.db.get_value(
+			"Company", company_name, ["abbr", "default_currency"]
+		) or ("", None)
 
-		for template_name in tax_templates:
-			sanitized_template_name = re.sub(r"[^\w]+", "_", template_name).lower()
+		for template_name, invoices in invoices_by_template.items():
+			summary = {
+				"company": company_name,
+				"item_tax_template": template_name,
+				"currency": currency,
+				"invoice_count": 0,
+				"taxable_amount": 0.0,
+				"vat_amount": 0.0,
+				"file": None,
+				"file_url": None,
+			}
+			csv_rows = []
 
-			csv_file_name = f"sales_{sanitized_template_name[:20]}_{company_abbr}_{from_date_str}_to_{to_date_str}_{timestamp}.csv".strip(
-				"_"
-			)
+			for invoice in invoices:
+				csv_row = _build_sales_csv_row(invoice)
+				if not csv_row:
+					skipped_invoices.add((company_name, invoice.get("invoice_name")))
+					skipped_no_pin["taxable_amount"] = add_amounts(
+						skipped_no_pin["taxable_amount"], invoice.get("taxable_value")
+					)
+					skipped_no_pin["vat_amount"] = add_amounts(
+						skipped_no_pin["vat_amount"], invoice.get("amount_of_vat")
+					)
+					continue
 
-			full_file_path = os.path.join(private_path, csv_file_name)
-			file_url = f"/private/files/{csv_file_name}"
+				csv_rows.append(csv_row)
+				summary["invoice_count"] += 1
+				summary["taxable_amount"] = add_amounts(
+					summary["taxable_amount"], invoice.get("taxable_value")
+				)
+				summary["vat_amount"] = add_amounts(summary["vat_amount"], invoice.get("amount_of_vat"))
 
-			sales_invoices = KenyaSalesTaxReport(
-				{
-					"company": company_name,
-					"from_date": from_date,
-					"to_date": to_date,
-					"tax_template": template_name,
-				}
-			).get_data()
+			# A template with no customer PINs has nothing to file, so no empty CSV is created
+			if csv_rows:
+				sanitized_template_name = re.sub(r"[^\w]+", "_", template_name).lower()
+				csv_file_name = f"sales_{sanitized_template_name[:20]}_{company_abbr}_{from_date_str}_to_{to_date_str}_{timestamp}.csv".strip(
+					"_"
+				)
+				saved_file = _save_csv_file(company_name, csv_file_name, csv_rows)
+				summary["file"] = saved_file["name"]
+				summary["file_url"] = saved_file["file_url"]
 
-			if not sales_invoices:
-				continue
+			templates.append(summary)
 
-			with open(full_file_path, "w", newline="") as csvfile:
-				writer = csv.writer(csvfile)
+	skipped_no_pin["invoice_count"] = len(skipped_invoices)
 
-				for invoice in sales_invoices:
-					if invoice.get("pin_of_purchaser"):
-						writer.writerow(
-							[
-								invoice.get("pin_of_purchaser", ""),
-								invoice.get("name_of_purchaser", ""),
-								invoice.get("etr_serial_number", ""),
-								invoice.get("invoice_date", "").strftime("%d/%m/%Y"),
-								f"|{(invoice.get('etr_invoice_number', ''))}",
-								invoice.get("invoice_name", ""),
-								invoice.get("taxable_value", ""),
-								"",
-								(
-									f"|{invoice.get('return_cu_invoice_number', '')}"
-									if invoice.return_against
-									else ""
-								),
-								(
-									invoice.get("return_cu_invoice_date").strftime("%d/%m/%Y")
-									if invoice.return_against and invoice.get("return_cu_invoice_date")
-									else ""
-								),
-							]
-						)
+	totals = {"invoice_count": 0, "taxable_amount": 0.0, "vat_amount": 0.0}
+	for summary in templates:
+		totals["invoice_count"] += summary["invoice_count"]
+		totals["taxable_amount"] = add_amounts(totals["taxable_amount"], summary["taxable_amount"])
+		totals["vat_amount"] = add_amounts(totals["vat_amount"], summary["vat_amount"])
 
-			file_record = frappe.get_doc(
-				{
-					"doctype": "File",
-					"file_name": csv_file_name,
-					"file_url": file_url,
-					"attached_to_name": company_name,
-					"attached_to_doctype": "Sales Invoice",
-					"file_size": os.path.getsize(full_file_path),
-					"is_private": 1,
-					"file_type": "CSV",
-				}
-			)
-			file_record.insert()
-
-			display_key = f"{company_name} - {template_name}" if len(companies) > 1 else template_name
-			csv_files[display_key] = file_url
-
-	return csv_files
+	return {
+		"from_date": from_date,
+		"to_date": to_date,
+		"timestamp": timestamp,
+		"templates": templates,
+		"totals": totals,
+		"skipped_no_pin": skipped_no_pin,
+		"invoices_without_template": len(invoices_without_template),
+	}

@@ -121,30 +121,145 @@ frappe.query_reports["Kenya Sales Tax Report"] = {
           from_date: report.get_filter_value("from_date"),
           to_date: report.get_filter_value("to_date"),
         },
+        freeze: true,
+        freeze_message: __("Generating CSV files..."),
         callback: function (response) {
           if (response.message) {
-            const fileLinks = Object.entries(response.message).map(
-              ([template, fileUrl]) => {
-                return `<a href="${fileUrl}" target="_blank">${template} Sales Report</a>`;
-              },
-            );
-
-            // Display links in a modal
-            frappe.msgprint({
-              title: __("CSV Download Links"),
-              message: __(
-                "The files have been successfully generated. Redirecting to the File List...",
-              ),
-              indicator: "green",
-            });
-
-            // Redirect to the File List
-            frappe.set_route("List", "File", { file_name: ["Like", `sales`] });
-          } else {
-            frappe.msgprint(__("No files were generated"));
+            show_sales_csv_export_dialog(response.message);
           }
         },
       });
     });
   },
 };
+
+function show_sales_csv_export_dialog(result) {
+  const templates = result.templates || [];
+  const files = templates.filter((row) => row.file);
+
+  if (!templates.length) {
+    frappe.msgprint(
+      __(
+        "No submitted sales invoices with an Item Tax Template were found for this period.",
+      ),
+    );
+    return;
+  }
+
+  const dialog = new frappe.ui.Dialog({
+    title: __("Sales VAT CSVs"),
+    size: "large",
+    fields: [{ fieldtype: "HTML", fieldname: "summary" }],
+    primary_action_label: __("Download All (.zip)"),
+    primary_action() {
+      open_url_post("/api/method/frappe.core.api.file.zip_files", {
+        files: JSON.stringify(files.map((row) => row.file)),
+      });
+    },
+    secondary_action_label: __("Go to Files"),
+    secondary_action() {
+      dialog.hide();
+      // Plain List/File opens the folder view, which ignores these filters
+      frappe.set_route("List", "File", "Report", {
+        file_name: ["like", `%${result.timestamp}%`],
+      });
+    },
+  });
+
+  dialog.fields_dict.summary.$wrapper.html(
+    get_sales_csv_export_summary_html(result, files.length),
+  );
+  dialog.get_primary_btn().prop("disabled", !files.length);
+  dialog.show();
+}
+
+function get_sales_csv_export_summary_html(result, file_count) {
+  const templates = result.templates;
+  const escape = frappe.utils.escape_html;
+  const currency = templates[0].currency;
+  const money = (value) => format_currency(value, currency);
+  const companies = [...new Set(templates.map((row) => row.company))];
+  const show_company = companies.length > 1;
+  const cell_style = "vertical-align: middle;";
+
+  const rows = templates
+    .map((row) => {
+      const file_cell = row.file_url
+        ? `<a href="${encodeURI(row.file_url)}" target="_blank">${__("Download")}</a>`
+        : `<span class="text-muted">${__("No customers with PIN")}</span>`;
+
+      return `<tr>
+        ${show_company ? `<td style="${cell_style}">${escape(row.company)}</td>` : ""}
+        <td style="${cell_style}">${escape(row.item_tax_template)}</td>
+        <td class="text-right" style="${cell_style}">${row.invoice_count}</td>
+        <td class="text-right" style="${cell_style}">${money(row.taxable_amount)}</td>
+        <td class="text-right" style="${cell_style}">${money(row.vat_amount)}</td>
+        <td class="text-center" style="${cell_style}">${file_cell}</td>
+      </tr>`;
+    })
+    .join("");
+
+  const notes = [];
+  if (!file_count) {
+    notes.push(
+      __(
+        "No CSV files were created: none of these invoices are for customers with a PIN.",
+      ),
+    );
+  }
+  if (result.skipped_no_pin.invoice_count) {
+    notes.push(
+      __(
+        "{0} invoice(s) left out because the customer has no PIN (Taxable {1}, VAT {2}).",
+        [
+          result.skipped_no_pin.invoice_count,
+          money(result.skipped_no_pin.taxable_amount),
+          money(result.skipped_no_pin.vat_amount),
+        ],
+      ),
+    );
+  }
+  if (result.invoices_without_template) {
+    notes.push(
+      __(
+        "{0} invoice(s) have items without an Item Tax Template; those items are not in any CSV.",
+        [result.invoices_without_template],
+      ),
+    );
+  }
+
+  return `
+    <div class="mb-3">
+      <div><span class="text-muted">${__("Company")}:</span> <b>${escape(companies.join(", "))}</b></div>
+      <div><span class="text-muted">${__("Invoice Date")}:</span>
+        <b>${frappe.datetime.str_to_user(result.from_date)}</b> ${__("to")}
+        <b>${frappe.datetime.str_to_user(result.to_date)}</b>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-bordered table-sm">
+        <thead>
+          <tr>
+            ${show_company ? `<th>${__("Company")}</th>` : ""}
+            <th>${__("Item Tax Template")}</th>
+            <th class="text-right">${__("Invoices")}</th>
+            <th class="text-right">${__("Taxable Amount")}</th>
+            <th class="text-right">${__("VAT")}</th>
+            <th class="text-center">${__("CSV")}</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+        <tfoot>
+          <tr class="font-weight-bold">
+            <td${show_company ? ' colspan="2"' : ""}>${__("Total")}</td>
+            <td class="text-right">${result.totals.invoice_count}</td>
+            <td class="text-right">${money(result.totals.taxable_amount)}</td>
+            <td class="text-right">${money(result.totals.vat_amount)}</td>
+            <td class="text-center">${__("{0} file(s)", [file_count])}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    ${notes.map((note) => `<div class="alert alert-warning mb-2">${note}</div>`).join("")}
+  `;
+}
