@@ -1,9 +1,15 @@
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from decimal import Decimal
 
 import frappe
 from frappe import _
 from frappe.utils import flt
+
+
+def add_amounts(total, value):
+	"""Add two amounts without binary float drift (1034.48 + 862.07 stays 1896.55). No rounding."""
+	return float(Decimal(str(flt(total))) + Decimal(str(flt(value))))
 
 
 class TaxReport(ABC):
@@ -31,7 +37,10 @@ class TaxReport(ABC):
 				data = self.group_by_dimension(data)
 		return data
 
-	def get_invoice_data(self, invoice_type):
+	def get_invoice_data(self, invoice_type, include_item_tax_template=False):
+		return self.build_invoice_query(invoice_type, include_item_tax_template).run(as_dict=True)
+
+	def build_invoice_query(self, invoice_type, include_item_tax_template=False):
 		invoice_doctype = "Sales Invoice" if invoice_type == "sales" else "Purchase Invoice"
 		item_doctype = f"{invoice_doctype} Item"
 		INV = frappe.qb.DocType(invoice_doctype)
@@ -69,16 +78,22 @@ class TaxReport(ABC):
 
 		# TODO: handle invoice_type = sales
 
+		if include_item_tax_template:
+			query = query.select(INVI.item_tax_template)
+
 		query = self._select_accounting_dimension(query, INV, invoice_doctype)
+
+		# Purchases are reported by the supplier's invoice date (bill_date), not the posting date
+		date_field = INV.bill_date if invoice_type == "purchase" else INV.posting_date
 
 		if self.filters.get("company"):
 			query = query.where(INV.company == self.filters.get("company"))
 
 		if self.filters.get("from_date"):
-			query = query.where(INV.posting_date >= self.filters.get("from_date"))
+			query = query.where(date_field >= self.filters.get("from_date"))
 
 		if self.filters.get("to_date"):
-			query = query.where(INV.posting_date <= self.filters.get("to_date"))
+			query = query.where(date_field <= self.filters.get("to_date"))
 
 		if self.filters.get("item_tax_template"):
 			query = query.where(INVI.item_tax_template == self.filters.get("item_tax_template"))
@@ -89,7 +104,7 @@ class TaxReport(ABC):
 		if self.filters.get("is_return"):
 			query = query.where(INV.is_return == self.filters.get("is_return"))
 
-		return query.run(as_dict=True)
+		return query
 
 	def _select_accounting_dimension(self, query, INV, invoice_doctype):
 		accounting_dimension = self.filters.get("accounting_dimension")
@@ -143,13 +158,19 @@ class TaxReport(ABC):
 					)
 				seen_items[invoice_number] = set()
 
-			invoice_map[invoice_number]["vat_amount"] += flt(row.get("amount", 0))
+			invoice_map[invoice_number]["vat_amount"] = add_amounts(
+				invoice_map[invoice_number]["vat_amount"], row.get("amount")
+			)
 
 			if party_field == "supplier":
 				if row.get("tax_id"):
-					self.registered_suppliers_total_vat += flt(row.get("amount", 0))
+					self.registered_suppliers_total_vat = add_amounts(
+						self.registered_suppliers_total_vat, row.get("amount")
+					)
 				else:
-					self.unregistered_suppliers_total_vat += flt(row.get("amount", 0))
+					self.unregistered_suppliers_total_vat = add_amounts(
+						self.unregistered_suppliers_total_vat, row.get("amount")
+					)
 
 			# Taxable amount is per item; only count it once when an item has
 			# multiple tax rows (e.g. VAT + another charge on the same base).
@@ -157,14 +178,20 @@ class TaxReport(ABC):
 				item_row not in seen_items[invoice_number]
 				# and not (row.get("amount")) == 0
 			):
-				invoice_map[invoice_number]["taxable_amount"] += flt(row.get("taxable_amount", 0))
+				invoice_map[invoice_number]["taxable_amount"] = add_amounts(
+					invoice_map[invoice_number]["taxable_amount"], row.get("taxable_amount")
+				)
 				seen_items[invoice_number].add(item_row)
 
 				if party_field == "supplier":
 					if row.get("tax_id"):
-						self.registered_suppliers_total_purchases += flt(row.get("taxable_amount", 0))
+						self.registered_suppliers_total_purchases = add_amounts(
+							self.registered_suppliers_total_purchases, row.get("taxable_amount")
+						)
 					else:
-						self.unregistered_suppliers_total_purchases += flt(row.get("taxable_amount", 0))
+						self.unregistered_suppliers_total_purchases = add_amounts(
+							self.unregistered_suppliers_total_purchases, row.get("taxable_amount")
+						)
 
 		if invoice_type == "purchase":
 			INV = frappe.qb.DocType("Purchase Invoice")
@@ -184,7 +211,7 @@ class TaxReport(ABC):
 				for row in data:
 					return_against_map[row.name] = {
 						"original_cu_invoice_number": row.etr_invoice_number,
-						"original_cu_invoice_date": row.get("bill_date", row.get("posting_date")),
+						"original_cu_invoice_date": row.get("bill_date") or row.get("posting_date"),
 					}
 
 			if invoice_map and return_against_map:
@@ -218,12 +245,16 @@ class TaxReport(ABC):
 		final_data = []
 		for dimension_value in sorted(grouped_data.keys()):
 			group_rows = grouped_data[dimension_value]
+			taxable_amount = vat_amount = 0.0
+			for row in group_rows:
+				taxable_amount = add_amounts(taxable_amount, row.get("taxable_amount"))
+				vat_amount = add_amounts(vat_amount, row.get("vat_amount"))
 			final_data.append(
 				{
 					"accounting_dimension_value": dimension_value,
 					"party_name": None,
-					"taxable_amount": sum(flt(row.get("taxable_amount")) for row in group_rows),
-					"vat_amount": sum(flt(row.get("vat_amount")) for row in group_rows),
+					"taxable_amount": taxable_amount,
+					"vat_amount": vat_amount,
 					"currency": self.currency,
 					"is_group_header": True,
 				}
