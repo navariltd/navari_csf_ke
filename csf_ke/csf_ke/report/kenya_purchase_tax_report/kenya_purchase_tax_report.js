@@ -150,6 +150,14 @@ frappe.query_reports["Kenya Purchase Tax Report"] = {
       }
     });
 
+    // All query reports share one page menu and Frappe never clears items added in onload, so remove
+    // an "Export CSVs" left behind by another report (e.g. Kenya Sales Tax Report) before adding ours.
+    report.page.menu
+      .find(".menu-item-label")
+      .filter((_, label) => $(label).text().trim() === __("Export CSVs"))
+      .closest("li")
+      .remove();
+
     report.page.add_menu_item(__("Export CSVs"), function () {
       frappe.call({
         method:
