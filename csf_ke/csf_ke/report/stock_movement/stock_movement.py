@@ -88,7 +88,7 @@ class StockBalanceReport:
 			return
 
 		self.start_from = add_days(closing_balance[0].to_date, 1)
-		res = frappe.get_doc("Closing Stock Balance", closing_balance[0].name).get_prepared_data()
+		res = frappe.get_doc("Stock Closing Balance", closing_balance[0].name).get_prepared_data()
 
 		for entry in res.data:
 			entry = frappe._dict(entry)
@@ -310,7 +310,7 @@ class StockBalanceReport:
 		if self.filters.get("ignore_closing_balance"):
 			return []
 
-		table = frappe.qb.DocType("Closing Stock Balance")
+		table = frappe.qb.DocType("Stock Closing Balance")
 
 		query = (
 			frappe.qb.from_(table)
