@@ -42,12 +42,14 @@ def make_row(invoice_number, item_row, taxable_amount, amount, **overrides):
 
 
 class TestPurchaseQueryDateField(UnitTestCase):
-	def test_purchase_query_filters_on_bill_date(self):
+	def test_purchase_query_filters_on_posting_date(self):
 		sql = KenyaPurchaseTaxReport(FILTERS).build_invoice_query("purchase").get_sql()
 
-		self.assertRegex(sql, r"bill_date`?>='2026-06-01'")
-		self.assertRegex(sql, r"bill_date`?<='2026-06-30'")
-		self.assertNotRegex(sql, r"posting_date`?[<>]=")
+		self.assertRegex(sql, r"posting_date`?>='2026-06-01'")
+		self.assertRegex(sql, r"posting_date`?<='2026-06-30'")
+		self.assertNotRegex(sql, r"bill_date`?[<>]=")
+		# bill_date is still selected for the Supplier Invoice Date column and CSV
+		self.assertRegex(sql, r"bill_date`? `?supplier_invoice_date")
 
 	def test_sales_branch_still_filters_on_posting_date(self):
 		sql = KenyaPurchaseTaxReport(FILTERS).build_invoice_query("sales").get_sql()

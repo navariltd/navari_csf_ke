@@ -139,8 +139,8 @@ frappe.query_reports["Kenya Purchase Tax Report"] = {
 
     // Report filters only show their label on hover, so spell out the date field being filtered
     [
-      ["from_date", __("From Supplier Invoice Date (bill_date)")],
-      ["to_date", __("To Supplier Invoice Date (bill_date)")],
+      ["from_date", __("From Posting Date")],
+      ["to_date", __("To Posting Date")],
     ].forEach(([fieldname, title]) => {
       const filter = report.get_filter(fieldname);
       if (filter) {

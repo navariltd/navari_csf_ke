@@ -83,17 +83,15 @@ class TaxReport(ABC):
 
 		query = self._select_accounting_dimension(query, INV, invoice_doctype)
 
-		# Purchases are reported by the supplier's invoice date (bill_date), not the posting date
-		date_field = INV.bill_date if invoice_type == "purchase" else INV.posting_date
-
 		if self.filters.get("company"):
 			query = query.where(INV.company == self.filters.get("company"))
 
+		# Both reports pick invoices by posting date; purchases still show and export bill_date
 		if self.filters.get("from_date"):
-			query = query.where(date_field >= self.filters.get("from_date"))
+			query = query.where(INV.posting_date >= self.filters.get("from_date"))
 
 		if self.filters.get("to_date"):
-			query = query.where(date_field <= self.filters.get("to_date"))
+			query = query.where(INV.posting_date <= self.filters.get("to_date"))
 
 		if self.filters.get("item_tax_template"):
 			query = query.where(INVI.item_tax_template == self.filters.get("item_tax_template"))
