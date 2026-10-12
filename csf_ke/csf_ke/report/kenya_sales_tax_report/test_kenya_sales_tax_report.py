@@ -142,7 +142,7 @@ class TestDownloadCustomCsvFormat(UnitTestCase):
 		self.assertEqual(
 			result["skipped_no_pin"], {"invoice_count": 1, "taxable_amount": 40.0, "vat_amount": 0.0}
 		)
-		self.assertEqual(result["invoices_without_template"], 1)
+		self.assertEqual(result["invoices_without_template"], ["SINV-3"])
 
 
 class TestSaveCsvFile(UnitTestCase):

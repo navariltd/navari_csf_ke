@@ -137,12 +137,16 @@ function show_sales_csv_export_dialog(result) {
   const templates = result.templates || [];
   const files = templates.filter((row) => row.file);
 
+  const missing = result.invoices_without_template || [];
+
   if (!templates.length) {
-    frappe.msgprint(
-      __(
-        "No submitted sales invoices with an Item Tax Template were found for this period.",
-      ),
+    let message = __(
+      "No submitted sales invoices with an Item Tax Template were found for this period.",
     );
+    if (missing.length) {
+      message += `<div class="alert alert-warning mt-3 mb-0">${get_invoices_without_template_html(missing, "Sales Invoice")}</div>`;
+    }
+    frappe.msgprint(message);
     return;
   }
 
@@ -219,11 +223,11 @@ function get_sales_csv_export_summary_html(result, file_count) {
       ),
     );
   }
-  if (result.invoices_without_template) {
+  if (result.invoices_without_template.length) {
     notes.push(
-      __(
-        "{0} invoice(s) have items without an Item Tax Template; those items are not in any CSV.",
-        [result.invoices_without_template],
+      get_invoices_without_template_html(
+        result.invoices_without_template,
+        "Sales Invoice",
       ),
     );
   }
@@ -262,4 +266,19 @@ function get_sales_csv_export_summary_html(result, file_count) {
     </div>
     ${notes.map((note) => `<div class="alert alert-warning mb-2">${note}</div>`).join("")}
   `;
+}
+
+function get_invoices_without_template_html(names, doctype) {
+  const links = names
+    .map(
+      (name) =>
+        `<a href="${frappe.utils.get_form_link(doctype, name)}" target="_blank">${frappe.utils.escape_html(name)}</a>`,
+    )
+    .join(", ");
+
+  return `${__(
+    "{0} invoice(s) have items without an Item Tax Template; those items are not in any CSV:",
+    [names.length],
+  )}
+    <div class="mt-2" style="max-height: 150px; overflow-y: auto;">${links}</div>`;
 }

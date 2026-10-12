@@ -595,5 +595,5 @@ def download_custom_csv_format(company: str, from_date: str | None = None, to_da
 		"templates": templates,
 		"totals": totals,
 		"skipped_no_pin": skipped_no_pin,
-		"invoices_without_template": len(invoices_without_template),
+		"invoices_without_template": sorted(name for _company, name in invoices_without_template),
 	}
