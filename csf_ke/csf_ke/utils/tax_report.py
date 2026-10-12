@@ -7,6 +7,15 @@ from frappe import _
 from frappe.utils import flt
 
 
+def check_export_permission(report_name, companies):
+	"""CSV exports are whitelisted methods, so they enforce the report's roles and Company access here."""
+	if not frappe.get_cached_doc("Report", report_name).is_permitted():
+		frappe.throw(_("You are not permitted to export {0}").format(_(report_name)), frappe.PermissionError)
+
+	for company in companies:
+		frappe.has_permission("Company", "read", company, throw=True)
+
+
 def add_amounts(total, value):
 	"""Add two amounts without binary float drift (1034.48 + 862.07 stays 1896.55). No rounding."""
 	return float(Decimal(str(flt(total))) + Decimal(str(flt(value))))

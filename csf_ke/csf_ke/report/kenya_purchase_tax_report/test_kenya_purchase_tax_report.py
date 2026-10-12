@@ -169,6 +169,24 @@ class TestDownloadCustomCsvFormat(UnitTestCase):
 		self.assertEqual(result["totals"], {"invoice_count": 1, "taxable_amount": 100.0, "vat_amount": 16.0})
 
 
+class TestExportPermissions(UnitTestCase):
+	def test_user_without_report_role_cannot_export(self):
+		self.addCleanup(frappe.set_user, frappe.session.user)
+		frappe.set_user("Guest")
+
+		with self.assertRaises(frappe.PermissionError):
+			download_custom_csv_format("_Test Company", "2026-06-01", "2026-06-30")
+
+	def test_blank_company_does_not_export_every_company(self):
+		with (
+			patch.object(purchase_report, "_save_csv_file") as save_csv_file,
+			self.assertRaises(frappe.ValidationError),
+		):
+			download_custom_csv_format("", "2026-06-01", "2026-06-30")
+
+		save_csv_file.assert_not_called()
+
+
 class TestSaveCsvFile(UnitTestCase):
 	def test_writes_one_private_csv_without_orphan_copies(self):
 		prefix = f"purchase_test_{frappe.generate_hash(length=8)}"

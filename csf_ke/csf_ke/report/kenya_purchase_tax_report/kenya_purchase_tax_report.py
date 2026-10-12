@@ -11,7 +11,7 @@ from typing import TypedDict
 import frappe
 from frappe import _
 
-from csf_ke.csf_ke.utils.tax_report import TaxReport, add_amounts
+from csf_ke.csf_ke.utils.tax_report import TaxReport, add_amounts, check_export_permission
 
 
 class KenyaPurchaseTaxReportFilters(TypedDict):
@@ -182,12 +182,12 @@ class KenyaPurchaseTaxReport(TaxReport):
 
 def _normalize_companies(company):
 	if not company:
-		return frappe.get_all("Company", pluck="name")
+		return []
 
 	if isinstance(company, str):
 		company = company.strip()
 		if not company:
-			return frappe.get_all("Company", pluck="name")
+			return []
 
 		if company.startswith("["):
 			try:
@@ -281,6 +281,8 @@ def download_custom_csv_format(company: str, from_date: str | None = None, to_da
 	companies = _normalize_companies(company)
 	if not companies:
 		frappe.throw(_("At least one company is required"))
+
+	check_export_permission("Kenya Purchase Tax Report", companies)
 
 	timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 	templates = []
