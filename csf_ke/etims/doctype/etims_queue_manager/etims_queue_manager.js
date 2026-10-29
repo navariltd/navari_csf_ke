@@ -30,31 +30,20 @@ frappe.ui.form.on("eTims Queue Manager", {
     frm.add_custom_button(
       __("Clear All Jobs"),
       () => {
-        frappe.confirm(__("Delete ALL eTims Job Queue records?"), () => {
-          frappe.call({
-            method: "frappe.client.get_list",
-            args: {
-              doctype: "eTims Job Queue",
-              fields: ["name"],
-              limit_page_length: 0,
-            },
-            callback: (r) => {
-              const jobs = r.message || [];
-
-              Promise.all(
-                jobs.map((j) =>
-                  frappe.call({
-                    method: "frappe.client.delete",
-                    args: {
-                      doctype: "eTims Job Queue",
-                      name: j.name,
-                    },
-                  }),
-                ),
-              ).then(() => frm.reload_doc());
-            },
-          });
-        });
+        frappe.confirm(
+          __(
+            "Clear the current job pointers and delete ALL eTims Job Queue records?",
+          ),
+          () => {
+            frappe.call({
+              method: "clear_all_jobs",
+              doc: frm.doc,
+              freeze: true,
+              freeze_message: __("Clearing queue..."),
+              callback: () => frm.reload_doc(),
+            });
+          },
+        );
       },
       __("eTims Actions"),
     );
