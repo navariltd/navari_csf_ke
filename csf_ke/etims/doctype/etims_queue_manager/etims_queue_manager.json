@@ -1,19 +1,32 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2026-05-22 12:53:40.922230",
+ "creation": "2026-09-10 14:47:27.048927",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "queue_status",
-  "disabled",
   "column_break_ahaa",
   "duplicate_detection_window",
+  "column_break_hmxk",
+  "disabled",
+  "queue_reliability_section",
+  "max_retries",
+  "retry_backoff_seconds",
+  "column_break_reliability",
+  "circuit_failure_threshold",
+  "circuit_cooldown_seconds",
+  "job_retention_hours",
+  "column_break_vwry",
+  "integration_request_success_retention_days",
+  "integration_request_failed_retention_days",
+  "integration_request_max_attempts",
   "section_break_lkys",
   "current_job",
-  "next_job",
   "column_break_cfis",
-  "last_job"
+  "last_job",
+  "column_break_uraq",
+  "next_job"
  ],
  "fields": [
   {
@@ -65,13 +78,88 @@
    "fieldtype": "Duration",
    "hide_days": 1,
    "label": "Duplicate Detection Window"
+  },
+  {
+   "fieldname": "queue_reliability_section",
+   "fieldtype": "Section Break",
+   "label": "Retry & Reliability"
+  },
+  {
+   "default": "4",
+   "description": "Retries before a transient failure becomes terminal.",
+   "fieldname": "max_retries",
+   "fieldtype": "Int",
+   "label": "Max Retries"
+  },
+  {
+   "default": "60,300,900,1800",
+   "description": "Comma-separated backoff schedule in seconds.",
+   "fieldname": "retry_backoff_seconds",
+   "fieldtype": "Data",
+   "label": "Retry Backoff (seconds)"
+  },
+  {
+   "fieldname": "column_break_reliability",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "5",
+   "description": "Consecutive transient failures that open the circuit.",
+   "fieldname": "circuit_failure_threshold",
+   "fieldtype": "Int",
+   "label": "Circuit Failure Threshold"
+  },
+  {
+   "default": "300,900,1800",
+   "description": "Comma-separated cooldown schedule in seconds.",
+   "fieldname": "circuit_cooldown_seconds",
+   "fieldtype": "Data",
+   "label": "Circuit Cooldown (seconds)"
+  },
+  {
+   "default": "72",
+   "description": "Hours to retain terminal eTims Job Queue records.",
+   "fieldname": "job_retention_hours",
+   "fieldtype": "Int",
+   "label": "Job Retention (hours)"
+  },
+  {
+   "default": "3",
+   "fieldname": "integration_request_success_retention_days",
+   "fieldtype": "Int",
+   "label": "Integration Request Success Retention (days)"
+  },
+  {
+   "default": "30",
+   "fieldname": "integration_request_failed_retention_days",
+   "fieldtype": "Int",
+   "label": "Integration Request Failed Retention (days)"
+  },
+  {
+   "default": "10",
+   "description": "Maximum HTTP attempts retained per logical request_id.",
+   "fieldname": "integration_request_max_attempts",
+   "fieldtype": "Int",
+   "label": "Max Attempts per Request"
+  },
+  {
+   "fieldname": "column_break_vwry",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_hmxk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_uraq",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2026-08-19 10:10:04.415003",
+ "modified": "2026-09-10 14:55:29.053272",
  "modified_by": "Administrator",
  "module": "eTims",
  "name": "eTims Queue Manager",
