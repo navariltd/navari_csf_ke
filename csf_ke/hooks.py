@@ -9,15 +9,19 @@ app_license = "GNU General Public License (v3)"
 required_apps = ["erpnext", "hrms"]
 
 
+# The apps-screen tile and the dock header. No `route`: `/desk/kenya` names the Kenya workspace,
+# and the tile lands on the dock's first entry instead (see `Sidebar.app_landing_route`).
 add_to_apps_screen = [
 	{
 		"name": "csf_ke",
 		"logo": "/assets/csf_ke_docs/images/csf_ke.svg",
 		"title": "Kenya",
-		"route": "/desk/kenya",
 		"has_permission": "csf_ke.check_app_permission",
 	}
 ]
+
+# The app's own sprite, holding the dock icon built from the app logo.
+app_include_icons = ["/assets/csf_ke/icons/csf_ke-icons.svg"]
 
 
 fixtures = [

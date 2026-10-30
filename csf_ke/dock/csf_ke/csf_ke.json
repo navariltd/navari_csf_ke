@@ -1,0 +1,24 @@
+{
+ "app": "csf_ke",
+ "creation": "2026-10-30 13:25:00.000000",
+ "docstatus": 0,
+ "doctype": "Dock",
+ "idx": 0,
+ "items": [
+  {
+   "added": 0,
+   "hidden": 0,
+   "icon": "csf-ke-duotone",
+   "link_to": "Kenya",
+   "link_type": "Sidebar",
+   "title": "Kenya"
+  }
+ ],
+ "modified": "2026-10-30 13:25:00.000000",
+ "modified_by": "Administrator",
+ "mount_on": "",
+ "name": "csf_ke",
+ "owner": "Administrator",
+ "standard": 1,
+ "user": ""
+}
