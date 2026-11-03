@@ -266,17 +266,6 @@
       "dependencies": "",
       "hidden": 0,
       "is_query_report": 0,
-      "label": "Lead Source",
-      "link_count": 0,
-      "link_to": "Lead Source",
-      "link_type": "DocType",
-      "onboard": 0,
-      "type": "Link"
-    },
-    {
-      "dependencies": "",
-      "hidden": 0,
-      "is_query_report": 0,
       "label": "Customer Group",
       "link_count": 0,
       "link_to": "Customer Group",
@@ -654,7 +643,7 @@
       "type": "Link"
     }
   ],
-  "modified": "2025-03-06 11:12:51.993893",
+  "modified": "2026-11-03 12:00:15.710207",
   "modified_by": "Administrator",
   "module": "Selling",
   "name": "Selling",
