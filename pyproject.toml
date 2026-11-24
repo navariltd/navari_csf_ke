@@ -4,11 +4,12 @@ authors = [
     { name = "Navari Ltd", email = "solutions@navari.co.ke"}
 ]
 description = "ERPNext and FrappeHR Country Specific Customizations for Kenya by Navari Ltd"
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 readme = "README.md"
 dynamic = ["version"]
 dependencies = [
-    "qrcode~=7.4.2",
+    "qrcode[pil]>=7.4.2,<9",
+    "Pillow>=13.0.0,<14",
 ]
 
 [build-system]
